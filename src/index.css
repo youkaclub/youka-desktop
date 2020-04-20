@@ -1,0 +1,63 @@
+*:focus {
+  outline: 0 !important;
+}
+
+a:hover {
+  color: white !important;
+}
+
+.plyr--video {
+  max-height: 60vh;
+}
+
+.plyr__caption {
+  font-size: 2rem;
+}
+
+.plyr:fullscreen .plyr__caption {
+  font-size: 4rem;
+}
+
+.plyr__captions .plyr__caption {
+  background: none !important;
+  line-height: 1% !important;
+}
+
+.plyr__captions {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.plyr__captions .plyr__caption .captions-all {
+  font-size: 1.5rem;
+  line-height: 1%;
+}
+
+.captions-curr-line,
+.captions-curr-word {
+  color: #2185d0;
+  font-weight: bold;
+  line-height: 185%;
+}
+
+.captions-next-line,
+.captions-after-word,
+.captions-before-word {
+  color: #ccc;
+  font-weight: bold;
+  line-height: 185%;
+}
+
+.ui.form {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.ui.form .field {
+  margin: 0;
+}
+
+.bg-primary {
+  background-color: #e30b17;
+}

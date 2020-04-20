@@ -1,0 +1,29 @@
+language: node_js
+node_js: "12"
+os: linux
+dist: bionic
+
+cache: npm
+
+branches:
+  only:
+    - master
+
+before_install:
+  - pip install --user awscli
+  - export PATH=$PATH:$HOME/.local/bin
+
+install:
+  - npm install
+
+script:
+  - npm run build
+
+deploy:
+  provider: script
+  script: bash scripts/deploy.sh
+  skip_cleanup: true
+
+after_deploy:
+  - ./scripts/source_map.sh
+  - ./scripts/cloudflare_purge.sh
