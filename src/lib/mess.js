@@ -21,12 +21,12 @@ const MODE_MEDIA_INSTRUMENTS = "instruments";
 const MODE_MEDIA_VOCALS = "vocals";
 
 const MODE_CAPTIONS_LINE = "line";
-// const MODE_CAPTIONS_WORD = "word";
+const MODE_CAPTIONS_WORD = "word";
 
 const MODE_LYRICS = "lyrics";
 const MODE_INFO = "info";
 
-const CAPTIONS_MODES = [MODE_CAPTIONS_LINE];
+const CAPTIONS_MODES = [MODE_CAPTIONS_LINE, MODE_CAPTIONS_WORD];
 
 const MEDIA_MODES = [
   MODE_MEDIA_ORIGINAL,
@@ -73,17 +73,15 @@ async function files(youtubeID) {
 
     switch (ext) {
       case FILE_VIDEO:
-        const furl = fileurl(youtubeID, mode, FILE_VIDEO);
-        if (furl) {
-          videos[mode] = furl;
+        const fvurl = fileurl(youtubeID, mode, FILE_VIDEO);
+        if (fvurl) {
+          videos[mode] = fvurl;
         }
         break;
       case FILE_CAPTIONS:
-        if (mode === MODE_CAPTIONS_LINE) {
-          const furl = fileurl(youtubeID, mode, FILE_CAPTIONS);
-          if (furl) {
-            captions[mode] = furl;
-          }
+        const fcurl = fileurl(youtubeID, mode, FILE_CAPTIONS);
+        if (fcurl) {
+          captions[mode] = fcurl;
         }
         break;
       default:
