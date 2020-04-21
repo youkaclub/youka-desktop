@@ -21,9 +21,11 @@ export default function WatchPage() {
   const defaultCaptions = mess.MODE_CAPTIONS_LINE;
 
   const [videoModes, setVideoModes] = useState({});
+  const [captionsModes, setCaptionsModes] = useState({});
   const [videoMode, setVideoMode] = useState(defaultVideo);
+  const [captionsMode, setCaptionsMode] = useState(defaultCaptions);
   const [videoURL, setVideoURL] = useState();
-  const [captionsURL, setCaptionURL] = useState();
+  const [captionsURL, setCaptionsURL] = useState();
   const [error, setError] = useState();
   const [progress, setProgress] = useState(true);
   const [info, setInfo] = useState();
@@ -33,6 +35,10 @@ export default function WatchPage() {
   }
 
   const ddoptions = Object.keys(videoModes).map((mode, i) => {
+    return { key: i, text: capitalize(mode), value: mode };
+  });
+
+  const ccoptions = Object.keys(captionsModes).map((mode, i) => {
     return { key: i, text: capitalize(mode), value: mode };
   });
 
@@ -47,6 +53,11 @@ export default function WatchPage() {
     visitor.event("Click", "Change Video", youtubeID).send();
   }
 
+  function handleChangeCaptions(e, data) {
+    changeCaptions(data.value);
+    visitor.event("Click", "Change Captions", youtubeID).send();
+  }
+
   function changeVideo(mode, modes) {
     const m = modes || videoModes;
     const url = m[mode];
@@ -54,6 +65,13 @@ export default function WatchPage() {
       setVideoMode(mode);
       setVideoURL(url);
     }
+  }
+
+  function changeCaptions(mode, modes) {
+    const m = modes || captionsModes;
+    const url = m[mode];
+    setCaptionsMode(mode);
+    setCaptionsURL(url);
   }
 
   useEffect(() => {
@@ -64,10 +82,17 @@ export default function WatchPage() {
         setProgress(true);
         const files = await mess.files(youtubeID);
         setVideoModes(files.videos);
+        setCaptionsModes(files.captions);
         setInfo(await mess.info(youtubeID));
-        setVideoMode(defaultVideo);
-        setVideoURL(files.videos[defaultVideo]);
-        setCaptionURL(files.captions[defaultCaptions]);
+        const currVideo = defaultVideo;
+        const currCaptions = files.captions[defaultCaptions]
+          ? defaultCaptions
+          : "off";
+        setVideoMode(currVideo);
+        setCaptionsMode(currCaptions);
+        setVideoURL(files.videos[currVideo]);
+        setCaptionsURL(files.captions[currCaptions]);
+
         if (!files.captions[defaultCaptions]) {
           visitor.event("Click", "Report missing subtitles", youtubeID).send();
         }
@@ -131,10 +156,17 @@ export default function WatchPage() {
                 />
                 <Dropdown
                   button
-                  text={capitalize(videoMode)}
+                  text={" Audio: " + capitalize(videoMode)}
                   value={videoMode}
                   options={ddoptions}
                   onChange={handleChangeVideo}
+                />
+                <Dropdown
+                  button
+                  text={" Captions: " + capitalize(captionsMode)}
+                  value={captionsMode}
+                  options={ccoptions}
+                  onChange={handleChangeCaptions}
                 />
                 <ReportButton
                   category="Click"

@@ -73,17 +73,25 @@ async function files(youtubeID) {
 
     switch (ext) {
       case FILE_VIDEO:
-        videos[mode] = fileurl(youtubeID, mode, FILE_VIDEO);
+        const furl = fileurl(youtubeID, mode, FILE_VIDEO);
+        if (furl) {
+          videos[mode] = furl;
+        }
         break;
       case FILE_CAPTIONS:
         if (mode === MODE_CAPTIONS_LINE) {
-          captions[mode] = fileurl(youtubeID, mode, FILE_CAPTIONS);
+          const furl = fileurl(youtubeID, mode, FILE_CAPTIONS);
+          if (furl) {
+            captions[mode] = furl;
+          }
         }
         break;
       default:
         break;
     }
   }
+
+  captions["off"] = null;
 
   return { videos, captions };
 }

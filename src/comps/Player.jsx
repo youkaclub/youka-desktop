@@ -38,8 +38,6 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
       }, 0);
     } else {
       playerRef.current.toggleCaptions(false);
-      const el = document.querySelector(".plyr__captions");
-      if (el) el.remove();
     }
   }, [captionsURL]);
 
