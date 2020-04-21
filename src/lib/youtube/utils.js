@@ -82,6 +82,7 @@ async function initialData(url) {
     return null;
   });
   const script = $(scriptEl).html();
+  if (!script) return;
   const start = script.indexOf("{");
   const end = script.indexOf(`window["ytInitialPlayerResponse"]`) - 1;
   if (!start || !end) return;
