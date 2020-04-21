@@ -12,7 +12,7 @@ export default function VideoListItem({ video }) {
             src={video.image}
           ></img>
         </div>
-        <div className="w-full leading-normal text-black p-1 text-2xl">
+        <div className="w-full leading-tight text-black p-1 text-2xl">
           {video.title}
         </div>
       </div>

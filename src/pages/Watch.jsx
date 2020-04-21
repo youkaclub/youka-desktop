@@ -142,7 +142,7 @@ export default function WatchPage() {
               style={{ width: "60vw" }}
             >
               {info ? (
-                <div className="text-2xl leading-normal m-1">
+                <div className="text-2xl leading-tight m-1">
                   {youtube.utils.cleanTitle(info.title)}
                 </div>
               ) : null}
