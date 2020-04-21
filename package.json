@@ -46,7 +46,7 @@
     "ffbinaries": "^1.1.4",
     "fluent-ffmpeg": "^2.1.2",
     "franc": "^5.0.0",
-    "jest": "^25.4.0",
+    "jest": "^24.9.0",
     "lodash": "^4.17.15",
     "mkdirp": "^1.0.3",
     "needle": "^2.3.3",
