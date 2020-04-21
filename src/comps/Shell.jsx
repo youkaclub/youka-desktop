@@ -4,6 +4,7 @@ import { memoize, debounce } from "lodash";
 import { Link } from "react-router-dom";
 import { Input, Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
+import Update from "./Update";
 import * as mess from "../lib/mess";
 import rollbar from "../lib/rollbar";
 import { visitor } from "../lib/ua";
@@ -222,6 +223,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
       ) : (
         <VideoList videos={videos} />
       )}
+      <Update />
     </div>
   );
 }
