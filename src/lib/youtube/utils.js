@@ -1,4 +1,5 @@
 const rp = require("./request-promise");
+const cheerio = require("cheerio");
 
 const blacklist = [
   "lyrics",
@@ -71,10 +72,22 @@ function cleanResults(results) {
 
 async function initialData(url) {
   const html = await rp(url);
-  const re = /window\["ytInitialData"\] = (.*?);\s+window\["ytInitialPlayerResponse"\]/s;
-  const match = re.exec(html);
-  if (!match || match.length !== 2) return;
-  return JSON.parse(match[1]);
+  const $ = cheerio.load(html);
+  let found = false;
+  const scriptEl = $("script").map((i, el) => {
+    if (!found) {
+      found = $(el).html().trim().startsWith(`window["ytInitialData"] =`);
+      if (found) return el;
+    }
+    return null;
+  });
+  const script = $(scriptEl).html();
+  const start = script.indexOf("{");
+  const end = script.indexOf(`window["ytInitialPlayerResponse"]`) - 1;
+  if (!start || !end) return;
+  const json = script.slice(start, end).trim().slice(0, -1);
+  const obj = JSON.parse(json);
+  return obj;
 }
 
 module.exports = {

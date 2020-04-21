@@ -1,5 +1,7 @@
 const youtube = require("../../../lib/youtube");
 
+jest.mock("request-promise-native");
+
 describe("utils", () => {
   it("should return initial data", async () => {
     const url = "https://www.youtube.com/watch?v=D9AFMVMl9qE";
