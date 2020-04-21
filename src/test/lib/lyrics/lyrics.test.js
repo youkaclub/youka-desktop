@@ -1,6 +1,7 @@
 const search = require("../../../lib/lyrics");
 
 const queries = [
+  "如果有如果-鄧福如",
   "Zhou Shen - Big Fish",
   "ellie goulding your song",
   "임영웅 - 이제 나만 믿어요",

@@ -18,6 +18,7 @@ const providers = [
   require("./providers/utamap"),
   require("./providers/sanook"),
   require("./providers/kapook"),
+  require("./providers/mojim"),
 ];
 
 async function search(query) {
