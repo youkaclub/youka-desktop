@@ -45,7 +45,7 @@ function removeBrackets(str) {
 function cleanTitle(r) {
   r = removeBrackets(r);
   r = r.replace(
-    /(official video|official music video|music video|video oficial)/gi,
+    /(official video|official music video|music video|video oficial| mv )/gi,
     ""
   );
   r = r.replace(/(\s|-)+$/g, "");
