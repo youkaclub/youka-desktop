@@ -74,6 +74,10 @@ export default function WatchPage() {
     setCaptionsURL(url);
   }
 
+  function handleRetry() {
+    window.location.reload();
+  }
+
   useEffect(() => {
     (async function () {
       try {
@@ -99,7 +103,7 @@ export default function WatchPage() {
         setProgress(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
-        setError(error.toString());
+        setError(true);
         setProgress(false);
         rollbar.error(error);
       }
@@ -112,9 +116,9 @@ export default function WatchPage() {
     <Shell youtubeID={youtubeID} defaultPlaylist={PLAYLIST_MIX}>
       <div className="flex flex-col items-center">
         {error ? (
-          <Message negative>
+          <Message className="cursor-pointer" negative onClick={handleRetry}>
             <Message.Header>Ooops, some error occurred :(</Message.Header>
-            <p>{error}</p>
+            <div className="py-1">Click here to retry...</div>
           </Message>
         ) : null}
         {progress ? (
