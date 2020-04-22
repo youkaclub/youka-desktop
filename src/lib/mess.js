@@ -259,6 +259,10 @@ async function library() {
   const items = [];
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i];
+    const fpath = filepath(id, MODE_MEDIA_INSTRUMENTS, FILE_VIDEO);
+    if (!(await exists(fpath))) {
+      continue;
+    }
     const inf = await info(id);
     if (inf) {
       items.push({
