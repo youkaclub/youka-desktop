@@ -30,7 +30,7 @@ function App() {
               return <Home />;
             }}
           />
-          <Route path="/watch/:youtubeID" component={Watch} />
+          <Route path="/watch" component={Watch} />
         </Switch>
       </Suspense>
     </Router>

@@ -57,10 +57,10 @@ function filepath(youtubeID, mode, file) {
   return join(ROOT, youtubeID, `${mode}${file}`);
 }
 
-async function files(youtubeID) {
+async function files(youtubeID, handleStatusChanged) {
   const fpath = filepath(youtubeID, MODE_MEDIA_INSTRUMENTS, FILE_VIDEO);
   if (!(await exists(fpath))) {
-    await generate(youtubeID);
+    await generate(youtubeID, handleStatusChanged);
   }
 
   let videos = {};
@@ -94,7 +94,7 @@ async function files(youtubeID) {
   return { videos, captions };
 }
 
-async function generate(youtubeID) {
+async function generate(youtubeID, onStatusChanged) {
   debug("youtube-id", youtubeID);
 
   if (await exists(filepath(youtubeID, MODE_MEDIA_INSTRUMENTS, FILE_VIDEO))) {
@@ -105,7 +105,7 @@ async function generate(youtubeID) {
   debug("can't find video locally");
 
   if (!(await ffmpegExists())) {
-    debug("download ffmpeg");
+    onStatusChanged("Download ffmpeg")
     await downloadFfpmeg();
   }
 
@@ -114,18 +114,22 @@ async function generate(youtubeID) {
 
   await mkdirp(join(ROOT, youtubeID));
 
-  debug("download video");
+  onStatusChanged("Download video")
   const originalVideoFilepath = filepath(
     youtubeID,
     MODE_MEDIA_ORIGINAL,
     FILE_VIDEO
   );
   if (!(await exists(originalVideoFilepath))) {
-    const videoOriginal = await youtube.download(youtubeID);
-    await fs.promises.writeFile(originalVideoFilepath, videoOriginal);
+    try {
+      const videoOriginal = await youtube.download(youtubeID);
+      await fs.promises.writeFile(originalVideoFilepath, videoOriginal);
+    } catch (e) {
+      throw new Error("download video failed")
+    }
   }
 
-  debug("find lyrics");
+  onStatusChanged("Search for lyrics")
   const info = await youtube.info(youtubeID);
   await fs.promises.writeFile(
     filepath(youtubeID, MODE_INFO, FILE_JSON),
@@ -135,7 +139,7 @@ async function generate(youtubeID) {
   const title = youtube.utils.cleanTitle(info.title);
   const lyrics = await lyricsFinder(title);
 
-  debug("seperate audio");
+  onStatusChanged("Separate video and audio")
   await new Promise((resolve, reject) => {
     ffmpeg(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_VIDEO))
       .on("error", (error) => reject(error))
@@ -144,7 +148,6 @@ async function generate(youtubeID) {
       .save(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_AUDIO));
   });
 
-  debug("split-align");
   const audioBuffer = await fs.promises.readFile(
     filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_AUDIO)
   );
@@ -173,15 +176,17 @@ async function generate(youtubeID) {
   }
   let apiurl = "https://api.audioai.online/split-align";
   if (lyrics) {
-    debug("detect lyrics lang");
+    onStatusChanged("Detect lyrics language");
     try {
       const lang = await gt.language(lyrics);
+      onStatusChanged(`Language detected (${lang})`);
       apiurl = `${apiurl}?lang=${lang}`;
     } catch (e) {
       debug(e);
     }
   }
   debug(apiurl);
+  onStatusChanged("Separate instruments and vocals")
   const response = await needle("post", apiurl, data, {
     multipart: true,
     user_agent: "Youka",
@@ -191,6 +196,9 @@ async function generate(youtubeID) {
     throw new Error(message);
   }
   const { audio, captions } = response.body;
+  if (!audio && !captions) {
+    throw new Error("split failed")
+  }
   if (audio) {
     for (const [mode, value] of Object.entries(audio)) {
       const fpath = filepath(youtubeID, mode, FILE_AUDIO);
@@ -204,7 +212,7 @@ async function generate(youtubeID) {
     }
   }
 
-  debug("create videos");
+  onStatusChanged("Create instruments and vocals videos");
   const medias = [MODE_MEDIA_INSTRUMENTS, MODE_MEDIA_VOCALS];
   for (let i = 0; i < medias.length; i++) {
     const media = medias[i];
@@ -268,7 +276,7 @@ async function library() {
       items.push({
         id: id,
         image: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-        title: inf.title,
+        title: youtube.utils.cleanTitle(inf.title),
       });
     }
   }

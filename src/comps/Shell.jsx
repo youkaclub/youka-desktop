@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { search, trending, mix, utils } from "../lib/youtube";
+import { search, trending, mix } from "../lib/youtube";
 import { memoize, debounce } from "lodash";
 import { Link } from "react-router-dom";
 import { Input, Loader, Icon } from "semantic-ui-react";
@@ -78,7 +78,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
       setLoading(true);
       setPlaylist(PLAYLIST_TRENDING);
       const results = await trending_memoize();
-      setVideos(utils.cleanResults(results));
+      setVideos(results);
       setPlaylist(PLAYLIST_TRENDING);
     } catch (error) {
       console.error(error);
@@ -95,7 +95,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
       setPlaylist(PLAYLIST_MIX);
       const results = await mix_memoize(youtubeID);
       results.shift();
-      setVideos(utils.cleanResults(results));
+      setVideos(results);
       setPlaylist(PLAYLIST_MIX);
     } catch (error) {
       console.error(error);

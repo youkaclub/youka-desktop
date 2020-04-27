@@ -26,5 +26,5 @@ module.exports = async function () {
     }
   );
 
-  return results;
+  return utils.cleanResults(results);
 };

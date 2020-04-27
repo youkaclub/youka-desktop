@@ -42,5 +42,5 @@ module.exports = async function (query) {
       return null;
     }
   );
-  return results;
+  return utils.cleanResults(results);
 };

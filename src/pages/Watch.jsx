@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Message, Icon, Button, Dropdown } from "semantic-ui-react";
-import * as youtube from "../lib/youtube";
 import * as mess from "../lib/mess";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
 import Player from "../comps/Player";
@@ -10,12 +9,13 @@ import { usePageView } from "../lib/hooks";
 import { visitor } from "../lib/ua";
 import rollbar from "../lib/rollbar";
 const { shell } = require("electron");
+const querystring = require('querystring');
+const debug = require("debug")("youka:desktop");
 
 export default function WatchPage() {
   const location = useLocation();
   usePageView(location.pathname);
-
-  const { youtubeID } = useParams();
+  const { id, title } = querystring.parse(location.search.slice(1))
 
   const defaultVideo = mess.MODE_MEDIA_INSTRUMENTS;
   const defaultCaptions = mess.MODE_CAPTIONS_LINE;
@@ -28,7 +28,7 @@ export default function WatchPage() {
   const [captionsURL, setCaptionsURL] = useState();
   const [error, setError] = useState();
   const [progress, setProgress] = useState(true);
-  const [info, setInfo] = useState();
+  const [status, setStatus] = useState();
 
   function capitalize(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -42,20 +42,25 @@ export default function WatchPage() {
     return { key: i, text: capitalize(mode), value: mode };
   });
 
+  function handleStatusChanged(s) {
+    setStatus(s)
+    debug(s)
+  }
+
   function handleClickDownload() {
-    const fpath = mess.filepath(youtubeID, videoMode, mess.FILE_VIDEO);
+    const fpath = mess.filepath(id, videoMode, mess.FILE_VIDEO);
     shell.showItemInFolder(fpath);
-    visitor.event("Click", "Download", youtubeID).send();
+    visitor.event("Click", "Download", id).send();
   }
 
   function handleChangeVideo(e, data) {
     changeVideo(data.value);
-    visitor.event("Click", "Change Video", youtubeID).send();
+    visitor.event("Click", "Change Video", id).send();
   }
 
   function handleChangeCaptions(e, data) {
     changeCaptions(data.value);
-    visitor.event("Click", "Change Captions", youtubeID).send();
+    visitor.event("Click", "Change Captions", id).send();
   }
 
   function changeVideo(mode, modes) {
@@ -84,10 +89,9 @@ export default function WatchPage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
         setError(null);
         setProgress(true);
-        const files = await mess.files(youtubeID);
+        const files = await mess.files(id, handleStatusChanged);
         setVideoModes(files.videos);
         setCaptionsModes(files.captions);
-        setInfo(await mess.info(youtubeID));
         const currVideo = defaultVideo;
         const currCaptions = files.captions[defaultCaptions]
           ? defaultCaptions
@@ -98,7 +102,7 @@ export default function WatchPage() {
         setCaptionsURL(files.captions[currCaptions]);
 
         if (!files.captions[defaultCaptions]) {
-          visitor.event("Click", "Report missing subtitles", youtubeID).send();
+          visitor.event("Click", "Report missing subtitles", id).send();
         }
         setProgress(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -108,12 +112,12 @@ export default function WatchPage() {
         rollbar.error(error);
       }
     })();
-  }, [youtubeID, defaultVideo, defaultCaptions]);
+  }, [id, defaultVideo, defaultCaptions]);
 
-  if (!youtubeID) return null;
+  if (!id) return null;
 
   return (
-    <Shell youtubeID={youtubeID} defaultPlaylist={PLAYLIST_MIX}>
+    <Shell youtubeID={id} defaultPlaylist={PLAYLIST_MIX}>
       <div className="flex flex-col items-center">
         {error ? (
           <Message className="cursor-pointer" negative onClick={handleRetry}>
@@ -126,8 +130,8 @@ export default function WatchPage() {
             <Message icon>
               <Icon name="circle notched" loading />
               <Message.Content>
-                <Message.Header>Loading</Message.Header>
-                It may take a minute..
+                <Message.Header>{title}</Message.Header>
+                <div className="py-2">{status}</div>
               </Message.Content>
             </Message>
           </div>
@@ -136,7 +140,7 @@ export default function WatchPage() {
           <div>
             <div style={{ width: "60vw" }}>
               <Player
-                youtubeID={youtubeID}
+                youtubeID={id}
                 videoURL={videoURL}
                 captionsURL={captionsURL}
               />
@@ -145,11 +149,9 @@ export default function WatchPage() {
               className="flex flex-row justify-between p-1"
               style={{ width: "60vw" }}
             >
-              {info ? (
-                <div className="text-2xl leading-tight m-1">
-                  {youtube.utils.cleanTitle(info.title)}
-                </div>
-              ) : null}
+              <div className="text-2xl leading-tight m-1">
+                {title}
+              </div>
             </div>
             <div className="flex flex-row w-full m-2 justify-center">
               <div className="flex flex-row p-2 mx-4">
@@ -175,7 +177,7 @@ export default function WatchPage() {
                 <ReportButton
                   category="Click"
                   action="Report out of sync"
-                  label={youtubeID}
+                  label={id}
                 >
                   Report out of sync
                 </ReportButton>

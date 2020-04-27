@@ -37,7 +37,9 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
         playerRef.current.toggleCaptions(true);
       }, 0);
     } else {
-      playerRef.current.toggleCaptions(false);
+      setTimeout(() => {
+        playerRef.current.toggleCaptions(false);
+      }, 0);
     }
   }, [captionsURL]);
 

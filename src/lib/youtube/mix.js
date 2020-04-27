@@ -12,19 +12,19 @@ module.exports = async function (youtubeID) {
   const mixURL = `https://www.youtube.com/watch?v=${youtubeID}&list=${mixID}&start_radio=1`;
   const obj = await utils.initialData(mixURL);
   if (!obj) return [];
-  const playlist = [];
+  const results = [];
   const items =
     obj.contents.twoColumnWatchNextResults.playlist.playlist.contents;
   items.map((item) => {
     const id = item.playlistPanelVideoRenderer.videoId;
     const title = item.playlistPanelVideoRenderer.title.simpleText;
     const image = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-    playlist.push({
+    results.push({
       id,
       title,
       image,
     });
     return null;
   });
-  return playlist;
+  return utils.cleanResults(results);
 };
