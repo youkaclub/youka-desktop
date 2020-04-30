@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 import { Input, Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
 import Update from "./Update";
-import * as mess from "../lib/mess";
 import rollbar from "../lib/rollbar";
 import { visitor } from "../lib/ua";
+import * as library from "../lib/library";
 
 const { shell } = require("electron");
 
@@ -110,7 +110,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
     try {
       setLoading(true);
       setPlaylist(PLAYLIST_LIBRARY);
-      const libraryVideos = await mess.library();
+      const libraryVideos = await library.videos();
       setVideos(libraryVideos);
       setPlaylist(PLAYLIST_LIBRARY);
     } catch (error) {

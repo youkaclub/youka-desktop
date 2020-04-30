@@ -1,11 +1,21 @@
-import React from "react";
-import { useLocation } from "react-router-dom";
+import React, { useEffect } from "react";
+import { useLocation, useHistory } from "react-router-dom";
 import Shell, { PLAYLIST_TRENDING } from "../comps/Shell";
 import { usePageView } from "../lib/hooks";
+import store from "../lib/store";
 
 export default function HomePage() {
   const location = useLocation();
+  let history = useHistory();
+
   usePageView(location.pathname);
+
+  useEffect(() => {
+    if (store.get("eula") !== true) {
+      history.push("/eula");
+    }
+    // eslint-disable-next-line
+  }, []);
 
   return <Shell defaultPlaylist={PLAYLIST_TRENDING} />;
 }

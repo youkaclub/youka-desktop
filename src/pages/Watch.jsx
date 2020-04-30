@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Message, Icon, Button, Dropdown } from "semantic-ui-react";
-import * as mess from "../lib/mess";
+import * as library from "../lib/library";
+import * as karaoke from "../lib/karaoke";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
 import Player from "../comps/Player";
 import ReportButton from "../comps/ReportButton";
@@ -9,16 +10,16 @@ import { usePageView } from "../lib/hooks";
 import { visitor } from "../lib/ua";
 import rollbar from "../lib/rollbar";
 const { shell } = require("electron");
-const querystring = require('querystring');
+const querystring = require("querystring");
 const debug = require("debug")("youka:desktop");
 
 export default function WatchPage() {
   const location = useLocation();
   usePageView(location.pathname);
-  const { id, title } = querystring.parse(location.search.slice(1))
+  const { id, title } = querystring.parse(location.search.slice(1));
 
-  const defaultVideo = mess.MODE_MEDIA_INSTRUMENTS;
-  const defaultCaptions = mess.MODE_CAPTIONS_LINE;
+  const defaultVideo = library.MODE_MEDIA_INSTRUMENTS;
+  const defaultCaptions = library.MODE_CAPTIONS_LINE;
 
   const [videoModes, setVideoModes] = useState({});
   const [captionsModes, setCaptionsModes] = useState({});
@@ -43,12 +44,12 @@ export default function WatchPage() {
   });
 
   function handleStatusChanged(s) {
-    setStatus(s)
-    debug(s)
+    setStatus(s);
+    debug(s);
   }
 
   function handleClickDownload() {
-    const fpath = mess.filepath(id, videoMode, mess.FILE_VIDEO);
+    const fpath = library.filepath(id, videoMode, library.FILE_VIDEO);
     shell.showItemInFolder(fpath);
     visitor.event("Click", "Download", id).send();
   }
@@ -89,7 +90,11 @@ export default function WatchPage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
         setError(null);
         setProgress(true);
-        const files = await mess.files(id, handleStatusChanged);
+        let files = await library.files(id);
+        if (!files) {
+          await karaoke.generate(id, title, handleStatusChanged);
+          files = await library.files(id);
+        }
         setVideoModes(files.videos);
         setCaptionsModes(files.captions);
         const currVideo = defaultVideo;
@@ -110,9 +115,10 @@ export default function WatchPage() {
         setError(true);
         setProgress(false);
         rollbar.error(error);
+        console.log(error);
       }
     })();
-  }, [id, defaultVideo, defaultCaptions]);
+  }, [id, title, defaultVideo, defaultCaptions]);
 
   if (!id) return null;
 
@@ -149,9 +155,7 @@ export default function WatchPage() {
               className="flex flex-row justify-between p-1"
               style={{ width: "60vw" }}
             >
-              <div className="text-2xl leading-tight m-1">
-                {title}
-              </div>
+              <div className="text-2xl leading-tight m-1">{title}</div>
             </div>
             <div className="flex flex-row w-full m-2 justify-center">
               <div className="flex flex-row p-2 mx-4">

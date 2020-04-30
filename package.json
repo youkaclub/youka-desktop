@@ -36,6 +36,7 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "@types/react-router-dom": "^5.1.3",
+    "async-graph-resolver": "^1.0.1",
     "cheerio": "^1.0.0-rc.3",
     "concurrently": "^5.1.0",
     "debug": "^4.1.1",
