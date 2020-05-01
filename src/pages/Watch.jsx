@@ -92,7 +92,9 @@ export default function WatchPage() {
         setProgress(true);
         let files = await library.files(id);
         if (!files) {
-          await karaoke.generate(id, title, handleStatusChanged);
+          debug("generate start", Date());
+          await karaoke.generate(id, title, handleStatusChanged, true);
+          debug("generate end", Date());
           files = await library.files(id);
         }
         setVideoModes(files.videos);

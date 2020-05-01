@@ -10,7 +10,7 @@ import { version } from "../package.json";
 console.log("YOUKA_VERSION", version);
 console.log("YOUKA_GIT_SHA", process.env.REACT_APP_GIT_SHA);
 
-if (store.get("stats") && process.env.NODE_ENV === "production") {
+if (store.get("stats") && orgId) {
   FullStory.init({ orgId });
 }
 

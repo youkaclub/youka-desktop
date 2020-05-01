@@ -4,7 +4,10 @@ const join = require("path").join;
 const ffmpeg = require("fluent-ffmpeg");
 const ffbinaries = require("ffbinaries");
 const mkdirp = require("mkdirp");
+const lyricsFinder = require("./lyrics");
+const api = require("./api");
 const youtube = require("./youtube");
+const gt = require("./google-translate");
 
 const ROOT = join(homedir, ".youka", "youtube");
 
@@ -26,6 +29,7 @@ export const MODE_CAPTIONS_WORD = "word";
 
 export const MODE_LYRICS = "lyrics";
 export const MODE_INFO = "info";
+export const MODE_LANG = "lang";
 
 export const CAPTIONS_MODES = [MODE_CAPTIONS_LINE, MODE_CAPTIONS_WORD];
 
@@ -51,7 +55,7 @@ export async function videos() {
     if (!(await exists(fpath))) {
       continue;
     }
-    const inf = await info(id);
+    const inf = await getInfo(id);
     if (inf) {
       items.push({
         id: id,
@@ -130,51 +134,6 @@ export async function saveBase64(youtubeID, obj, file) {
   return Promise.all(ps);
 }
 
-export async function saveVideoMode(youtubeID, mode) {
-  await new Promise((resolve, reject) => {
-    ffmpeg()
-      .on("error", (error) => reject(error))
-      .on("end", () => resolve())
-      .input(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_VIDEO))
-      .input(filepath(youtubeID, mode, FILE_AUDIO))
-      .addOptions(["-vcodec copy", "-acodec copy", "-map 0:0", "-map 1:0"])
-      .save(filepath(youtubeID, mode, FILE_VIDEO));
-  });
-}
-
-export async function saveLyrics(youtubeID, lyrics) {
-  return fs.promises.writeFile(
-    filepath(youtubeID, MODE_LYRICS, FILE_TEXT),
-    lyrics,
-    "utf-8"
-  );
-}
-
-export async function saveInfo(youtubeID, i) {
-  return fs.promises.writeFile(
-    filepath(youtubeID, MODE_INFO, FILE_JSON),
-    JSON.stringify(i, null, 2),
-    "utf-8"
-  );
-}
-
-export async function saveVideo(youtubeID, video) {
-  return fs.promises.writeFile(
-    filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_VIDEO),
-    video
-  );
-}
-
-export async function info(youtubeID) {
-  try {
-    const fpath = join(ROOT, youtubeID, "info.json");
-    const content = await fs.promises.readFile(fpath, "utf-8");
-    return JSON.parse(content);
-  } catch (e) {
-    return null;
-  }
-}
-
 export async function init(youtubeID) {
   await mkdirp(join(ROOT, youtubeID));
   await initFfmpeg();
@@ -206,18 +165,21 @@ export async function initFfmpeg() {
   ffmpeg.setFfmpegPath(FFMPEG_PATH);
 }
 
-export async function saveAudio(youtubeID, mode) {
-  return new Promise((resolve, reject) => {
+export async function getAudio(youtubeID, mode) {
+  const fp = filepath(youtubeID, mode, FILE_AUDIO);
+  if (await exists(fp)) {
+    return fs.promises.readFile(fp);
+  }
+
+  await new Promise((resolve, reject) => {
     ffmpeg(filepath(youtubeID, mode, FILE_VIDEO))
       .on("error", (error) => reject(error))
       .on("end", () => resolve())
       .addOptions(["-map 0:a", "-c copy"])
-      .save(filepath(youtubeID, mode, FILE_AUDIO));
+      .save(fp);
   });
-}
 
-export async function getAudio(youtubeID, mode) {
-  return fs.promises.readFile(filepath(youtubeID, mode, FILE_AUDIO));
+  return fs.promises.readFile(fp);
 }
 
 export async function getVideo(youtubeID, mode) {
@@ -225,5 +187,70 @@ export async function getVideo(youtubeID, mode) {
   if (await exists(fp)) {
     return fs.promises.readFile(fp);
   }
-  return youtube.download(youtubeID);
+
+  if (mode === MODE_MEDIA_ORIGINAL) {
+    const video = await youtube.download(youtubeID);
+    await fs.promises.writeFile(fp, video);
+    return video;
+  }
+
+  await new Promise((resolve, reject) => {
+    ffmpeg()
+      .on("error", (error) => reject(error))
+      .on("end", () => resolve())
+      .input(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_VIDEO))
+      .input(filepath(youtubeID, mode, FILE_AUDIO))
+      .addOptions(["-vcodec copy", "-acodec copy", "-map 0:0", "-map 1:0"])
+      .save(fp);
+  });
+
+  return fs.promises.readFile(fp);
+}
+
+export async function getLyrics(youtubeID, title) {
+  const fp = filepath(youtubeID, MODE_LYRICS, FILE_TEXT);
+  if (await exists(fp)) {
+    return fs.promises.readFile(fp);
+  }
+  const lyrics = (await lyricsFinder(title)) || "";
+  await fs.promises.writeFile(fp, lyrics, "utf8");
+  return lyrics;
+}
+
+export async function getInfo(youtubeID) {
+  const fp = filepath(youtubeID, MODE_INFO, FILE_JSON);
+  if (await exists(fp)) {
+    return JSON.parse(await fs.promises.readFile(fp));
+  }
+  const info = (await youtube.info(youtubeID)) || {};
+  await fs.promises.writeFile(fp, JSON.stringify(info, null, 2), "utf8");
+  return info;
+}
+
+export async function getLanguage(youtubeID, s) {
+  const fp = filepath(youtubeID, MODE_LANG, FILE_TEXT);
+  if (await exists(fp)) {
+    return fs.promises.readFile(fp);
+  }
+  const lang = await gt.language(s);
+  await fs.promises.writeFile(fp, lang);
+  return lang;
+}
+
+export async function getSplitAlign(
+  youtubeID,
+  aaudio,
+  lyrics,
+  language,
+  upload
+) {
+  const { audio, captions } = await api.getSplitAlign(
+    youtubeID,
+    aaudio,
+    lyrics,
+    language,
+    upload
+  );
+  await saveBase64(youtubeID, audio, FILE_AUDIO);
+  await saveBase64(youtubeID, captions, FILE_CAPTIONS);
 }

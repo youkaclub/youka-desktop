@@ -1,7 +1,13 @@
 const needle = require("needle");
 const config = require("../config");
 
-export async function getSplitAlign(youtubeID, audio, lyrics, language) {
+export async function getSplitAlign(
+  youtubeID,
+  audio,
+  lyrics,
+  language,
+  upload
+) {
   const url = `${config.api}/split-align`;
   let data = {};
 
@@ -11,7 +17,7 @@ export async function getSplitAlign(youtubeID, audio, lyrics, language) {
       filename: "audio",
       content_type: "application/octet-stream",
     };
-  } else if (youtubeID) {
+  } else if (!upload && youtubeID) {
     data["youtube-id"] = youtubeID;
   } else {
     throw new Error("audio and youtube-id is missing");
@@ -40,5 +46,5 @@ export async function getSplitAlign(youtubeID, audio, lyrics, language) {
     throw new Error("split failed");
   }
 
-  return { audio: response.body.audio, captions: response.body.captions };
+  return response.body;
 }
