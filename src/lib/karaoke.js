@@ -10,6 +10,7 @@ async function generate(youtubeID, title, onStatusChanged, upload) {
     return fn;
   }
 
+  onStatusChanged("Initializing");
   await library.init(youtubeID);
 
   let getSplitAlignDeps;
@@ -22,7 +23,7 @@ async function generate(youtubeID, title, onStatusChanged, upload) {
   const graph = new AsyncGraph()
     .addNode({
       id: "getLyrics",
-      run: () => run("Search for lyrics", library.getLyrics(youtubeID, title)),
+      run: () => run("Searching lyrics", library.getLyrics(youtubeID, title)),
     })
     .addNode({
       id: "getInfo",
@@ -32,7 +33,7 @@ async function generate(youtubeID, title, onStatusChanged, upload) {
       id: "getOriginalVideo",
       run: () =>
         run(
-          "Download video",
+          "Downloading video",
           library.getVideo(youtubeID, library.MODE_MEDIA_ORIGINAL)
         ),
     })
@@ -50,7 +51,7 @@ async function generate(youtubeID, title, onStatusChanged, upload) {
       id: "getSplitAlign",
       run: ({ getOriginalAudio, getLyrics, getLanguage }) =>
         run(
-          "Separate instruments and vocals",
+          "Separating instruments and vocals",
           library.getSplitAlign(
             youtubeID,
             getOriginalAudio,
