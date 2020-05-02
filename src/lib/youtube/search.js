@@ -1,3 +1,4 @@
+const rollbar = require("../rollbar");
 const utils = require("./utils");
 
 module.exports = async function (query) {
@@ -9,6 +10,13 @@ module.exports = async function (query) {
   const results = [];
   obj.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents.map(
     (contents) => {
+      if (!contents.itemSectionRenderer) {
+        rollbar.warning(
+          "youtube initial data",
+          JSON.stringify(initialData, null, 2)
+        );
+        return null;
+      }
       contents.itemSectionRenderer.contents.map((i) => {
         const item = i.videoRenderer;
         if (!item) return null;
