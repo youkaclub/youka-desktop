@@ -1,20 +1,28 @@
 const rollbar = require("../rollbar");
 const utils = require("./utils");
 
+function report(url, initialData) {
+  rollbar.warning(
+    "youtube initial data",
+    url,
+    JSON.stringify(initialData, null, 2)
+  );
+}
+
 module.exports = async function (query) {
   const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(
     query
   )}`;
   const obj = await utils.initialData(url);
-  if (!obj) return [];
+  if (!obj) {
+    report(url, obj);
+    return [];
+  }
   const results = [];
   obj.contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents.map(
     (contents) => {
       if (!contents.itemSectionRenderer) {
-        rollbar.warning(
-          "youtube initial data",
-          JSON.stringify(initialData, null, 2)
-        );
+        report(url, obj);
         return null;
       }
       contents.itemSectionRenderer.contents.map((i) => {
@@ -50,5 +58,10 @@ module.exports = async function (query) {
       return null;
     }
   );
+
+  if (!results.length) {
+    report(url, obj);
+  }
+
   return utils.cleanResults(results);
 };
