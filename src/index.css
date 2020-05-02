@@ -40,7 +40,9 @@ a:hover {
 }
 
 .captions-next-line,
+.captions-wait-line,
 .captions-after-word,
+.captions-wait-word,
 .captions-before-word {
   color: #ccc;
   font-weight: bold;
