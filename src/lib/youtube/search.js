@@ -14,7 +14,7 @@ module.exports = async function (query) {
     query
   )}`;
   const obj = await utils.initialData(url);
-  if (!obj) {
+  if (!obj || !obj.contents || !obj.contents.twoColumnSearchResultsRenderer) {
     report(url, obj);
     return [];
   }
