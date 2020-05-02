@@ -45,7 +45,6 @@ async function generate(youtubeID, title, onStatusChanged, upload) {
     .addNode({
       id: "getOriginalAudio",
       run: () => library.getAudio(youtubeID, library.MODE_MEDIA_ORIGINAL),
-      dependencies: ["getOriginalVideo"],
     })
     .addNode({
       id: "getSplitAlign",

@@ -171,15 +171,11 @@ export async function getAudio(youtubeID, mode) {
     return fs.promises.readFile(fp);
   }
 
-  await new Promise((resolve, reject) => {
-    ffmpeg(filepath(youtubeID, mode, FILE_VIDEO))
-      .on("error", (error) => reject(error))
-      .on("end", () => resolve())
-      .addOptions(["-map 0:a", "-c copy"])
-      .save(fp);
-  });
-
-  return fs.promises.readFile(fp);
+  if (mode === MODE_MEDIA_ORIGINAL) {
+    const audio = await youtube.download(youtubeID, { quality: 140 });
+    await fs.promises.writeFile(fp, audio);
+    return audio;
+  }
 }
 
 export async function getVideo(youtubeID, mode) {
@@ -189,7 +185,7 @@ export async function getVideo(youtubeID, mode) {
   }
 
   if (mode === MODE_MEDIA_ORIGINAL) {
-    const video = await youtube.download(youtubeID);
+    const video = await youtube.download(youtubeID, { quality: 18 });
     await fs.promises.writeFile(fp, video);
     return video;
   }
