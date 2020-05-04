@@ -2,11 +2,10 @@ const rollbar = require("../rollbar");
 const utils = require("./utils");
 
 function report(url, initialData) {
-  rollbar.warning(
-    "youtube initial data",
-    url,
-    JSON.stringify(initialData, null, 2)
-  );
+  rollbar.warning("youtube initial data", {
+    url: url,
+    json: JSON.stringify(initialData, null, 2),
+  });
 }
 
 module.exports = async function (query) {
