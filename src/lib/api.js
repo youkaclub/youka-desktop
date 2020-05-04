@@ -5,7 +5,7 @@ const config = require("../config");
 export async function getSplitAlign(youtubeID) {
   const url = `${config.api}/split-align-queue-result/${youtubeID}`;
 
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 50; i++) {
     const response = await rp(url, { json: true });
     if (response && response.audio) {
       return { audio: response.audio, captions: response.captions };

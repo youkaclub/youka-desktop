@@ -235,13 +235,17 @@ export async function getInfo(youtubeID) {
 }
 
 export async function getLanguage(youtubeID, s) {
-  const fp = filepath(youtubeID, MODE_LANG, FILE_TEXT);
-  if (await exists(fp)) {
-    return fs.promises.readFile(fp, "utf8");
+  try {
+    const fp = filepath(youtubeID, MODE_LANG, FILE_TEXT);
+    if (await exists(fp)) {
+      return fs.promises.readFile(fp, "utf8");
+    }
+    const lang = await gt.language(s);
+    await fs.promises.writeFile(fp, lang);
+    return lang;
+  } catch (e) {
+    return null;
   }
-  const lang = await gt.language(s);
-  await fs.promises.writeFile(fp, lang);
-  return lang;
 }
 
 export async function saveSplitAlign(youtubeID, audio, captions) {

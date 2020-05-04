@@ -99,8 +99,11 @@ export default function WatchPage() {
         setVideoModes(files.videos);
         setCaptionsModes(files.captions);
         const currVideo = defaultVideo;
+        const lang = await library.getLanguage(youtubeID);
         let currCaptions;
-        if (library.MODE_CAPTIONS_LINE in files.captions) {
+        if (library.MODE_CAPTIONS_WORD in files.captions && lang === "en") {
+          currCaptions = library.MODE_CAPTIONS_WORD;
+        } else if (library.MODE_CAPTIONS_LINE in files.captions) {
           currCaptions = library.MODE_CAPTIONS_LINE;
         } else if (library.MODE_CAPTIONS_WORD in files.captions) {
           currCaptions = library.MODE_CAPTIONS_WORD;
