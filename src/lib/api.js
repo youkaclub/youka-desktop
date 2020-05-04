@@ -1,50 +1,49 @@
 const needle = require("needle");
+const rp = require("request-promise");
 const config = require("../config");
 
-export async function getSplitAlign(
-  youtubeID,
-  audio,
-  lyrics,
-  language,
-  upload
-) {
-  const url = `${config.api}/split-align`;
+export async function getSplitAlign(youtubeID) {
+  const url = `${config.api}/split-align-queue-result/${youtubeID}`;
+
+  for (let i = 0; i < 30; i++) {
+    const { audio, captions } = await rp(url, { json: true });
+    if (audio) {
+      return { audio, captions };
+    }
+    await new Promise((r) => setTimeout(r, 10000));
+  }
+  throw new Error("Server timeout");
+}
+
+export async function postSplitAlign(youtubeID, audio, lyrics, language) {
+  if (!youtubeID) throw new Error("youtubeID is empty");
+  if (!audio) throw new Error("audio is empty");
+
+  const url = `${config.api}/split-align-queue/${youtubeID}`;
+
   let data = {};
 
-  if (audio) {
-    data.audio = {
-      buffer: audio,
-      filename: "audio",
-      content_type: "application/octet-stream",
-    };
-  } else if (!upload && youtubeID) {
-    data["youtube-id"] = youtubeID;
-  } else {
-    throw new Error("audio and youtube-id is missing");
-  }
+  data.audio = {
+    buffer: audio,
+    filename: "audio",
+    content_type: "application/octet-stream",
+  };
 
   if (lyrics) {
+    data.lang = language;
     data.transcript = {
       buffer: Buffer.from(lyrics, "utf8"),
       filename: "transcript",
       content_type: "application/octet-stream",
     };
   }
-  if (language) {
-    data["lang"] = language;
-  }
 
   const response = await needle("post", url, data, {
     multipart: true,
     user_agent: "Youka",
   });
-  if (response.statusCode !== 200) {
-    const message = response.body.message || "split failed";
-    throw new Error(message);
-  }
-  if (!response.body.audio && !response.body.captions) {
-    throw new Error("split failed");
-  }
 
-  return response.body;
+  if (response.statusCode !== 204) {
+    throw new Error("Files uploading failed");
+  }
 }

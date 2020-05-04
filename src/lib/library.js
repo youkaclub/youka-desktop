@@ -6,7 +6,6 @@ const ffbinaries = require("ffbinaries");
 const mkdirp = require("mkdirp");
 const retry = require("promise.retry");
 const lyricsFinder = require("./lyrics");
-const api = require("./api");
 const youtube = require("./youtube");
 const gt = require("./google-translate");
 
@@ -27,6 +26,7 @@ export const MODE_MEDIA_VOCALS = "vocals";
 
 export const MODE_CAPTIONS_LINE = "line";
 export const MODE_CAPTIONS_WORD = "word";
+export const MODE_CAPTIONS_OFF = "word";
 
 export const MODE_LYRICS = "lyrics";
 export const MODE_INFO = "info";
@@ -237,27 +237,14 @@ export async function getInfo(youtubeID) {
 export async function getLanguage(youtubeID, s) {
   const fp = filepath(youtubeID, MODE_LANG, FILE_TEXT);
   if (await exists(fp)) {
-    return fs.promises.readFile(fp);
+    return fs.promises.readFile(fp, "utf8");
   }
   const lang = await gt.language(s);
   await fs.promises.writeFile(fp, lang);
   return lang;
 }
 
-export async function getSplitAlign(
-  youtubeID,
-  aaudio,
-  lyrics,
-  language,
-  upload
-) {
-  const { audio, captions } = await api.getSplitAlign(
-    youtubeID,
-    aaudio,
-    lyrics,
-    language,
-    upload
-  );
+export async function saveSplitAlign(youtubeID, audio, captions) {
   await saveBase64(youtubeID, audio, FILE_AUDIO);
   await saveBase64(youtubeID, captions, FILE_CAPTIONS);
 }

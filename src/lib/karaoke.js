@@ -1,8 +1,9 @@
 const debug = require("debug")("youka:desktop");
 const AsyncGraph = require("async-graph-resolver").AsyncGraph;
 const library = require("./library");
+const api = require("./api");
 
-async function generate(youtubeID, title, onStatusChanged, upload) {
+async function generate(youtubeID, title, onStatusChanged) {
   debug("youtube-id", youtubeID);
 
   async function run(status, fn) {
@@ -12,13 +13,6 @@ async function generate(youtubeID, title, onStatusChanged, upload) {
 
   onStatusChanged("Initializing");
   await library.init(youtubeID);
-
-  let getSplitAlignDeps;
-  if (upload) {
-    getSplitAlignDeps = ["getOriginalAudio", "getLyrics", "getLanguage"];
-  } else {
-    getSplitAlignDeps = ["getLyrics", "getLanguage"];
-  }
 
   const graph = new AsyncGraph()
     .addNode({
@@ -47,29 +41,44 @@ async function generate(youtubeID, title, onStatusChanged, upload) {
       run: () => library.getAudio(youtubeID, library.MODE_MEDIA_ORIGINAL),
     })
     .addNode({
-      id: "getSplitAlign",
+      id: "postSplitAlign",
       run: ({ getOriginalAudio, getLyrics, getLanguage }) =>
         run(
-          "Separating instruments and vocals",
-          library.getSplitAlign(
+          "Uploading files",
+          api.postSplitAlign(
             youtubeID,
             getOriginalAudio,
             getLyrics,
-            getLanguage,
-            upload
+            getLanguage
           )
         ),
-      dependencies: getSplitAlignDeps,
+      dependencies: ["getOriginalAudio", "getLyrics", "getLanguage"],
+    })
+    .addNode({
+      id: "getSplitAlign",
+      run: () =>
+        run("Server is processing your song", api.getSplitAlign(youtubeID)),
+      dependencies: ["postSplitAlign"],
+    })
+    .addNode({
+      id: "saveSplitAlign",
+      run: ({ getSplitAlign }) =>
+        library.saveSplitAlign(
+          youtubeID,
+          getSplitAlign.audio,
+          getSplitAlign.captions
+        ),
+      dependencies: ["getSplitAlign"],
     })
     .addNode({
       id: "getInstrumentsVideo",
       run: () => library.getVideo(youtubeID, library.MODE_MEDIA_INSTRUMENTS),
-      dependencies: ["getSplitAlign"],
+      dependencies: ["saveSplitAlign"],
     })
     .addNode({
       id: "getVocalsVideo",
       run: () => library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS),
-      dependencies: ["getSplitAlign"],
+      dependencies: ["saveSplitAlign"],
     });
 
   return graph.resolve();

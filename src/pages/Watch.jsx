@@ -19,12 +19,11 @@ export default function WatchPage() {
   const { id, title } = querystring.parse(location.search.slice(1));
 
   const defaultVideo = library.MODE_MEDIA_INSTRUMENTS;
-  const defaultCaptions = library.MODE_CAPTIONS_LINE;
 
   const [videoModes, setVideoModes] = useState({});
   const [captionsModes, setCaptionsModes] = useState({});
   const [videoMode, setVideoMode] = useState(defaultVideo);
-  const [captionsMode, setCaptionsMode] = useState(defaultCaptions);
+  const [captionsMode, setCaptionsMode] = useState();
   const [videoURL, setVideoURL] = useState();
   const [captionsURL, setCaptionsURL] = useState();
   const [error, setError] = useState();
@@ -93,34 +92,35 @@ export default function WatchPage() {
         let files = await library.files(id);
         if (!files) {
           debug("generate start", Date());
-          await karaoke.generate(id, title, handleStatusChanged, true);
+          await karaoke.generate(id, title, handleStatusChanged);
           debug("generate end", Date());
           files = await library.files(id);
         }
         setVideoModes(files.videos);
         setCaptionsModes(files.captions);
         const currVideo = defaultVideo;
-        const currCaptions = files.captions[defaultCaptions]
-          ? defaultCaptions
-          : "off";
+        let currCaptions;
+        if (library.MODE_CAPTIONS_LINE in files.captions) {
+          currCaptions = library.MODE_CAPTIONS_LINE;
+        } else if (library.MODE_CAPTIONS_WORD in files.captions) {
+          currCaptions = library.MODE_CAPTIONS_WORD;
+        } else {
+          currCaptions = library.MODE_CAPTIONS_OFF;
+          visitor.event("Click", "Report missing subtitles", id).send();
+        }
         setVideoMode(currVideo);
         setCaptionsMode(currCaptions);
         setVideoURL(files.videos[currVideo]);
         setCaptionsURL(files.captions[currCaptions]);
-
-        if (!files.captions[defaultCaptions]) {
-          visitor.event("Click", "Report missing subtitles", id).send();
-        }
         setProgress(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
-        setError(true);
+        setError(error.toString());
         setProgress(false);
         rollbar.error(error);
-        console.log(error);
       }
     })();
-  }, [id, title, defaultVideo, defaultCaptions]);
+  }, [id, title, defaultVideo]);
 
   if (!id) return null;
 
@@ -130,6 +130,7 @@ export default function WatchPage() {
         {error ? (
           <Message className="cursor-pointer" negative onClick={handleRetry}>
             <Message.Header>Ooops, some error occurred :(</Message.Header>
+            <div className="py-1">{error}</div>
             <div className="py-1">Click here to retry...</div>
           </Message>
         ) : null}
