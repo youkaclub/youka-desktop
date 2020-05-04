@@ -6,9 +6,9 @@ export async function getSplitAlign(youtubeID) {
   const url = `${config.api}/split-align-queue-result/${youtubeID}`;
 
   for (let i = 0; i < 30; i++) {
-    const { audio, captions } = await rp(url, { json: true });
-    if (audio) {
-      return { audio, captions };
+    const response = await rp(url, { json: true });
+    if (response && response.audio) {
+      return { audio: response.audio, captions: response.captions };
     }
     await new Promise((r) => setTimeout(r, 10000));
   }
