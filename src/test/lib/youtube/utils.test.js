@@ -1,8 +1,27 @@
 const youtube = require("../../../lib/youtube");
-
+const fs = require("fs");
 jest.mock("request-promise-native");
 
 describe("utils", () => {
+  it("parse initial data search results", async () => {
+    const initialData = JSON.parse(
+      await fs.promises.readFile(
+        "src/test/lib/youtube/assets/initial-data.json"
+      )
+    );
+    const results = youtube.utils.parseInitialDataSearchResults(initialData);
+    expect(results.length).toEqual(18);
+    expect(results[0]).toEqual(
+      expect.objectContaining({
+        id: expect.any(String),
+        title: expect.any(String),
+        image: expect.any(String),
+        minutes: expect.any(Number),
+        seconds: expect.any(Number),
+      })
+    );
+  });
+
   it("should return initial data", async () => {
     const url = "https://www.youtube.com/watch?v=D9AFMVMl9qE";
     const obj = await youtube.utils.initialData(url);
