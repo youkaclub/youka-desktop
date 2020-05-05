@@ -29,7 +29,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
   useEffect(() => {
     handlePlaylistChange(defaultPlaylist);
     // eslint-disable-next-line
-  }, []);
+  }, [youtubeID]);
 
   function handlePlaylistChange(pl) {
     visitor.event("Click", "Change Playlist", pl).send();
