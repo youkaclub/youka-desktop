@@ -8,6 +8,7 @@ const retry = require("promise.retry");
 const lyricsFinder = require("./lyrics");
 const youtube = require("./youtube");
 const gt = require("./google-translate");
+const rollbar = require("./rollbar");
 
 const ROOT = join(homedir, ".youka", "youtube");
 
@@ -221,6 +222,9 @@ export async function getLyrics(youtubeID, title) {
     return l;
   }
   const lyrics = await lyricsFinder(title);
+  if (!lyrics) {
+    rollbar.warning("missing lyrics", { youtubeID, title });
+  }
   await fs.promises.writeFile(fp, lyrics, "utf8");
 
   return lyrics;

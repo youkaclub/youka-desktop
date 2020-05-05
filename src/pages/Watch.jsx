@@ -132,7 +132,6 @@ export default function WatchPage() {
           currCaptions = library.MODE_CAPTIONS_FULL;
         } else {
           currCaptions = library.MODE_CAPTIONS_OFF;
-          visitor.event("Click", "Report missing subtitles", id).send();
         }
 
         setVideoMode(currVideo);
