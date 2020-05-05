@@ -26,7 +26,8 @@ export const MODE_MEDIA_VOCALS = "vocals";
 
 export const MODE_CAPTIONS_LINE = "line";
 export const MODE_CAPTIONS_WORD = "word";
-export const MODE_CAPTIONS_OFF = "word";
+export const MODE_CAPTIONS_FULL = "full";
+export const MODE_CAPTIONS_OFF = "off";
 
 export const MODE_LYRICS = "lyrics";
 export const MODE_INFO = "info";
@@ -118,8 +119,6 @@ export async function files(youtubeID) {
         break;
     }
   }
-
-  captions["off"] = null;
 
   return { videos, captions };
 }
@@ -217,10 +216,13 @@ export async function getVideo(youtubeID, mode) {
 export async function getLyrics(youtubeID, title) {
   const fp = filepath(youtubeID, MODE_LYRICS, FILE_TEXT);
   if (await exists(fp)) {
-    return fs.promises.readFile(fp);
+    const l = await fs.promises.readFile(fp, "utf8");
+    if (l.trim() === "") return null;
+    return l;
   }
-  const lyrics = (await lyricsFinder(title)) || "";
+  const lyrics = await lyricsFinder(title);
   await fs.promises.writeFile(fp, lyrics, "utf8");
+
   return lyrics;
 }
 

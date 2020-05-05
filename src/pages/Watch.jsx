@@ -29,18 +29,35 @@ export default function WatchPage() {
   const [error, setError] = useState();
   const [progress, setProgress] = useState(true);
   const [status, setStatus] = useState();
+  const [lyrics, setLyrics] = useState();
+  const [ddoptions, setddoptions] = useState([]);
+  const [ccoptions, setccoptions] = useState([]);
 
   function capitalize(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  const ddoptions = Object.keys(videoModes).map((mode, i) => {
-    return { key: i, text: capitalize(mode), value: mode };
-  });
+  useEffect(() => {
+    const tmpddoptions = Object.keys(videoModes).map((mode, i) => {
+      return { key: i, text: capitalize(mode), value: mode };
+    });
+    setddoptions(tmpddoptions);
 
-  const ccoptions = Object.keys(captionsModes).map((mode, i) => {
-    return { key: i, text: capitalize(mode), value: mode };
-  });
+    const tmpccoptions = Object.keys(captionsModes).map((mode, i) => {
+      return { key: i, text: capitalize(mode), value: mode };
+    });
+    if (lyrics) {
+      tmpccoptions.push({
+        text: capitalize(library.MODE_CAPTIONS_FULL),
+        value: library.MODE_CAPTIONS_FULL,
+      });
+    }
+    tmpccoptions.push({
+      text: capitalize(library.MODE_CAPTIONS_OFF),
+      value: library.MODE_CAPTIONS_OFF,
+    });
+    setccoptions(tmpccoptions);
+  }, [videoModes, captionsModes, lyrics]);
 
   function handleStatusChanged(s) {
     setStatus(s);
@@ -98,8 +115,12 @@ export default function WatchPage() {
         }
         setVideoModes(files.videos);
         setCaptionsModes(files.captions);
+
         const currVideo = defaultVideo;
         const lang = await library.getLanguage(id);
+        handleStatusChanged("Searching lyrics");
+        const lyr = await library.getLyrics(id, title);
+
         let currCaptions;
         if (library.MODE_CAPTIONS_WORD in files.captions && lang === "en") {
           currCaptions = library.MODE_CAPTIONS_WORD;
@@ -107,15 +128,19 @@ export default function WatchPage() {
           currCaptions = library.MODE_CAPTIONS_LINE;
         } else if (library.MODE_CAPTIONS_WORD in files.captions) {
           currCaptions = library.MODE_CAPTIONS_WORD;
+        } else if (lyr) {
+          currCaptions = library.MODE_CAPTIONS_FULL;
         } else {
           currCaptions = library.MODE_CAPTIONS_OFF;
           visitor.event("Click", "Report missing subtitles", id).send();
         }
+
         setVideoMode(currVideo);
         setCaptionsMode(currCaptions);
         setVideoURL(files.videos[currVideo]);
         setCaptionsURL(files.captions[currCaptions]);
         setProgress(false);
+        setLyrics(lyr);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
         setError(error.toString());
@@ -157,10 +182,7 @@ export default function WatchPage() {
                 captionsURL={captionsURL}
               />
             </div>
-            <div
-              className="flex flex-row justify-between p-1"
-              style={{ width: "60vw" }}
-            >
+            <div className="flex flex-row justify-between p-1">
               <div className="text-2xl leading-tight m-1">{title}</div>
             </div>
             <div className="flex flex-row w-full m-2 justify-center">
@@ -193,6 +215,18 @@ export default function WatchPage() {
                 </ReportButton>
               </div>
             </div>
+            {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
+              <div className="flex justify-center mx-4 p-2">
+                <div className="text-2xl leading-normal">
+                  {lyrics.split("\n").map((line, i) => (
+                    <div key={i}>
+                      {line}
+                      <br></br>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </div>
