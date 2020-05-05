@@ -13,7 +13,7 @@ module.exports = async function (query) {
     query
   )}`;
   const initialData = await utils.initialData(url);
-  const results = utils.parseInitialData(initialData);
+  const results = utils.parseInitialDataSearchResults(initialData);
   if (!results || !results.length) {
     report(query, initialData);
     return [];
