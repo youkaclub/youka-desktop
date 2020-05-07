@@ -5,12 +5,12 @@ const config = require("../config");
 export async function getSplitAlign(youtubeID) {
   const url = `${config.api}/split-align-queue-result/${youtubeID}`;
 
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 100; i++) {
     const response = await rp(url, { json: true });
     if (response && response.audio) {
       return { audio: response.audio, captions: response.captions };
     }
-    await new Promise((r) => setTimeout(r, 10000));
+    await new Promise((r) => setTimeout(r, 5000));
   }
   throw new Error("Server timeout");
 }
