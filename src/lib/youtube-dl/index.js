@@ -1,9 +1,6 @@
-const join = require("path").join;
-const homedir = require("os").homedir();
 const execa = require("execa");
 const install = require("./install");
-const BINARIES_PATH = join(homedir, ".youka", "binaries");
-const YOUTUBE_DL_PATH = join(BINARIES_PATH, "youtube-dl");
+const YOUTUBE_DL_PATH = require("../library").YOUTUBE_DL_PATH;
 
 module.exports = async function ytdl(args) {
   await install();
