@@ -4,7 +4,6 @@ const join = require("path").join;
 const ffmpeg = require("fluent-ffmpeg");
 const ffbinaries = require("ffbinaries");
 const mkdirp = require("mkdirp");
-const retry = require("promise.retry");
 const lyricsFinder = require("./lyrics");
 const youtube = require("./youtube");
 const gt = require("./google-translate");
@@ -173,12 +172,7 @@ export async function getAudio(youtubeID, mode) {
   }
 
   if (mode === MODE_MEDIA_ORIGINAL) {
-    const audio = await retry(
-      () => youtube.download(youtubeID, { quality: 140 }),
-      {
-        times: 3,
-      }
-    )();
+    const audio = await youtube.download(youtubeID, { quality: 140 });
     await fs.promises.writeFile(fp, audio);
     return audio;
   }
@@ -191,12 +185,7 @@ export async function getVideo(youtubeID, mode) {
   }
 
   if (mode === MODE_MEDIA_ORIGINAL) {
-    const video = await retry(
-      () => youtube.download(youtubeID, { quality: 18 }),
-      {
-        times: 3,
-      }
-    )();
+    const video = await youtube.download(youtubeID, { quality: 18 });
     await fs.promises.writeFile(fp, video);
     return video;
   }
