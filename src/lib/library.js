@@ -7,14 +7,13 @@ const mkdirp = require("mkdirp");
 const lyricsFinder = require("./lyrics");
 const gt = require("./google-translate");
 const rollbar = require("./rollbar");
+const youtube = require("./youtube");
 
 const ROOT = join(homedir, ".youka", "youtube");
 
 export const BINARIES_PATH = join(homedir, ".youka", "binaries");
 export const FFMPEG_PATH = join(BINARIES_PATH, "ffmpeg");
 export const YOUTUBE_DL_PATH = join(BINARIES_PATH, "youtube-dl");
-
-const youtube = require("./youtube");
 
 export const FILE_VIDEO = ".mp4";
 export const FILE_AUDIO = ".m4a";

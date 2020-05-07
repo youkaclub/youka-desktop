@@ -2,14 +2,23 @@ const debug = require("debug")("youka:youtube-dl");
 const os = require("os");
 const fs = require("fs");
 const rp = require("request-promise");
-const { YOUTUBE_DL_PATH, exists } = require("../library");
 const platform = os.platform();
+const YOUTUBE_DL_PATH = require("./").YOUTUBE_DL_PATH;
 
 const urls = {
   win32: "https://yt-dl.org/downloads/latest/youtube-dl.exe",
   darwin: "https://yt-dl.org/downloads/latest/youtube-dl",
   linux: "https://yt-dl.org/downloads/latest/youtube-dl",
 };
+
+async function exists(filepath) {
+  try {
+    await fs.promises.stat(filepath);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 
 async function shouldInstall() {
   if (!(await exists(YOUTUBE_DL_PATH))) return true;
