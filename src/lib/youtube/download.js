@@ -1,19 +1,28 @@
-const ytdl = require("ytdl-core");
+const fs = require("fs");
+const ytdl = require("../youtube-dl");
+const tmp = require("tmp-promise");
 
-module.exports = async function(youtubeID, options) {
-  const url = `https://www.youtube.com/watch?v=${youtubeID}`;
-  return new Promise((resolve, reject) => {
-    var buffers = [];
-    ytdl(url, options)
-      .on("data", buffer => {
-        buffers.push(buffer);
-      })
-      .on("error", error => {
-        return reject(error);
-      })
-      .on("finish", () => {
-        var buffer = Buffer.concat(buffers);
-        return resolve(buffer);
-      });
-  });
+async function downloadAudio(youtubeID) {
+  return download(youtubeID, ["-f", "140"]);
+}
+
+async function downloadVideo(youtubeID) {
+  return download(youtubeID, ["-f", "18"]);
+}
+
+async function download(youtubeID, args) {
+  args = args || [];
+  const filename = await tmp.tmpName();
+  args = args.concat(["--output", filename]);
+  args.push(`https://www.youtube.com/watch?v=${youtubeID}`);
+  await ytdl(args);
+  const file = await fs.promises.readFile(filename);
+  await fs.promises.unlink(filename);
+  return file;
+}
+
+module.exports = {
+  download,
+  downloadAudio,
+  downloadVideo,
 };

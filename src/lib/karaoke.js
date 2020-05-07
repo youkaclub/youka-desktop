@@ -78,12 +78,12 @@ async function generate(youtubeID, title, onStatusChanged) {
     .addNode({
       id: "getInstrumentsVideo",
       run: () => library.getVideo(youtubeID, library.MODE_MEDIA_INSTRUMENTS),
-      dependencies: ["saveSplitAlign"],
+      dependencies: ["getOriginalVideo", "saveSplitAlign"],
     })
     .addNode({
       id: "getVocalsVideo",
       run: () => library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS),
-      dependencies: ["saveSplitAlign"],
+      dependencies: ["getOriginalVideo", "saveSplitAlign"],
     });
 
   return graph.resolve();
