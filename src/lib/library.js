@@ -5,16 +5,14 @@ const ffmpeg = require("fluent-ffmpeg");
 const ffbinaries = require("ffbinaries");
 const mkdirp = require("mkdirp");
 const lyricsFinder = require("./lyrics");
+const youtube = require("./youtube");
 const gt = require("./google-translate");
 const rollbar = require("./rollbar");
 
 const ROOT = join(homedir, ".youka", "youtube");
 
-export const BINARIES_PATH = join(homedir, ".youka", "binaries");
-export const FFMPEG_PATH = join(BINARIES_PATH, "ffmpeg");
-export const YOUTUBE_DL_PATH = join(BINARIES_PATH, "youtube-dl");
-
-const youtube = require("./youtube");
+const BINARIES_PATH = join(homedir, ".youka", "binaries");
+const FFMPEG_PATH = join(BINARIES_PATH, "ffmpeg");
 
 export const FILE_VIDEO = ".mp4";
 export const FILE_AUDIO = ".m4a";
@@ -174,7 +172,7 @@ export async function getAudio(youtubeID, mode) {
   }
 
   if (mode === MODE_MEDIA_ORIGINAL) {
-    const audio = await youtube.downloadAudio(youtubeID);
+    const audio = await youtube.download(youtubeID, { quality: 140 });
     await fs.promises.writeFile(fp, audio);
     return audio;
   }
@@ -187,7 +185,7 @@ export async function getVideo(youtubeID, mode) {
   }
 
   if (mode === MODE_MEDIA_ORIGINAL) {
-    const video = await youtube.downloadVideo(youtubeID);
+    const video = await youtube.download(youtubeID, { quality: 18 });
     await fs.promises.writeFile(fp, video);
     return video;
   }
