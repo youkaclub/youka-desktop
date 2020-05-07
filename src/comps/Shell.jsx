@@ -147,7 +147,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
     }
   }
 
-  const debouncedSearch = debounce(doSearch, 500);
+  const debouncedSearch = debounce(doSearch, 1000);
 
   return (
     <div>
