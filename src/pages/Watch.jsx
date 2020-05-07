@@ -108,9 +108,12 @@ export default function WatchPage() {
         setProgress(true);
         let files = await library.files(id);
         if (!files) {
-          debug("generate start", Date());
+          const start = Date();
           await karaoke.generate(id, title, handleStatusChanged);
-          debug("generate end", Date());
+          const end = Date();
+          const diff = Math.abs((end - start) / 1000);
+          debug("generate time", diff);
+          visitor.event("Click", "Generate", id, diff).send();
           files = await library.files(id);
         }
         setVideoModes(files.videos);

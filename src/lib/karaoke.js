@@ -30,6 +30,7 @@ async function generate(youtubeID, title, onStatusChanged) {
           "Downloading video",
           library.getVideo(youtubeID, library.MODE_MEDIA_ORIGINAL)
         ),
+      dependencies: ["postSplitAlign"],
     })
     .addNode({
       id: "getLanguage",
@@ -38,7 +39,11 @@ async function generate(youtubeID, title, onStatusChanged) {
     })
     .addNode({
       id: "getOriginalAudio",
-      run: () => library.getAudio(youtubeID, library.MODE_MEDIA_ORIGINAL),
+      run: () =>
+        run(
+          "Downloading audio",
+          library.getAudio(youtubeID, library.MODE_MEDIA_ORIGINAL)
+        ),
     })
     .addNode({
       id: "postSplitAlign",
