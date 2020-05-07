@@ -1,9 +1,13 @@
 const debug = require("debug")("youka:youtube-dl");
 const os = require("os");
 const fs = require("fs");
+const join = require("path").join;
+const homedir = require("os").homedir();
 const rp = require("request-promise");
 const platform = os.platform();
-const YOUTUBE_DL_PATH = require("./").YOUTUBE_DL_PATH;
+
+const BINARIES_PATH = join(homedir, ".youka", "binaries");
+const YOUTUBE_DL_PATH = join(BINARIES_PATH, "youtube-dl");
 
 const urls = {
   win32: "https://yt-dl.org/downloads/latest/youtube-dl.exe",
@@ -20,15 +24,10 @@ async function exists(filepath) {
   }
 }
 
-async function shouldInstall() {
-  const ex = await exists(YOUTUBE_DL_PATH);
-  if (!ex) return true;
-  return false;
-}
-
 async function install() {
   try {
-    if (!(await shouldInstall())) return;
+    const ex = await exists(YOUTUBE_DL_PATH);
+    if (ex) return;
     const url = urls[platform];
     if (!url) throw new Error("unsupported platform");
     debug("install youtube-dl");
@@ -40,4 +39,7 @@ async function install() {
   }
 }
 
-module.exports = install;
+module.exports = {
+  install,
+  YOUTUBE_DL_PATH,
+};
