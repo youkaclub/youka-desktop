@@ -218,7 +218,7 @@ export async function getLyrics(youtubeID, title) {
   const fp = filepath(youtubeID, MODE_LYRICS, FILE_TEXT);
   if (await exists(fp)) {
     const l = await fs.promises.readFile(fp, "utf8");
-    if (l.trim() === "") return null;
+    if (l.trim() === "" || l === "undefined" || l === "null") return null;
     return l;
   }
   const lyrics = await lyricsFinder(title);
