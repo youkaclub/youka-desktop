@@ -13,7 +13,6 @@ const ROOT = join(homedir, ".youka", "youtube");
 
 export const BINARIES_PATH = join(homedir, ".youka", "binaries");
 export const FFMPEG_PATH = join(BINARIES_PATH, "ffmpeg");
-export const YOUTUBE_DL_PATH = join(BINARIES_PATH, "youtube-dl");
 
 export const FILE_VIDEO = ".mp4";
 export const FILE_AUDIO = ".m4a";
