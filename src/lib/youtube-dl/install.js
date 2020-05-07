@@ -21,11 +21,8 @@ async function exists(filepath) {
 }
 
 async function shouldInstall() {
-  if (!(await exists(YOUTUBE_DL_PATH))) return true;
-  const stat = await fs.promises.stat(YOUTUBE_DL_PATH);
-  const differentDays = Math.ceil((Date() - stat.mtime) / (1000 * 3600 * 24));
-  if (differentDays > 7) return true;
-
+  const ex = await exists(YOUTUBE_DL_PATH);
+  if (!ex) return true;
   return false;
 }
 

@@ -7,5 +7,9 @@ const YOUTUBE_DL_PATH = join(BINARIES_PATH, "youtube-dl");
 
 module.exports = async function ytdl(args) {
   await install();
-  await execa(YOUTUBE_DL_PATH, args);
+  try {
+    await execa(YOUTUBE_DL_PATH, args);
+  } catch (e) {
+    throw new Error("Download from YouTube failed");
+  }
 };
