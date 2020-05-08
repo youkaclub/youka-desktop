@@ -1,18 +1,16 @@
 const fs = require("fs");
-const homedir = require("os").homedir();
 const join = require("path").join;
-const ffmpeg = require("fluent-ffmpeg");
-const ffbinaries = require("ffbinaries");
 const mkdirp = require("mkdirp");
+const ffmpeg = require("fluent-ffmpeg");
+
 const lyricsFinder = require("./lyrics");
 const gt = require("./google-translate");
 const rollbar = require("./rollbar");
 const youtube = require("./youtube");
-
-const ROOT = join(homedir, ".youka", "youtube");
-
-export const BINARIES_PATH = join(homedir, ".youka", "binaries");
-export const FFMPEG_PATH = join(BINARIES_PATH, "ffmpeg");
+const youtubeDL = require("./youtube-dl");
+const ffmpegi = require("./ffmpeg");
+const { exists } = require("./utils");
+const { ROOT, FFMPEG_PATH } = require("./path");
 
 export const FILE_VIDEO = ".mp4";
 export const FILE_AUDIO = ".m4a";
@@ -68,15 +66,6 @@ export async function videos() {
   }
 
   return items;
-}
-
-export async function exists(filepath) {
-  try {
-    await fs.promises.stat(filepath);
-    return true;
-  } catch (e) {
-    return false;
-  }
 }
 
 export function filepath(youtubeID, mode, file) {
@@ -136,31 +125,7 @@ export async function saveBase64(youtubeID, obj, file) {
 
 export async function init(youtubeID) {
   await mkdirp(join(ROOT, youtubeID));
-  await initFfmpeg();
-}
-
-export async function ffmpegExists() {
-  return exists(FFMPEG_PATH);
-}
-
-export async function downloadFfpmeg() {
-  await mkdirp(BINARIES_PATH);
-  await new Promise((resolve, reject) => {
-    ffbinaries.downloadBinaries(
-      "ffmpeg",
-      { destination: BINARIES_PATH },
-      (err) => {
-        if (err) return reject(err);
-        resolve();
-      }
-    );
-  });
-}
-
-export async function initFfmpeg() {
-  if (!(await ffmpegExists())) {
-    await downloadFfpmeg();
-  }
+  await Promise.all([ffmpegi.install(), youtubeDL.install()]);
   process.env.FFMPEG_PATH = FFMPEG_PATH;
   ffmpeg.setFfmpegPath(FFMPEG_PATH);
 }

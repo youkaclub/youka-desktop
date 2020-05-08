@@ -1,6 +1,6 @@
 const fs = require("fs");
-const ytdl = require("../youtube-dl");
 const tmp = require("tmp-promise");
+const { ytdl } = require("../youtube-dl");
 
 async function downloadAudio(youtubeID) {
   return download(youtubeID, ["-f", "140"]);

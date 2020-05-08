@@ -1,34 +1,18 @@
 const debug = require("debug")("youka:youtube-dl");
 const os = require("os");
 const fs = require("fs");
-const join = require("path").join;
-const homedir = require("os").homedir();
+const execa = require("execa");
 const rp = require("request-promise");
-const platform = os.platform();
 
+const { YOUTUBE_DL_PATH } = require("./path");
+const { exists } = require("./utils");
+
+const platform = os.platform();
 const urls = {
   win32: "https://yt-dl.org/downloads/latest/youtube-dl.exe",
   darwin: "https://yt-dl.org/downloads/latest/youtube-dl",
   linux: "https://yt-dl.org/downloads/latest/youtube-dl",
 };
-
-const names = {
-  win32: "youtube-dl.exe",
-  darwin: "youtube-dl",
-  linux: "youtube-dl",
-};
-
-const BINARIES_PATH = join(homedir, ".youka", "binaries");
-const YOUTUBE_DL_PATH = join(BINARIES_PATH, names[platform]);
-
-async function exists(filepath) {
-  try {
-    await fs.promises.stat(filepath);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
 
 async function install() {
   try {
@@ -47,7 +31,15 @@ async function install() {
   }
 }
 
+async function ytdl(args) {
+  try {
+    await execa(YOUTUBE_DL_PATH, args);
+  } catch (e) {
+    throw new Error("Download from YouTube failed");
+  }
+}
+
 module.exports = {
+  ytdl,
   install,
-  YOUTUBE_DL_PATH,
 };
