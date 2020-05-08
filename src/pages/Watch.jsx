@@ -65,6 +65,7 @@ export default function WatchPage() {
 
   function handleClickClose() {
     setVideoURL(null);
+    visitor.event("Click", "Close Video", id).send();
   }
 
   function handleChangeVideo(e, data) {
