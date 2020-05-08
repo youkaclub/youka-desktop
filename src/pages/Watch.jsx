@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Message, Icon, Button, Dropdown } from "semantic-ui-react";
+import { Message, Icon, Dropdown } from "semantic-ui-react";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
@@ -9,7 +9,6 @@ import ReportButton from "../comps/ReportButton";
 import { usePageView } from "../lib/hooks";
 import { visitor } from "../lib/ua";
 import rollbar from "../lib/rollbar";
-const { shell } = require("electron");
 const querystring = require("querystring");
 const debug = require("debug")("youka:desktop");
 
@@ -62,12 +61,6 @@ export default function WatchPage() {
   function handleStatusChanged(s) {
     setStatus(s);
     debug(s);
-  }
-
-  function handleClickDownload() {
-    const fpath = library.filepath(id, videoMode, library.FILE_VIDEO);
-    shell.showItemInFolder(fpath);
-    visitor.event("Click", "Download", id).send();
   }
 
   function handleChangeVideo(e, data) {
@@ -189,11 +182,6 @@ export default function WatchPage() {
             </div>
             <div className="flex flex-row w-full m-2 justify-center">
               <div className="flex flex-row p-2 mx-4">
-                <Button
-                  icon="download"
-                  content="Download"
-                  onClick={handleClickDownload}
-                />
                 <Dropdown
                   button
                   text={" Audio: " + capitalize(videoMode)}
