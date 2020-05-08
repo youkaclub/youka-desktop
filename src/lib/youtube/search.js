@@ -1,3 +1,4 @@
+const ytdl = require("ytdl-core");
 const rollbar = require("../rollbar");
 const utils = require("./utils");
 
@@ -9,6 +10,17 @@ function report(query, initialData) {
 }
 
 module.exports = async function (query) {
+  if (!query || query.trim() === "") return [];
+
+  if (query.startsWith("http://") || query.startsWith("https://")) {
+    try {
+      const id = ytdl.getURLVideoID(query);
+      query = `https://www.youtube.com/watch?v=${id}`;
+    } catch (e) {
+      return [];
+    }
+  }
+
   const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(
     query
   )}`;
