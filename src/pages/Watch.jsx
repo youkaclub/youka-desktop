@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Message, Icon, Dropdown } from "semantic-ui-react";
+import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
@@ -61,6 +61,10 @@ export default function WatchPage() {
   function handleStatusChanged(s) {
     setStatus(s);
     debug(s);
+  }
+
+  function handleClickClose() {
+    setVideoURL(null);
   }
 
   function handleChangeVideo(e, data) {
@@ -182,6 +186,11 @@ export default function WatchPage() {
             </div>
             <div className="flex flex-row w-full m-2 justify-center">
               <div className="flex flex-row p-2 mx-4">
+                <Button
+                  icon="close"
+                  content="Close"
+                  onClick={handleClickClose}
+                />
                 <Dropdown
                   button
                   text={" Audio: " + capitalize(videoMode)}
