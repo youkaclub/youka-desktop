@@ -4,6 +4,7 @@ const gt = require("../google-translate");
 const providers = [
   require("./providers/google"),
   require("./providers/musixmatch"),
+  require("./providers/shazam"),
   require("./providers/genius"),
   require("./providers/lyricsmint"),
   require("./providers/gasazip"),
