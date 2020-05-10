@@ -6,14 +6,15 @@ const AdmZip = require("adm-zip");
 const { exists } = require("./utils");
 const { FFMPEG_PATH } = require("./path");
 const rollbar = require("./rollbar");
+const arch = require('arch')
 
 const FFMPEG_ZIP_PATH = `${FFMPEG_PATH}.zip`;
-const platform = `${os.platform()}-${os.arch()}`;
+const platform = `${os.platform()}-${arch()}`;
 
 const urls = {
-  "win32-x32": "https://static.youka.club/binaries/ffmpeg-4.2.1-win-32.zip",
+  "win32-x86": "https://static.youka.club/binaries/ffmpeg-4.2.1-win-32.zip",
   "win32-x64": "https://static.youka.club/binaries/ffmpeg-4.2.1-win-64.zip",
-  "linux-x32": "https://static.youka.club/binaries/ffmpeg-4.2.1-linux-32.zip",
+  "linux-x86": "https://static.youka.club/binaries/ffmpeg-4.2.1-linux-32.zip",
   "linux-x64": "https://static.youka.club/binaries/ffmpeg-4.2.1-linux-64.zip",
   "darwin-x64": "https://static.youka.club/binaries/ffmpeg-4.2.1-osx-64.zip",
 };
