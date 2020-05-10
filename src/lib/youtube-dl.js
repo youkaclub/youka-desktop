@@ -3,6 +3,7 @@ const os = require("os");
 const fs = require("fs");
 const execa = require("execa");
 const rp = require("request-promise");
+const rollbar = require("./rollbar");
 
 const { YOUTUBE_DL_PATH } = require("./path");
 const { exists } = require("./utils");
@@ -27,6 +28,7 @@ async function install() {
       await fs.promises.chmod(YOUTUBE_DL_PATH, "755");
     }
   } catch (e) {
+    rollbar.error(e);
     throw new Error("Install youtube-dl failed");
   }
 }
@@ -35,6 +37,7 @@ async function ytdl(args) {
   try {
     await execa(YOUTUBE_DL_PATH, args);
   } catch (e) {
+    rollbar.error(e);
     throw new Error("Download from YouTube failed");
   }
 }

@@ -1,6 +1,7 @@
 const ffbinaries = require("ffbinaries");
 const { exists } = require("./utils");
 const { BINARIES_PATH, FFMPEG_PATH } = require("./path");
+const rollbar = require("./rollbar");
 
 async function install() {
   try {
@@ -17,6 +18,7 @@ async function install() {
       );
     });
   } catch (e) {
+    rollbar.error(e);
     throw new Error("Install FFmpeg failed");
   }
 }
