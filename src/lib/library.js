@@ -10,7 +10,7 @@ const youtube = require("./youtube");
 const youtubeDL = require("./youtube-dl");
 const ffmpegi = require("./ffmpeg");
 const { exists } = require("./utils");
-const { ROOT, FFMPEG_PATH } = require("./path");
+const { ROOT, FFMPEG_PATH, BINARIES_PATH } = require("./path");
 
 export const FILE_VIDEO = ".mp4";
 export const FILE_AUDIO = ".m4a";
@@ -125,6 +125,7 @@ export async function saveBase64(youtubeID, obj, file) {
 
 export async function init(youtubeID) {
   await mkdirp(join(ROOT, youtubeID));
+  await mkdirp(BINARIES_PATH);
   await Promise.all([ffmpegi.install(), youtubeDL.install()]);
   process.env.FFMPEG_PATH = FFMPEG_PATH;
   ffmpeg.setFfmpegPath(FFMPEG_PATH);
