@@ -30,10 +30,15 @@ async function install() {
     const zipfile = await rp({ url, encoding: null });
     await fs.promises.writeFile(FFMPEG_ZIP_PATH, zipfile);
     const zip = new AdmZip(FFMPEG_ZIP_PATH);
-    const entries = zip.getEntries();
-    if (!entries || entries.length !== 1)
-      throw new Error("Malformed ffmpeg zip file");
-    const buffer = zip.readFile(entries[0]);
+    let entryName
+    if (platform.startsWith("win32")) {
+      entryName = "ffmpeg.exe"
+    } else {
+      entryName = "ffmpeg"
+    }
+    const entry = zip.getEntry(entryName);
+    if (!entry) throw new Error("Malformed ffmpeg zip file")
+    const buffer = zip.readFile(entry);
     await fs.promises.writeFile(FFMPEG_PATH, buffer);
     await fs.promises.unlink(FFMPEG_ZIP_PATH);
     if (platform.startsWith("linux") || platform.startsWith("darwin")) {
