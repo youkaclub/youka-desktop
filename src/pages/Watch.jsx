@@ -65,17 +65,17 @@ export default function WatchPage() {
 
   function handleClickClose() {
     setVideoURL(null);
-    visitor.event("Click", "Close Video", id).send();
+    visitor.event("Click", "Close Video").send();
   }
 
   function handleChangeVideo(e, data) {
     changeVideo(data.value);
-    visitor.event("Click", "Change Video", id).send();
+    visitor.event("Click", "Change Video", data.value).send();
   }
 
   function handleChangeCaptions(e, data) {
     changeCaptions(data.value);
-    visitor.event("Click", "Change Captions", id).send();
+    visitor.event("Click", "Change Captions", data.value).send();
   }
 
   function changeVideo(mode, modes) {
@@ -106,12 +106,12 @@ export default function WatchPage() {
         setProgress(true);
         let files = await library.files(id);
         if (!files) {
-          const start = Date();
+          const start = new Date();
           await karaoke.generate(id, title, handleStatusChanged);
-          const end = Date();
-          const diff = Math.abs((end - start) / 1000);
+          const end = new Date();
+          const diff = Math.abs((end.getTime() - start.getTime()) / 1000);
           debug("generate time", diff);
-          visitor.event("Click", "Generate", id, diff).send();
+          visitor.event("Click", "Generate", "Karaoke", diff).send();
           files = await library.files(id);
         }
         setVideoModes(files.videos);
