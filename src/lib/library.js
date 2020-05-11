@@ -205,6 +205,7 @@ export async function getLanguage(youtubeID, s) {
     await fs.promises.writeFile(fp, lang);
     return lang;
   } catch (e) {
+    rollbar.error(e)
     return null;
   }
 }

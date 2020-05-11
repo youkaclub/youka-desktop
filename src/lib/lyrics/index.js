@@ -1,5 +1,6 @@
 const debug = require("debug")("youka:lyrics");
 const gt = require("../google-translate");
+const rollbar = require('../rollbar')
 
 const providers = [
   require("./providers/google"),
@@ -40,7 +41,8 @@ async function search(query) {
         debug(lyrics);
         return lyrics;
       }
-    } catch (error) {
+    } catch (e) {
+      rollbar.error(e)
       continue;
     }
   }
