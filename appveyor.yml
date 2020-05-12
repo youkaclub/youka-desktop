@@ -1,3 +1,5 @@
+build: off
+
 platform:
   - x86
   - x64
