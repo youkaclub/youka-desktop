@@ -1,30 +1,24 @@
 const cheerio = require("cheerio");
 const rp = require("./request-promise");
-const utils = require("./utils");
+const google = require("./google_site");
 
 const name = "uta-net.com";
 const supported = (lang) => lang === "ja";
-
-async function search(query) {
-  const site = "https://www.uta-net.com/song/";
-  const url = await utils.google_search_site(query, site);
-  if (!url) return;
-  return lyrics(url);
-}
+const site = "https://www.uta-net.com/song/";
+google.register(name, site);
+const search = async (query) => google.search(name, query);
 
 async function lyrics(url) {
   const html = await rp(url);
   const $ = cheerio.load(html);
-  const lyricsHtml = $("#kashi_area").html();
-  const lyrics = lyricsHtml
-    .split("<br>")
-    .filter((l) => l !== "")
-    .join("\n");
-  return lyrics;
+  $("#kashi_area").find("br").replaceWith("\n");
+  const l = $("#kashi_area").text().trim();
+  return l;
 }
 
 module.exports = {
   name,
-  supported,
   search,
+  supported,
+  lyrics,
 };

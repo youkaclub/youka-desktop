@@ -16,8 +16,9 @@ async function parseXML(xml) {
   });
 }
 
+const jar = rp.jar();
+
 async function search(query) {
-  const jar = rp.jar();
   const xml = await rp(
     `http://ttlyrics.com/api/search?title=${encodeURIComponent(query)}`,
     {
@@ -33,13 +34,15 @@ async function search(query) {
   const match = stringSimilarity.findBestMatch(query, strings);
   if (match.bestMatch.rating < 0.4) return;
   const id = results[match.bestMatchIndex].id;
-  const text = await rp(`http://ttlyrics.com/api/download?id=${id}`, { jar });
-  return lyrics(text);
+  const url = `http://ttlyrics.com/api/download?id=${id}`;
+  return url;
 }
 
-function lyrics(text) {
+async function lyrics(url) {
+  const text = await rp(url, { jar });
   const lines = [];
-  text.split("\n").filter((line) => {
+  text.split("\n").filter((line, i) => {
+    if (i < 3 && line.includes(":")) return null;
     const arr = line.match(re);
     if (!arr || arr.length !== 2) return null;
     lines.push(arr[1].split("     ")[0]);
@@ -52,4 +55,5 @@ module.exports = {
   name,
   supported,
   search,
+  lyrics,
 };

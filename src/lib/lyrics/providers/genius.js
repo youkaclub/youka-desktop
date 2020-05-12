@@ -12,15 +12,21 @@ const headers = {
 };
 
 async function search(query) {
-  try {
-    const searchResp = await searchMulti(query, 3);
-    const songID = songFromSearch(searchResp);
-    const songResp = await songs(songID);
-    const lyrics = cleanLyrics(lyricsFromSong(songResp));
-    return lyrics;
-  } catch (error) {
-    return null;
-  }
+  const searchResp = await searchMulti(query, 3);
+  const songID = songFromSearch(searchResp);
+  const url = `https://api.genius.com/songs/${songID}?text_format=plain`;
+  return url;
+}
+
+async function lyrics(url) {
+  const options = {
+    uri: url,
+    headers,
+    json: true,
+  };
+  const songResp = await rp(options);
+  const lyrics = cleanLyrics(lyricsFromSong(songResp));
+  return lyrics;
 }
 
 async function searchMulti(query, perPage) {
@@ -28,15 +34,6 @@ async function searchMulti(query, perPage) {
     uri: `https://api.genius.com/search/multi?q=${encodeURIComponent(
       query
     )}&per_page=${perPage}`,
-    headers,
-    json: true,
-  };
-  return rp(options);
-}
-
-async function songs(songID) {
-  const options = {
-    uri: `https://api.genius.com/songs/${songID}?text_format=plain`,
     headers,
     json: true,
   };
@@ -59,7 +56,6 @@ function cleanLyrics(lyrics) {
     line = line.trim();
     if (line.startsWith("[") && line.endsWith("]")) return null;
     if (line.startsWith("{") && line.endsWith("}")) return null;
-    if (line === "") return null;
     lines.push(line);
     return null;
   });
@@ -71,4 +67,5 @@ module.exports = {
   name,
   supported,
   search,
+  lyrics,
 };

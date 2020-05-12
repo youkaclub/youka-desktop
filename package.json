@@ -49,6 +49,8 @@
     "execa": "^4.0.0",
     "fluent-ffmpeg": "^2.1.2",
     "franc": "^5.0.0",
+    "he": "^1.2.0",
+    "iconv-lite": "git+https://github.com/youkaclub/iconv-lite.git",
     "jest": "^24.9.0",
     "lodash": "^4.17.15",
     "mkdirp": "^1.0.3",

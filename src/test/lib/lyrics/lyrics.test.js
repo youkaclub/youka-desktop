@@ -1,22 +1,9 @@
 const search = require("../../../lib/lyrics");
 
-const queries = [
-  "คึดฮอดกอดบ่ได้ - หนูนา หนึ่งธิดา",
-  "如果有如果-鄧福如",
-  "Zhou Shen - Big Fish",
-  "ellie goulding your song",
-  "임영웅 - 이제 나만 믿어요",
-  "Xxl Irione - UNA CERVEZA",
-  "Jassa Dhillon Surma",
-  "あいみょん - マリーゴールド",
-  "Coverheads - No te vayas mal",
-  "คบไม่ได้ - เต้น นรารักษ์",
-  "郁可唯 Yisa Yu",
-];
 
 describe("search", () => {
-  it.each(queries)("%s", async (query) => {
-    jest.setTimeout(100000);
+  it("should return lyrics", async () => {
+    const query = "ellie goulding your song",
     const lyr = await search(query);
     expect(lyr).toBeTruthy();
     expect(lyr.length).toBeGreaterThan(100);

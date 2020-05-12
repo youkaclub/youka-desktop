@@ -1,29 +1,25 @@
 const cheerio = require("cheerio");
 const rp = require("./request-promise");
-const utils = require("./utils");
+const google = require("./google_site");
 
 const name = "lyricsmint.com";
 const supported = (lang) => ["hi", "pa", "en"].includes(lang);
+const site = "https://www.lyricsmint.com/";
+google.register(name, site);
 
-async function search(query) {
-  const site = "https://www.lyricsmint.com/";
-  const url = await utils.google_search_site(query, site);
-  if (!url) return;
-  return lyrics(url);
-}
+const search = async (query) => google.search(name, query);
 
 async function lyrics(url) {
   const html = await rp(url);
   const $ = cheerio.load(html);
-  const lyricsHTML = $(".container .text-base").html();
-  const parts = lyricsHTML.split("</span>");
-  if (parts.length !== 2) return;
-  const lines = parts[1].split("<br>").filter((line) => line !== "");
-  return lines.join("\n");
+  $("div.pt-4.pb-2 > .text-base").find("br").replaceWith("\n");
+  const l = $("div.pt-4.pb-2 > .text-base").text().trim();
+  return l;
 }
 
 module.exports = {
   name,
-  supported,
   search,
+  supported,
+  lyrics,
 };

@@ -1,30 +1,27 @@
+const iconv = require("iconv-lite");
 const cheerio = require("cheerio");
 const rp = require("./request-promise");
-const utils = require("./utils");
+const google = require("./google_site");
 
 const name = "utamap.com";
 const supported = (lang) => lang === "ja";
+const site = "http://www.utamap.com/showkasi.php";
+google.register(name, site);
 
-async function search(query) {
-  const site = "http://www.utamap.com/showkasi.php";
-  const url = await utils.google_search_site(query, site);
-  if (!url) return;
-  return lyrics(url);
-}
+const search = async (query) => google.search(name, query);
 
 async function lyrics(url) {
-  const html = await rp(url);
-  const $ = cheerio.load(html);
-  const l = $(".kasi_honbun")
-    .html()
-    .split("<br>")
-    .filter((l) => l !== "" && !l.includes("<!--"))
-    .join("\n");
+  const html = await rp(url, { encoding: null });
+  const ehtml = iconv.decode(html, "EUC-JP");
+  const $ = cheerio.load(ehtml);
+  $(".kasi_honbun").find("br").replaceWith("\n");
+  const l = $(".kasi_honbun").text().trim();
   return l;
 }
 
 module.exports = {
   name,
-  supported,
   search,
+  supported,
+  lyrics,
 };
