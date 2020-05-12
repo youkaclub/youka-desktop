@@ -14,6 +14,7 @@ const headers = {
 async function search(query) {
   const searchResp = await searchMulti(query, 3);
   const songID = songFromSearch(searchResp);
+  if (!songID) return null;
   const url = `https://api.genius.com/songs/${songID}?text_format=plain`;
   return url;
 }
