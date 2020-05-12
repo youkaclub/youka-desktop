@@ -6,7 +6,8 @@ const google = require("./google_site");
 const name = "mojim.com";
 const supported = (lang) => ["ja", "ko", "zh"].includes(lang);
 const site = "https://mojim.com";
-google.register(name, site);
+const site_re = /https:\/\/mojim\.com\/.*.htm/;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

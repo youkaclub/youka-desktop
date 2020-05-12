@@ -5,7 +5,8 @@ const google = require("./google_site");
 const name = "sanook.com";
 const supported = (lang) => lang === "th";
 const site = "https://www.sanook.com/music/song";
-google.register(name, site);
+const site_re = /https:\/\/www\.sanook\.com\/music\/song\/.*/;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

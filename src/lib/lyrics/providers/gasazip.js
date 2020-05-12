@@ -5,8 +5,8 @@ const google = require("./google_site");
 const name = "gasazip.com";
 const supported = (lang) => lang === "ko";
 const site = `https://gasazip.com/`;
-
-google.register(name, site);
+const site_re = /https:\/\/gasazip\.com\/\d+/;
+google.register(name, site, site_re);
 const search = async (query) => google.search(name, query);
 
 async function lyrics(url) {

@@ -5,7 +5,8 @@ const google = require("./google_site");
 const name = "uta-net.com";
 const supported = (lang) => lang === "ja";
 const site = "https://www.uta-net.com/song/";
-google.register(name, site);
+const site_re = /https:\/\/www\.uta-net\.com\/song\/\d+/;
+google.register(name, site, site_re);
 const search = async (query) => google.search(name, query);
 
 async function lyrics(url) {

@@ -6,7 +6,8 @@ const google = require("./google_site");
 const name = "musica.com";
 const supported = (lang) => lang === "es";
 const site = "https://www.musica.com/letras.asp";
-google.register(name, site);
+const site_re = /https:\/\/www\.musica\.com\/letras\.asp\?letra=\d+/;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

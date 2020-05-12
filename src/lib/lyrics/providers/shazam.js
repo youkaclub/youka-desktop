@@ -4,7 +4,8 @@ const google = require("./google_site");
 const name = "shazam.com";
 const supported = () => true;
 const site = "https://www.shazam.com/track/";
-google.register(name, site);
+const site_re = /https:\/\/www\.shazam\.com\/track\/(\d+)\/.*/;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

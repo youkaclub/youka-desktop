@@ -19,4 +19,5 @@ module.exports = [
   require("./utanet"),
   require("./sarkisozum"),
   require("./megalyrics"),
+  require("./karaoke-ru"),
 ];

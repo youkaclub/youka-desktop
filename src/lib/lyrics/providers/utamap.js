@@ -6,7 +6,8 @@ const google = require("./google_site");
 const name = "utamap.com";
 const supported = (lang) => lang === "ja";
 const site = "http://www.utamap.com/showkasi.php";
-google.register(name, site);
+const site_re = /http:\/\/www\.utamap\.com\/showkasi\.php\?surl=.*/;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

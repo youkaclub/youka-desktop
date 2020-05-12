@@ -5,7 +5,8 @@ const google = require("./google_site");
 const name = "megalyrics.ru";
 const supported = (lang) => lang === "ru";
 const site = "http://www.megalyrics.ru/lyric/";
-google.register(name, site);
+const site_re = /http:\/\/www\.megalyrics\.ru\/lyric\/.*\/.*\.htm/;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

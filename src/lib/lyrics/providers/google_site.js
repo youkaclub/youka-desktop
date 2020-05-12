@@ -4,8 +4,8 @@ const rp = require("./request-promise");
 const providers = [];
 const cache = {};
 
-function register(name, site) {
-  providers.push({ name, site });
+function register(name, site, site_re) {
+  providers.push({ name, site, site_re });
 }
 
 async function search(name, query) {
@@ -19,7 +19,7 @@ async function search(name, query) {
 
   for (let i = 0; i < providers.length; i++) {
     const provider = providers[i];
-    const url = urls.find((url) => url.startsWith(provider.site));
+    const url = urls.find((url) => url.match(provider.site_re));
     const pkey = `${provider.name}::${query}`;
     cache[pkey] = url;
   }

@@ -122,6 +122,12 @@ const tests = [
     "http://www.megalyrics.ru/lyric/dmitro-gnatiuk/nich-iaka-misiachna.htm",
     "e26682b1600fa5ade028b54dfdf182fc",
   ],
+  [
+    "karaoke.ru",
+    "елка город мой",
+    "https://www.karaoke.ru/artists/elka/text/gorod-moj/",
+    "05d709b00eabfc828e78b4829456288b",
+  ],
 ];
 
 describe("provider should return url and lyrics", () => {

@@ -5,7 +5,8 @@ const google = require("./google_site");
 const name = "musixmatch.com";
 const supported = () => true;
 const site = "https://www.musixmatch.com/lyrics";
-google.register(name, site);
+const site_re = /https:\/\/www\.musixmatch\.com\/lyrics\//;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

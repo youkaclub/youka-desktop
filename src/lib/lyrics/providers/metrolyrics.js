@@ -5,7 +5,8 @@ const google = require("./google_site");
 const name = "metrolyrics.com";
 const supported = () => true;
 const site = "https://www.metrolyrics.com/";
-google.register(name, site);
+const site_re = /https:\/\/www\.metrolyrics\.com\/.*\.html/;
+google.register(name, site, site_re);
 
 const search = async (query) => google.search(name, query);
 

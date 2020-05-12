@@ -5,8 +5,8 @@ const google = require("./google_site");
 const name = "cmtv.com.ar";
 const supported = (lang) => lang === "es";
 const site = "https://www.cmtv.com.ar/discos_letras/letra.php";
-
-google.register(name, site);
+const site_re = /https:\/\/www\.cmtv\.com\.ar\/discos_letras\/letra\.php\?/;
+google.register(name, site, site_re);
 const search = async (query) => google.search(name, query);
 
 async function lyrics(url) {
