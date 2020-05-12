@@ -116,6 +116,12 @@ const tests = [
     "https://www.sarkisozum.gen.tr/en/edip-akbayram/anneler-gunu-lyrics",
     "28b1065e0328615859eba3aeebe64bc8",
   ],
+  [
+    "megalyrics.ru",
+    "Дмитро Гнатюк - Ніч яка місячна",
+    "http://www.megalyrics.ru/lyric/dmitro-gnatiuk/nich-iaka-misiachna.htm",
+    "e26682b1600fa5ade028b54dfdf182fc",
+  ],
 ];
 
 describe("provider should return url and lyrics", () => {

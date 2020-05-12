@@ -18,4 +18,5 @@ module.exports = [
   require("./utamap"),
   require("./utanet"),
   require("./sarkisozum"),
+  require("./megalyrics"),
 ];
