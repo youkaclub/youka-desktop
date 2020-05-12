@@ -5,7 +5,7 @@ var stringSimilarity = require("string-similarity");
 const re = /\[\d+:\d+\.\d+\](.*)/;
 
 const name = "ttlyrics.com";
-const supported = () => true;
+const supported = (lang) => ["ja", "ko", "zh"].includes(lang);
 
 async function parseXML(xml) {
   return new Promise((resolve, reject) => {
