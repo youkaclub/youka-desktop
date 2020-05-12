@@ -1,24 +1,52 @@
+const ytdlV2 = require("ytdl-core");
 const fs = require("fs");
 const tmp = require("tmp-promise");
-const { ytdl } = require("../youtube-dl");
+const ytdlV1 = require("../youtube-dl").ytdl;
+const rollbar = require("../rollbar");
 
 async function downloadAudio(youtubeID) {
-  return download(youtubeID, ["-f", "140"]);
+  return download(youtubeID, "140");
 }
 
 async function downloadVideo(youtubeID) {
-  return download(youtubeID, ["-f", "18"]);
+  return download(youtubeID, "18");
 }
 
-async function download(youtubeID, args) {
-  args = args || [];
+async function download(youtubeID, format) {
+  try {
+    const fileV1 = await downloadV1(youtubeID, format);
+    return fileV1;
+  } catch (e) {
+    rollbar.warn(e);
+  }
+  return downloadV2(youtubeID, format);
+}
+async function downloadV1(youtubeID, format) {
   const filename = await tmp.tmpName();
-  args = args.concat(["--output", filename]);
+  const args = ["-f", format, "--output", filename];
   args.push(`https://www.youtube.com/watch?v=${youtubeID}`);
-  await ytdl(args);
+  await ytdlV1(args);
   const file = await fs.promises.readFile(filename);
   await fs.promises.unlink(filename);
   return file;
+}
+
+async function downloadV2(youtubeID, format) {
+  const url = `https://www.youtube.com/watch?v=${youtubeID}`;
+  return new Promise((resolve, reject) => {
+    var buffers = [];
+    ytdlV2(url, { quality: format })
+      .on("data", (buffer) => {
+        buffers.push(buffer);
+      })
+      .on("error", (error) => {
+        return reject(error);
+      })
+      .on("finish", () => {
+        var buffer = Buffer.concat(buffers);
+        return resolve(buffer);
+      });
+  });
 }
 
 module.exports = {
