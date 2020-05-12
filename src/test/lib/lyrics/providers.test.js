@@ -128,6 +128,12 @@ const tests = [
     "https://www.karaoke.ru/artists/elka/text/gorod-moj/",
     "05d709b00eabfc828e78b4829456288b",
   ],
+  [
+    "rus-songs.ru",
+    "Елка — Около тебя",
+    "https://rus-songs.ru/elka-okolo-tebya/",
+    "2a031fc944078f1a257c05e232f446b1",
+  ],
 ];
 
 describe("provider should return url and lyrics", () => {

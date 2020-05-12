@@ -20,4 +20,5 @@ module.exports = [
   require("./sarkisozum"),
   require("./megalyrics"),
   require("./karaoke-ru"),
+  require("./rus-songs"),
 ];
