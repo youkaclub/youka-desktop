@@ -1,15 +1,21 @@
 platform:
   - x86
   - x64
+
 environment:
   nodejs_version: "8"
+
 cache:
   - '%APPDATA%\npm-cache'
   - '%USERPROFILE%\.electron'
   - node_modules
+
 branches:
   only:
-    - /^v\d+\.\d+\.\d+/
+    - master
+
+skip_non_tags: true
+
 install:
   - ps: Install-Product node $env:nodejs_version $env:platform
   - set PATH=%APPDATA%\npm;%PATH%

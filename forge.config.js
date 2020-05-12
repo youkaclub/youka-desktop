@@ -7,46 +7,48 @@ const config = {
     icon: "public/logo.icns",
     ignore: (file) => {
       if (!file) return false;
-      return !/^[/\\]\.webpack($|[/\\]).*$/.test(file)
-    }
+      return !/^[/\\]\.webpack($|[/\\]).*$/.test(file);
+    },
   },
   makers: [
     {
       name: "@electron-forge/maker-squirrel",
       platforms: ["win32"],
-      config: arch => {
+      config: (arch) => {
         return {
           name: "youka",
           exe: "youka.exe",
           setupExe: `youka-win32-${arch}-${version}-setup.exe`,
-          setupIcon: "public/logo.ico"
+          setupIcon: "public/logo.ico",
+          certificateFile: process.env.WINDOWS_CERTIFICATE_FILE,
+          certificatePassword: process.env.WINDOWS_CERTIFICATE_PASSWORD,
         };
-      }
+      },
     },
     {
       name: "@electron-forge/maker-dmg",
       platforms: ["darwin"],
       config: {
         name: `youka-${version}`,
-        icon: "public/logo.icns"
-      }
+        icon: "public/logo.icns",
+      },
     },
     {
       name: "@electron-forge/maker-deb",
       platforms: ["linux"],
       config: {
         name: "youka",
-        icon: "public/logo.svg"
-      }
+        icon: "public/logo.svg",
+      },
     },
     {
       name: "@electron-forge/maker-rpm",
       platforms: ["linux"],
       config: {
         name: "youka",
-        icon: "public/logo.svg"
-      }
-    }
+        icon: "public/logo.svg",
+      },
+    },
   ],
   publishers: [
     {
@@ -54,11 +56,11 @@ const config = {
       config: {
         repository: {
           owner: "youkaclub",
-          name: "youka-desktop"
+          name: "youka-desktop",
         },
-        draft: true
-      }
-    }
+        draft: true,
+      },
+    },
   ],
   plugins: [
     [
@@ -71,13 +73,13 @@ const config = {
             {
               html: "./public/index.html",
               js: "./webpack/index.js",
-              name: "main_window"
-            }
-          ]
-        }
-      }
-    ]
-  ]
+              name: "main_window",
+            },
+          ],
+        },
+      },
+    ],
+  ],
 };
 
 module.exports = config;
