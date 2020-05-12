@@ -17,4 +17,5 @@ module.exports = [
   require("./ttlyrics"),
   require("./utamap"),
   require("./utanet"),
+  require("./sarkisozum"),
 ];

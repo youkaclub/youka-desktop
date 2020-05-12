@@ -110,6 +110,12 @@ const tests = [
     "http://ttlyrics.com/api/download?id=10001",
     "a528d62fad90468425940fb9128166f4",
   ],
+  [
+    "sarkisozum.gen.tr",
+    "Edip Akbayram - Anneler Günü",
+    "https://www.sarkisozum.gen.tr/en/edip-akbayram/anneler-gunu-lyrics",
+    "28b1065e0328615859eba3aeebe64bc8",
+  ],
 ];
 
 describe("provider should return url and lyrics", () => {
