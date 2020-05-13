@@ -20,7 +20,7 @@ const config = {
           exe: "youka.exe",
           setupExe: `youka-win32-${arch}-${version}-setup.exe`,
           setupIcon: "public/logo.ico",
-          certificateFile: process.env.WINDOWS_CERTIFICATE_FILE,
+          certificateFile: "./cert.pfx",
           certificatePassword: process.env.WINDOWS_CERTIFICATE_PASSWORD,
         };
       },
