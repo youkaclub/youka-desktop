@@ -8,7 +8,7 @@ const uaid =
 
 export const visitor = ua(uaid, user);
 
-const cmd = process.argv[1];
-if (cmd === "--squirrel-firstrun") {
-  visitor.event("First time", "Click", user).send();
+if (!store.has("new")) {
+  store.set("new", true);
+  ua(config.ua, user).event("New Installation", "Click").send();
 }
