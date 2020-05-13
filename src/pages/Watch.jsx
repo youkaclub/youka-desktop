@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
+import { shell } from "electron";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
@@ -57,6 +58,12 @@ export default function WatchPage() {
     });
     setccoptions(tmpccoptions);
   }, [videoModes, captionsModes, lyrics]);
+
+  async function handleDownload() {
+    const fpath = library.filepath(id, videoMode, library.FILE_VIDEO);
+    shell.showItemInFolder(fpath);
+    visitor.event("Click", "Download", id).send();
+  }
 
   function handleStatusChanged(s) {
     setStatus(s);
@@ -191,6 +198,11 @@ export default function WatchPage() {
                   icon="close"
                   content="Close"
                   onClick={handleClickClose}
+                />
+                <Button
+                  icon="download"
+                  content="Download"
+                  onClick={handleDownload}
                 />
                 <Dropdown
                   button
