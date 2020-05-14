@@ -3,26 +3,26 @@ const cheerio = require("cheerio");
 const google = require("./google_site");
 
 const name = "musixmatch.com";
-const supported = () => true;
-const site = "https://www.musixmatch.com/lyrics";
-const site_re = /https:\/\/www\.musixmatch\.com\/lyrics\//;
-google.register(name, site, site_re);
 
-const search = async (query) => google.search(name, query);
-
-async function lyrics(url) {
-  const html = await rp(url);
-  const $ = cheerio.load(html);
-  let text = "";
-  $("span.lyrics__content__ok").each((i, el) => {
-    text += $(el).text();
-  });
-  return text.trim();
-}
-
-module.exports = {
+const provider = {
   name,
-  search,
-  lyrics,
-  supported,
+  supported: () => true,
+  site: "https://www.musixmatch.com/lyrics",
+  site_re: /https:\/\/www\.musixmatch\.com\/lyrics\//,
+
+  search: async (query, lang) => google.search(name, query, lang),
+
+  lyrics: async (url) => {
+    const html = await rp(url);
+    const $ = cheerio.load(html);
+    let text = "";
+    $(".mxm-lyrics__content").each((i, el) => {
+      text += $(el).text();
+    });
+    return text.trim();
+  },
 };
+
+google.register(provider);
+
+module.exports = provider;

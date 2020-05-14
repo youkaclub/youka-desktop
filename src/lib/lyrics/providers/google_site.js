@@ -1,21 +1,23 @@
+const debug = require("debug")("youka:desktop");
 const cheerio = require("cheerio");
 const rp = require("./request-promise");
 
 const providers = [];
 const cache = {};
 
-function register(name, site, site_re) {
-  providers.push({ name, site, site_re });
+function register(provider) {
+  providers.push(provider);
 }
 
-async function search(name, query) {
+async function search(name, query, lang) {
   const key = `${name}::${query}`;
   if (key in cache) {
     return cache[key];
   }
-  const sites = providers.map((p) => p.site);
+  const sites = providers.filter((p) => p.supported(lang)).map((p) => p.site);
   const siteQuery = google_search_query(query, sites);
-  const urls = await google_search(siteQuery);
+  const num = sites.length * 3;
+  const urls = await google_search(siteQuery, num);
 
   for (let i = 0; i < providers.length; i++) {
     const provider = providers[i];
@@ -23,7 +25,6 @@ async function search(name, query) {
     const pkey = `${provider.name}::${query}`;
     cache[pkey] = url;
   }
-
   return cache[key];
 }
 
@@ -31,10 +32,11 @@ function google_search_query(query, sites) {
   return sites.map((site) => `site:${site}`).join(" OR ") + " " + query;
 }
 
-async function google_search(query) {
+async function google_search(query, num) {
   query = encodeURIComponent(query);
   query = query.replace(/%20/g, "+");
-  const url = `https://www.google.com/search?q=${query}&num=30`;
+  const url = `https://www.google.com/search?q=${query}&num=${num}`;
+  debug(url);
   const html = await rp(url);
   const $ = cheerio.load(html);
 
@@ -43,11 +45,10 @@ async function google_search(query) {
     const u = $(el).attr("href");
     urls.push(u);
   });
-  return urls;
+  return urls.filter((url) => url !== "#");
 }
 
 module.exports = {
-  providers,
   register,
   search,
   google_search,

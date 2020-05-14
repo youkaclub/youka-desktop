@@ -16,8 +16,7 @@ async function search(query) {
   for (let i = 0; i < providers.length; i++) {
     try {
       const provider = providers[i];
-      if (lang && !provider.supported(lang)) continue;
-      const url = await provider.search(query);
+      const url = await provider.search(query, lang);
       if (!url) continue;
       const lyrics = await provider.lyrics(url);
       if (!lyrics || lyrics.length < 50) continue;

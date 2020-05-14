@@ -3,22 +3,23 @@ const rp = require("./request-promise");
 const google = require("./google_site");
 
 const name = "lyrics.com";
-const supported = (lang) => lang === "en";
-const site = "https://www.lyrics.com/lyric";
-const site_re = /https:\/\/www\.lyrics\.com\/lyric\/(\d+)\/.*\/.*/;
-google.register(name, site, site_re);
-const search = async (query) => google.search(name, query);
 
-async function lyrics(url) {
-  const html = await rp(url);
-  const $ = cheerio.load(html);
-  const l = $("#lyric-body-text").text().trim();
-  return l;
-}
-
-module.exports = {
+const provider = {
   name,
-  search,
-  supported,
-  lyrics,
+  supported: (lang) => lang === "en",
+  site: "https://www.lyrics.com/lyric",
+  site_re: /https:\/\/www\.lyrics\.com\/lyric\/(\d+)\/.*\/.*/,
+
+  search: async (query, lang) => google.search(name, query, lang),
+
+  lyrics: async (url) => {
+    const html = await rp(url);
+    const $ = cheerio.load(html);
+    const l = $("#lyric-body-text").text().trim();
+    return l;
+  },
 };
+
+google.register(provider);
+
+module.exports = provider;

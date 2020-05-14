@@ -3,22 +3,23 @@ const rp = require("./request-promise");
 const google = require("./google_site");
 
 const name = "gasazip.com";
-const supported = (lang) => lang === "ko";
-const site = `https://gasazip.com/`;
-const site_re = /https:\/\/gasazip\.com\/\d+/;
-google.register(name, site, site_re);
-const search = async (query) => google.search(name, query);
 
-async function lyrics(url) {
-  const html = await rp(url);
-  const $ = cheerio.load(html);
-  const text = $("#gasa").text().trim();
-  return text;
-}
-
-module.exports = {
+const provider = {
   name,
-  search,
-  supported,
-  lyrics,
+  site: `https://gasazip.com/`,
+  site_re: /https:\/\/gasazip\.com\/\d+/,
+  supported: (lang) => lang === "ko",
+
+  search: async (query, lang) => google.search(name, query, lang),
+
+  lyrics: async (url) => {
+    const html = await rp(url);
+    const $ = cheerio.load(html);
+    const text = $("#gasa").text().trim();
+    return text;
+  },
 };
+
+google.register(provider);
+
+module.exports = provider;

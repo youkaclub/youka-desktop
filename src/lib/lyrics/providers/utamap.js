@@ -4,25 +4,25 @@ const rp = require("./request-promise");
 const google = require("./google_site");
 
 const name = "utamap.com";
-const supported = (lang) => lang === "ja";
-const site = "http://www.utamap.com/showkasi.php";
-const site_re = /http:\/\/www\.utamap\.com\/showkasi\.php\?surl=.*/;
-google.register(name, site, site_re);
 
-const search = async (query) => google.search(name, query);
-
-async function lyrics(url) {
-  const html = await rp(url, { encoding: null });
-  const ehtml = iconv.decode(html, "EUC-JP");
-  const $ = cheerio.load(ehtml);
-  $(".kasi_honbun").find("br").replaceWith("\n");
-  const l = $(".kasi_honbun").text().trim();
-  return l;
-}
-
-module.exports = {
+const provider = {
   name,
-  search,
-  supported,
-  lyrics,
+  site: "http://www.utamap.com/showkasi.php",
+  site_re: /https?:\/\/www\.utamap\.com\/showkasi\.php\?surl=.*/,
+  supported: (lang) => lang === "ja",
+
+  search: async (query, lang) => google.search(name, query, lang),
+
+  lyrics: async (url) => {
+    const html = await rp(url, { encoding: null });
+    const ehtml = iconv.decode(html, "EUC-JP");
+    const $ = cheerio.load(ehtml);
+    $(".kasi_honbun").find("br").replaceWith("\n");
+    const l = $(".kasi_honbun").text().trim();
+    return l;
+  },
 };
+
+google.register(provider);
+
+module.exports = provider;

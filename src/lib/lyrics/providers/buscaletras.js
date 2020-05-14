@@ -3,25 +3,26 @@ const rp = require("./request-promise");
 const google = require("./google_site");
 
 const name = "buscaletras.com";
-const supported = (lang) => lang === "es";
-const site = "https://www.buscaletras.com/";
-const site_re = /https:\/\/www\.buscaletras\.com\/.*\/.*/;
-google.register(name, site, site_re);
-const search = async (query) => google.search(name, query);
 
-async function lyrics(url) {
-  const html = await rp(url);
-  const $ = cheerio.load(html);
-  let text = "";
-  $(".primary .entry-content p").each((i, el) => {
-    text += $(el).text().trim() + "\n\n";
-  });
-  return text.trim();
-}
-
-module.exports = {
+const provider = {
   name,
-  supported,
-  search,
-  lyrics,
+  site: "https://www.buscaletras.com/",
+  site_re: /https:\/\/www\.buscaletras\.com\/.*\/.*/,
+  supported: (lang) => lang === "es",
+
+  search: async (query, lang) => google.search(name, query, lang),
+
+  lyrics: async (url) => {
+    const html = await rp(url);
+    const $ = cheerio.load(html);
+    let text = "";
+    $(".primary .entry-content p").each((i, el) => {
+      text += $(el).text().trim() + "\n\n";
+    });
+    return text.trim();
+  },
 };
+
+google.register(provider);
+
+module.exports = provider;

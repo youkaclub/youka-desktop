@@ -21,4 +21,5 @@ module.exports = [
   require("./megalyrics"),
   require("./karaoke-ru"),
   require("./rus-songs"),
+  require("./kkbox"),
 ];

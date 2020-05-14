@@ -1,7 +1,6 @@
 const rp = require("request-promise");
 
 const name = "genius.com";
-const supported = () => true;
 
 const headers = {
   Host: "api.genius.com",
@@ -10,25 +9,6 @@ const headers = {
   "X-Genius-iOS-Version": "6.0.6",
   "User-Agent": "Genius/825 CFNetwork/1121.2.2 Darwin/19.2.0",
 };
-
-async function search(query) {
-  const searchResp = await searchMulti(query, 3);
-  const songID = songFromSearch(searchResp);
-  if (!songID) return null;
-  const url = `https://api.genius.com/songs/${songID}?text_format=plain`;
-  return url;
-}
-
-async function lyrics(url) {
-  const options = {
-    uri: url,
-    headers,
-    json: true,
-  };
-  const songResp = await rp(options);
-  const lyrics = cleanLyrics(lyricsFromSong(songResp));
-  return lyrics;
-}
 
 async function searchMulti(query, perPage) {
   const options = {
@@ -64,9 +44,27 @@ function cleanLyrics(lyrics) {
   return lines.join("\n");
 }
 
-module.exports = {
+const provider = {
   name,
-  supported,
-  search,
-  lyrics,
+  supported: () => true,
+
+  search: async (query) => {
+    const searchResp = await searchMulti(query, 3);
+    const songID = songFromSearch(searchResp);
+    if (!songID) return null;
+    const url = `https://api.genius.com/songs/${songID}?text_format=plain`;
+    return url;
+  },
+
+  lyrics: async (url) => {
+    const options = {
+      uri: url,
+      headers,
+      json: true,
+    };
+    const songResp = await rp(options);
+    const lyrics = cleanLyrics(lyricsFromSong(songResp));
+    return lyrics;
+  },
 };
+module.exports = provider;
