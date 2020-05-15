@@ -44,6 +44,8 @@ export async function postSplitAlign(youtubeID, audio, lyrics, language) {
   });
 
   if (response.statusCode !== 204) {
-    throw new Error("Files uploading failed");
+    throw new Error(
+      "The server is too busy at the moment. please try again later"
+    );
   }
 }
