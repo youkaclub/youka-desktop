@@ -19,7 +19,13 @@ async function download(youtubeID, format) {
   } catch (e) {
     rollbar.error(e);
   }
-  return downloadV2(youtubeID, format);
+  try {
+    const fileV2 = downloadV2(youtubeID, format);
+    return fileV2;
+  } catch (e) {
+    rollbar.error(e);
+  }
+  throw new Error("Download from YouTube failed");
 }
 async function downloadV1(youtubeID, format) {
   const filename = await tmp.tmpName();
