@@ -20,7 +20,7 @@ async function download(youtubeID, format) {
     rollbar.error(e);
   }
   try {
-    const fileV2 = downloadV2(youtubeID, format);
+    const fileV2 = await downloadV2(youtubeID, format);
     return fileV2;
   } catch (e) {
     rollbar.error(e);
