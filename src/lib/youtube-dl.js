@@ -35,12 +35,7 @@ async function install() {
 }
 
 async function ytdl(args) {
-  try {
-    await execa(YOUTUBE_DL_PATH, args);
-  } catch (e) {
-    rollbar.error(e);
-    throw new Error("Download from YouTube failed");
-  }
+  return execa(YOUTUBE_DL_PATH, args);
 }
 
 module.exports = {
