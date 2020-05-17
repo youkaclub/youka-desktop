@@ -66,24 +66,25 @@ async function generate(youtubeID, title, onStatusChanged) {
       dependencies: ["postSplitAlign"],
     })
     .addNode({
-      id: "saveSplitAlign",
+      id: "getDownload",
       run: ({ getSplitAlign }) =>
-        library.saveSplitAlign(
-          youtubeID,
-          getSplitAlign.audio,
-          getSplitAlign.captions
-        ),
+        run("Downloading files", api.getDownload(youtubeID, getSplitAlign)),
       dependencies: ["getSplitAlign"],
+    })
+    .addNode({
+      id: "saveFiles",
+      run: ({ getDownload }) => library.saveFiles(youtubeID, getDownload),
+      dependencies: ["getDownload"],
     })
     .addNode({
       id: "getInstrumentsVideo",
       run: () => library.getVideo(youtubeID, library.MODE_MEDIA_INSTRUMENTS),
-      dependencies: ["getOriginalVideo", "saveSplitAlign"],
+      dependencies: ["getOriginalVideo", "saveFiles"],
     })
     .addNode({
       id: "getVocalsVideo",
       run: () => library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS),
-      dependencies: ["getOriginalVideo", "saveSplitAlign"],
+      dependencies: ["getOriginalVideo", "saveFiles"],
     });
 
   return graph.resolve();

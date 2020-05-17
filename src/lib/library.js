@@ -205,12 +205,14 @@ export async function getLanguage(youtubeID, s) {
     await fs.promises.writeFile(fp, lang);
     return lang;
   } catch (e) {
-    rollbar.error(e)
+    rollbar.error(e);
     return null;
   }
 }
 
-export async function saveSplitAlign(youtubeID, audio, captions) {
-  await saveBase64(youtubeID, audio, FILE_AUDIO);
-  await saveBase64(youtubeID, captions, FILE_CAPTIONS);
+export async function saveFiles(youtubeID, files) {
+  const promises = files.map((file) =>
+    fs.promises.writeFile(filepath(youtubeID, file.name, file.ext), file.buffer)
+  );
+  return Promise.all(promises);
 }

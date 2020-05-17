@@ -2,13 +2,23 @@ const needle = require("needle");
 const rp = require("request-promise");
 const config = require("../config");
 
+export async function getDownload(youtubeID, files) {
+  const urls = files.map(
+    (file) => `${config.api}/download/${youtubeID}/${file.name}${file.ext}`
+  );
+  const promises = urls.map((url) => rp(url, { encoding: null }));
+  const buffers = await Promise.all(promises);
+  files.map((file, i) => (file.buffer = buffers[i]));
+  return files;
+}
+
 export async function getSplitAlign(youtubeID) {
-  const url = `${config.api}/split-align-queue-result/${youtubeID}`;
+  const url = `${config.api}/split-align-queue-result-v2/${youtubeID}`;
 
   for (let i = 0; i < 100; i++) {
     const response = await rp(url, { json: true });
-    if (response && response.audio) {
-      return { audio: response.audio, captions: response.captions };
+    if (response) {
+      return response;
     }
     await new Promise((r) => setTimeout(r, 5000));
   }
