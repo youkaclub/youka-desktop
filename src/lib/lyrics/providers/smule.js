@@ -15,7 +15,6 @@ const provider = {
   search: async (query, lang) => google.search(name, query, lang),
 
   lyrics: async (url) => {
-    console.log(url);
     const html = await rp(url);
     const $ = cheerio.load(html);
     let found = false;
