@@ -187,4 +187,15 @@ describe("provider should return url and lyrics", () => {
       expect(actualHash).toBe(test.hash);
     }
   });
+
+  it("should return nothing", async () => {
+    for (let i = 0; i < providers.length; i++) {
+      const provider = providers[i];
+      if (["google.com"].includes(provider.name)) continue;
+      const query = "abcdefgasdalkjfalddsk";
+      provider.supported = () => true;
+      const url = await provider.search(query);
+      expect(url).toBeFalsy();
+    }
+  });
 });
