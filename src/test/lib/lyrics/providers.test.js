@@ -25,6 +25,14 @@ const tests = [
     hash: "4927cc2fd9c8aa76f1b7faacb5a5be3e",
   },
   {
+    name: "smule.com",
+    query: "your song ellie goulding",
+    lang: "en",
+    url:
+      "https://www.smule.com/song/ellie-goulding-your-song-karaoke-lyrics/6753696_6753696/arrangement",
+    hash: "73493c61a94065074b095afad118ff0d",
+  },
+  {
     name: "azlyrics.com",
     query: "your song ellie goulding",
     lang: "en",

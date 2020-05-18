@@ -2,6 +2,7 @@ module.exports = [
   require("./google"),
   require("./shazam"),
   require("./musixmatch"),
+  require("./smule"),
   require("./genius"),
   require("./azlyrics"),
   require("./buscaletras"),

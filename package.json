@@ -64,6 +64,7 @@
     "request": "^2.88.2",
     "request-promise": "^4.2.5",
     "rollbar": "^2.15.0",
+    "safe-eval": "^0.4.1",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.88.2",
     "string-similarity": "^4.0.1",
