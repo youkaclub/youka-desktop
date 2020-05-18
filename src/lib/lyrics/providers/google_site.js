@@ -27,9 +27,9 @@ async function search(name, query, lang) {
         result.url.match(provider.site_re) &&
         (match(query, result.title) || match(query, result.url))
     );
-    if (!result) continue;
+    const url = result ? result.url : null;
     const pkey = `${provider.name}::${query}`;
-    cache[pkey] = result.url;
+    cache[pkey] = url;
   }
   return cache[key];
 }
