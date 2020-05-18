@@ -1,8 +1,14 @@
-const compareTwoStrings = require("string-similarity").compareTwoStrings;
+function match(query, s) {
+  query = query.toLowerCase();
+  s = s.toLowerCase();
 
-function match(a, b) {
-  const score = compareTwoStrings(a, b);
-  return score > 0.5;
+  const words = query.split(" ").map((word) => word.toLowerCase());
+  const missed = words.filter((word) => !s.includes(word) && word.length > 2);
+
+  const missPerc = (missed.length / words.length) * 100;
+  const match = missPerc < 30;
+
+  return match;
 }
 
 module.exports = {

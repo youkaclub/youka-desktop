@@ -1,6 +1,7 @@
 const debug = require("debug")("youka:desktop");
 const cheerio = require("cheerio");
 const rp = require("./request-promise");
+const match = require("./utils").match;
 
 const providers = [];
 const cache = {};
@@ -17,13 +18,18 @@ async function search(name, query, lang) {
   const sites = providers.filter((p) => p.supported(lang)).map((p) => p.site);
   const siteQuery = google_search_query(query, sites);
   const num = sites.length * 3;
-  const urls = await google_search(siteQuery, num);
+  const results = await google_search(siteQuery, num);
 
   for (let i = 0; i < providers.length; i++) {
     const provider = providers[i];
-    const url = urls.find((url) => url.match(provider.site_re));
+    const result = results.find(
+      (result) =>
+        result.url.match(provider.site_re) &&
+        (match(query, result.title) || match(query, result.url))
+    );
+    if (!result) continue;
     const pkey = `${provider.name}::${query}`;
-    cache[pkey] = url;
+    cache[pkey] = result.url;
   }
   return cache[key];
 }
@@ -39,13 +45,14 @@ async function google_search(query, num) {
   debug(url);
   const html = await rp(url);
   const $ = cheerio.load(html);
-
-  const urls = [];
-  $(".g a").each((i, el) => {
-    const u = $(el).attr("href");
-    urls.push(u);
+  const results = [];
+  $(".g").each((i, el) => {
+    const url = $(el).find(".r > a").attr("href");
+    if (!url) return;
+    const title = $(el).find(".r h3").text();
+    results.push({ url, title });
   });
-  return urls.filter((url) => url !== "#");
+  return results;
 }
 
 module.exports = {

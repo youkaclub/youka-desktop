@@ -32,10 +32,13 @@ const provider = {
     const results = obj.result.lrc
       .map((r) => r["$"])
       .filter((r) => r.artist && r.title);
-    const strings = results.map((r) => `${r.artist} ${r.title}`);
-    const match = stringSimilarity.findBestMatch(query, strings);
+    const strings = results.map(
+      (r) => `${r.artist.toLowerCase()} ${r.title.toLowerCase()}`
+    );
+    const match = stringSimilarity.findBestMatch(query.toLowerCase(), strings);
     if (match.bestMatch.rating < 0.4) return;
     const id = results[match.bestMatchIndex].id;
+    if (!id) return;
     const url = `http://ttlyrics.com/api/download?id=${id}`;
     return url;
   },

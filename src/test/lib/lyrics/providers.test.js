@@ -21,8 +21,8 @@ const tests = [
     name: "shazam.com",
     query: "your song ellie goulding",
     lang: "en",
-    url: "https://www.shazam.com/track/225457523/your-song",
-    hash: "31e23108bd1dc057f0754cd6d08ccf17",
+    url: "https://www.shazam.com/track/52873018/your-song",
+    hash: "4927cc2fd9c8aa76f1b7faacb5a5be3e",
   },
   {
     name: "azlyrics.com",
