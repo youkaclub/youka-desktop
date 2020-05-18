@@ -44,7 +44,12 @@ const provider = {
   },
 
   lyrics: async (url) => {
-    const text = await rp(url, { jar });
+    let text;
+    try {
+      text = await rp(url, { jar });
+    } catch (e) {
+      return null;
+    }
     const lines = [];
     text.split("\n").filter((line, i) => {
       if (i < 3 && line.includes(":")) return null;
