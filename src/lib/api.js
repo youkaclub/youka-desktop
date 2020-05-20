@@ -20,7 +20,7 @@ export async function getSplitAlign(youtubeID) {
     if (response) {
       return response;
     }
-    await new Promise((r) => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 10000));
   }
   throw new Error("Server timeout");
 }
