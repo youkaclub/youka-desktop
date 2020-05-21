@@ -43,7 +43,13 @@ async function google_search(query, num) {
   query = query.replace(/%20/g, "+");
   const url = `https://www.google.com/search?q=${query}&num=${num}`;
   debug(url);
-  const html = await rp(url);
+  let html;
+  try {
+    html = await rp(url);
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
   const $ = cheerio.load(html);
   const results = [];
   $(".g").each((i, el) => {
