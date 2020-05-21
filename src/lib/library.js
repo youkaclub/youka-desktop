@@ -13,6 +13,7 @@ const { exists } = require("./utils");
 const { ROOT, FFMPEG_PATH, BINARIES_PATH } = require("./path");
 
 export const FILE_VIDEO = ".mp4";
+export const FILE_MP3 = ".mp3";
 export const FILE_AUDIO = ".m4a";
 export const FILE_CAPTIONS = ".vtt";
 export const FILE_TEXT = ".txt";
@@ -215,4 +216,27 @@ export async function saveFiles(youtubeID, files) {
     fs.promises.writeFile(filepath(youtubeID, file.name, file.ext), file.buffer)
   );
   return Promise.all(promises);
+}
+
+export async function download(youtubeID, mode, file) {
+  const fpath = filepath(youtubeID, mode, file);
+  if (await exists(fpath)) {
+    return fpath;
+  }
+  if (file === FILE_MP3) {
+    const srcPath = filepath(youtubeID, mode, FILE_AUDIO);
+    if (await exists(srcPath)) {
+      await init(youtubeID);
+      await new Promise((resolve, reject) => {
+        ffmpeg()
+          .on("error", (error) => reject(error))
+          .on("end", () => resolve())
+          .input(srcPath)
+          .audioCodec("libmp3lame")
+          .audioBitrate(320)
+          .save(fpath);
+      });
+      return fpath;
+    }
+  }
 }

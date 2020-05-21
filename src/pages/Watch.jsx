@@ -13,6 +13,39 @@ import rollbar from "../lib/rollbar";
 const querystring = require("querystring");
 const debug = require("debug")("youka:desktop");
 
+const downloadOptions = [
+  {
+    key: 1,
+    text: "Instruments Audio",
+    value: "instruments.mp3",
+  },
+  {
+    key: 2,
+    text: "Instruments Video",
+    value: "instruments.mp4",
+  },
+  {
+    key: 3,
+    text: "Vocals Audio",
+    value: "vocals.mp3",
+  },
+  {
+    key: 4,
+    text: "Vocals Video",
+    value: "instruments.mp4",
+  },
+  {
+    key: 5,
+    text: "Original Audio",
+    value: "original.mp3",
+  },
+  {
+    key: 6,
+    text: "Original Video",
+    value: "original.mp4",
+  },
+];
+
 export default function WatchPage() {
   const location = useLocation();
   usePageView(location.pathname);
@@ -28,6 +61,7 @@ export default function WatchPage() {
   const [captionsURL, setCaptionsURL] = useState();
   const [error, setError] = useState();
   const [progress, setProgress] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [status, setStatus] = useState();
   const [lyrics, setLyrics] = useState();
   const [ddoptions, setddoptions] = useState([]);
@@ -59,10 +93,21 @@ export default function WatchPage() {
     setccoptions(tmpccoptions);
   }, [videoModes, captionsModes, lyrics]);
 
-  async function handleDownload() {
-    const fpath = library.filepath(id, videoMode, library.FILE_VIDEO);
-    shell.showItemInFolder(fpath);
-    visitor.event("Click", "Download", id).send();
+  async function handleDownload(e, data) {
+    try {
+      setDownloading(true);
+      const parts = data.value.split(".");
+      const mode = parts[0];
+      const file = `.${parts[1]}`;
+      const fpath = await library.download(id, mode, file);
+      shell.showItemInFolder(fpath);
+      visitor.event("Click", "Download", id).send();
+    } catch (e) {
+      rollbar.error(e);
+      console.error(e);
+    } finally {
+      setDownloading(false);
+    }
   }
 
   function handleStatusChanged(s) {
@@ -199,10 +244,12 @@ export default function WatchPage() {
                   content="Close"
                   onClick={handleClickClose}
                 />
-                <Button
-                  icon="download"
-                  content="Download"
-                  onClick={handleDownload}
+                <Dropdown
+                  button
+                  loading={downloading}
+                  text="Download"
+                  options={downloadOptions}
+                  onChange={handleDownload}
                 />
                 <Dropdown
                   button
