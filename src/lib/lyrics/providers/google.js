@@ -8,7 +8,6 @@ const provider = {
   supported: () => true,
 
   search: async (query) => {
-    query = query + " lyrics";
     query = encodeURIComponent(query);
     query = query.replace(/%20/g, "+");
     const url = `https://www.google.com/search?q=${query}`;
