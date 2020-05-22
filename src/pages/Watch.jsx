@@ -13,38 +13,6 @@ import rollbar from "../lib/rollbar";
 const querystring = require("querystring");
 const debug = require("debug")("youka:desktop");
 
-const downloadOptions = [
-  {
-    key: 1,
-    text: "Instruments Audio",
-    value: "instruments.mp3",
-  },
-  {
-    key: 2,
-    text: "Instruments Video",
-    value: "instruments.mp4",
-  },
-  {
-    key: 3,
-    text: "Vocals Audio",
-    value: "vocals.mp3",
-  },
-  {
-    key: 4,
-    text: "Vocals Video",
-    value: "instruments.mp4",
-  },
-  {
-    key: 5,
-    text: "Original Audio",
-    value: "original.mp3",
-  },
-  {
-    key: 6,
-    text: "Original Video",
-    value: "original.mp4",
-  },
-];
 
 export default function WatchPage() {
   const location = useLocation();
@@ -96,10 +64,8 @@ export default function WatchPage() {
   async function handleDownload(e, data) {
     try {
       setDownloading(true);
-      const parts = data.value.split(".");
-      const mode = parts[0];
-      const file = `.${parts[1]}`;
-      const fpath = await library.download(id, mode, file);
+      const file = data.value
+      const fpath = await library.download(id, videoMode, file);
       shell.showItemInFolder(fpath);
       visitor.event("Click", "Download", id).send();
     } catch (e) {
@@ -248,8 +214,17 @@ export default function WatchPage() {
                   button
                   loading={downloading}
                   text="Download"
-                  options={downloadOptions}
                   onChange={handleDownload}
+                  options={[
+                    {
+                      text: "Audio",
+                      value: library.FILE_MP3,
+                    },
+                    {
+                      text: "Video",
+                      value: library.FILE_VIDEO,
+                    },
+                  ]}
                 />
                 <Dropdown
                   button
