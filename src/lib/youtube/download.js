@@ -29,8 +29,14 @@ async function download(youtubeID, format) {
 }
 async function downloadV1(youtubeID, format) {
   const filename = await tmp.tmpName();
-  const args = ["-f", format, "--output", filename];
-  args.push(`https://www.youtube.com/watch?v=${youtubeID}`);
+  const args = [
+    "-v",
+    "-f",
+    format,
+    "--output",
+    filename,
+    `"https://www.youtube.com/watch?v=${youtubeID}"`,
+  ];
   await ytdlV1(args);
   const file = await fs.promises.readFile(filename);
   await fs.promises.unlink(filename);

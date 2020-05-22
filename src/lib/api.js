@@ -6,7 +6,14 @@ export async function getDownload(youtubeID, files) {
   const urls = files.map(
     (file) => `${config.api}/download/${youtubeID}/${file.name}${file.ext}`
   );
-  const promises = urls.map((url) => rp(url, { encoding: null }));
+  const promises = urls.map((url) =>
+    rp(url, {
+      encoding: null,
+      headers: {
+        Connection: "keep-alive",
+      },
+    })
+  );
   const buffers = await Promise.all(promises);
   files.map((file, i) => (file.buffer = buffers[i]));
   return files;
