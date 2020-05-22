@@ -179,7 +179,11 @@ export async function getLyrics(youtubeID, title) {
   }
   const lyrics = await lyricsFinder(title);
   if (!lyrics) {
-    rollbar.warning("missing lyrics", { youtubeID, title });
+    const sendWarn = Math.floor(Math.random() * 5) + 1 === 1;
+    console.log(sendWarn);
+    if (sendWarn) {
+      rollbar.warning("missing lyrics", { youtubeID, title });
+    }
   }
   await fs.promises.writeFile(fp, lyrics, "utf8");
 
