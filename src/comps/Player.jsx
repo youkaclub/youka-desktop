@@ -1,3 +1,4 @@
+import fs from "fs";
 import React, { useRef, useEffect } from "react";
 import Plyr from "plyr";
 import "plyr/dist/plyr.css";
@@ -47,20 +48,31 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
   }, [captionsURL]);
 
   useEffect(() => {
-    if (!assRef.current && captionsURL) {
-      if (!captionsURL.endsWith(".ass")) return;
-      var options = {
-        video: videoRef.current,
-        workerUrl: "/js/subtitles-octopus-worker.js",
-        subUrl: captionsURL,
-      };
-      assRef.current = new SubtitlesOctopus(options);
-    } else if (assRef.current && !captionsURL) {
-      assRef.current.freeTrack();
-    } else if (assRef.current && captionsURL) {
-      if (!captionsURL.endsWith(".ass")) return;
-      assRef.current.setTrackByUrl(captionsURL);
+    async function setTrack(captionsURL) {
+      if (!assRef.current && captionsURL) {
+        if (!captionsURL.endsWith(".ass")) return;
+        captionsURL = captionsURL.replace("file://", "");
+        const content = await fs.promises.readFile(captionsURL, "utf-8");
+        var options = {
+          video: videoRef.current,
+          workerUrl: `${process.env.PUBLIC_URL}/js/subtitles-octopus-worker.js`,
+          subContent: content,
+        };
+        assRef.current = new SubtitlesOctopus(options);
+      } else if (assRef.current && !captionsURL) {
+        assRef.current.freeTrack();
+      } else if (
+        assRef.current &&
+        captionsURL &&
+        captionsURL.endsWith(".ass")
+      ) {
+        captionsURL = captionsURL.replace("file://", "");
+        const content = await fs.promises.readFile(captionsURL, "utf-8");
+        assRef.current.setTrack(content);
+      }
     }
+
+    setTrack(captionsURL);
   }, [captionsURL]);
 
   if (!videoURL) return null;
