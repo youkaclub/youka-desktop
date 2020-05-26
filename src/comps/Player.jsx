@@ -48,6 +48,7 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
 
   useEffect(() => {
     if (!assRef.current && captionsURL) {
+      if (!captionsURL.endsWith(".ass")) return;
       var options = {
         video: videoRef.current,
         workerUrl: "/js/subtitles-octopus-worker.js",
