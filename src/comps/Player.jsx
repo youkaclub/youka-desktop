@@ -1,11 +1,13 @@
 import React, { useRef, useEffect } from "react";
 import Plyr from "plyr";
 import "plyr/dist/plyr.css";
+import SubtitlesOctopus from "libass-wasm";
 
 export default function Player({ youtubeID, videoURL, captionsURL }) {
   const playerRef = useRef();
   const videoRef = useRef();
   const captionsRef = useRef();
+  const assRef = useRef();
 
   useEffect(() => {
     const plyrOptions = {
@@ -32,6 +34,7 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
 
   useEffect(() => {
     if (captionsURL) {
+      if (!captionsURL.endsWith(".vtt")) return;
       captionsRef.current.setAttribute("src", captionsURL);
       setTimeout(() => {
         playerRef.current.toggleCaptions(true);
@@ -40,6 +43,22 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
       setTimeout(() => {
         playerRef.current.toggleCaptions(false);
       }, 0);
+    }
+  }, [captionsURL]);
+
+  useEffect(() => {
+    if (!assRef.current && captionsURL) {
+      var options = {
+        video: videoRef.current,
+        workerUrl: "/js/subtitles-octopus-worker.js",
+        subUrl: captionsURL,
+      };
+      assRef.current = new SubtitlesOctopus(options);
+    } else if (assRef.current && !captionsURL) {
+      assRef.current.freeTrack();
+    } else if (assRef.current && captionsURL) {
+      if (!captionsURL.endsWith(".ass")) return;
+      assRef.current.setTrackByUrl(captionsURL);
     }
   }, [captionsURL]);
 

@@ -3,6 +3,7 @@ const platform = os.platform();
 const join = require("path").join;
 const homedir = require("os").homedir();
 const BINARIES_PATH = join(homedir, ".youka", "binaries");
+const DOWNLOAD_PATH = join(homedir, ".youka", "downloads");
 const ROOT = join(homedir, ".youka", "youtube");
 
 const ytdlNames = {
@@ -24,4 +25,5 @@ module.exports = {
   BINARIES_PATH,
   FFMPEG_PATH,
   YOUTUBE_DL_PATH,
+  DOWNLOAD_PATH,
 };

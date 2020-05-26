@@ -13,7 +13,6 @@ import rollbar from "../lib/rollbar";
 const querystring = require("querystring");
 const debug = require("debug")("youka:desktop");
 
-
 export default function WatchPage() {
   const location = useLocation();
   usePageView(location.pathname);
@@ -64,8 +63,8 @@ export default function WatchPage() {
   async function handleDownload(e, data) {
     try {
       setDownloading(true);
-      const file = data.value
-      const fpath = await library.download(id, videoMode, file);
+      const file = data.value;
+      const fpath = await library.download(id, videoMode, captionsMode, file);
       shell.showItemInFolder(fpath);
       visitor.event("Click", "Download", id).send();
     } catch (e) {
@@ -214,6 +213,7 @@ export default function WatchPage() {
                   button
                   loading={downloading}
                   text="Download"
+                  value={null}
                   onChange={handleDownload}
                   options={[
                     {
@@ -222,7 +222,7 @@ export default function WatchPage() {
                     },
                     {
                       text: "Video",
-                      value: library.FILE_VIDEO,
+                      value: library.FILE_MP4,
                     },
                   ]}
                 />

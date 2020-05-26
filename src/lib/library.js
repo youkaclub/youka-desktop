@@ -10,12 +10,13 @@ const youtube = require("./youtube");
 const youtubeDL = require("./youtube-dl");
 const ffmpegi = require("./ffmpeg");
 const { exists } = require("./utils");
-const { ROOT, FFMPEG_PATH, BINARIES_PATH } = require("./path");
+const { ROOT, FFMPEG_PATH, BINARIES_PATH, DOWNLOAD_PATH } = require("./path");
 
-export const FILE_VIDEO = ".mp4";
+export const FILE_MP4 = ".mp4";
 export const FILE_MP3 = ".mp3";
-export const FILE_AUDIO = ".m4a";
-export const FILE_CAPTIONS = ".vtt";
+export const FILE_M4A = ".m4a";
+export const FILE_ASS = ".ass";
+export const FILE_VTT = ".vtt";
 export const FILE_TEXT = ".txt";
 export const FILE_JSON = ".json";
 
@@ -52,7 +53,7 @@ export async function videos() {
   const items = [];
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i];
-    const fpath = filepath(id, MODE_MEDIA_INSTRUMENTS, FILE_VIDEO);
+    const fpath = filepath(id, MODE_MEDIA_INSTRUMENTS, FILE_MP4);
     if (!(await exists(fpath))) {
       continue;
     }
@@ -79,7 +80,7 @@ export function fileurl(youtubeID, mode, file) {
 }
 
 export async function files(youtubeID) {
-  const fpath = filepath(youtubeID, MODE_MEDIA_INSTRUMENTS, FILE_VIDEO);
+  const fpath = filepath(youtubeID, MODE_MEDIA_INSTRUMENTS, FILE_MP4);
   if (!(await exists(fpath))) {
     return null;
   }
@@ -93,14 +94,15 @@ export async function files(youtubeID) {
     const ext = "." + parts[1];
 
     switch (ext) {
-      case FILE_VIDEO:
-        const fvurl = fileurl(youtubeID, mode, FILE_VIDEO);
+      case FILE_MP4:
+        const fvurl = fileurl(youtubeID, mode, FILE_MP4);
         if (fvurl) {
           videos[mode] = fvurl;
         }
         break;
-      case FILE_CAPTIONS:
-        const fcurl = fileurl(youtubeID, mode, FILE_CAPTIONS);
+      case FILE_ASS:
+      case FILE_VTT:
+        const fcurl = fileurl(youtubeID, mode, ext);
         if (fcurl) {
           captions[mode] = fcurl;
         }
@@ -127,13 +129,14 @@ export async function saveBase64(youtubeID, obj, file) {
 export async function init(youtubeID) {
   await mkdirp(join(ROOT, youtubeID));
   await mkdirp(BINARIES_PATH);
+  await mkdirp(DOWNLOAD_PATH);
   await Promise.all([ffmpegi.install(), youtubeDL.install()]);
   process.env.FFMPEG_PATH = FFMPEG_PATH;
   ffmpeg.setFfmpegPath(FFMPEG_PATH);
 }
 
 export async function getAudio(youtubeID, mode) {
-  const fp = filepath(youtubeID, mode, FILE_AUDIO);
+  const fp = filepath(youtubeID, mode, FILE_M4A);
   if (await exists(fp)) {
     return fs.promises.readFile(fp);
   }
@@ -146,7 +149,7 @@ export async function getAudio(youtubeID, mode) {
 }
 
 export async function getVideo(youtubeID, mode) {
-  const fp = filepath(youtubeID, mode, FILE_VIDEO);
+  const fp = filepath(youtubeID, mode, FILE_MP4);
   if (await exists(fp)) {
     return fs.promises.readFile(fp);
   }
@@ -161,8 +164,8 @@ export async function getVideo(youtubeID, mode) {
     ffmpeg()
       .on("error", (error) => reject(error))
       .on("end", () => resolve())
-      .input(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_VIDEO))
-      .input(filepath(youtubeID, mode, FILE_AUDIO))
+      .input(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_MP4))
+      .input(filepath(youtubeID, mode, FILE_M4A))
       .addOptions(["-vcodec copy", "-acodec copy", "-map 0:0", "-map 1:0"])
       .save(fp);
   });
@@ -221,25 +224,59 @@ export async function saveFiles(youtubeID, files) {
   return Promise.all(promises);
 }
 
-export async function download(youtubeID, mode, file) {
-  const fpath = filepath(youtubeID, mode, file);
+export async function download(youtubeID, mediaMode, captionsMode, file) {
+  await init(youtubeID);
+
+  if (file === FILE_MP3) {
+    return downloadAudio(youtubeID, mediaMode);
+  } else if (file === FILE_MP4) {
+    return downloadVideo(youtubeID, mediaMode, captionsMode);
+  }
+}
+
+export async function downloadAudio(youtubeID, mediaMode) {
+  const fpath = join(DOWNLOAD_PATH, `${youtubeID}-${mediaMode}${FILE_MP3}`);
   if (await exists(fpath)) {
     return fpath;
   }
-  if (file === FILE_MP3) {
-    const srcPath = filepath(youtubeID, mode, FILE_AUDIO);
-    if (await exists(srcPath)) {
-      await init(youtubeID);
-      await new Promise((resolve, reject) => {
-        ffmpeg()
-          .on("error", (error) => reject(error))
-          .on("end", () => resolve())
-          .input(srcPath)
-          .audioCodec("libmp3lame")
-          .audioBitrate(320)
-          .save(fpath);
-      });
-      return fpath;
-    }
+  const srcPath = filepath(youtubeID, mediaMode, FILE_M4A);
+  if (await exists(srcPath)) {
+    await new Promise((resolve, reject) => {
+      ffmpeg()
+        .on("error", (error) => reject(error))
+        .on("end", () => resolve())
+        .input(srcPath)
+        .audioCodec("libmp3lame")
+        .audioBitrate(320)
+        .save(fpath);
+    });
+    return fpath;
   }
+}
+
+export async function downloadVideo(youtubeID, mediaMode, captionsMode) {
+  const fpath = join(
+    DOWNLOAD_PATH,
+    `${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`
+  );
+  if (await exists(fpath)) {
+    return fpath;
+  }
+  const captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
+  if (
+    [MODE_CAPTIONS_FULL, MODE_CAPTIONS_OFF].includes(captionsMode) ||
+    !(await exists(captionsPath))
+  ) {
+    await fs.promises.copyFile(filepath(youtubeID, mediaMode, FILE_MP4), fpath);
+    return fpath;
+  }
+  await new Promise((resolve, reject) => {
+    ffmpeg()
+      .on("error", (error) => reject(error))
+      .on("end", () => resolve())
+      .input(filepath(youtubeID, mediaMode, FILE_MP4))
+      .addOptions(["-vf", `ass=${captionsPath}`])
+      .save(fpath);
+  });
+  return fpath;
 }
