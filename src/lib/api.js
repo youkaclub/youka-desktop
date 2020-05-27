@@ -3,12 +3,12 @@ const rp = require("request-promise");
 const config = require("../config");
 
 export async function getDownload(youtubeID, files) {
-  const urls = files.map(
-    (file) => `${config.api}/download/${youtubeID}/${file.name}${file.ext}`
-  );
-  const promises = urls.map((url) => rp(url, { encoding: null }));
-  const buffers = await Promise.all(promises);
-  files.map((file, i) => (file.buffer = buffers[i]));
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const url = `${config.api}/download/${youtubeID}/${file.name}${file.ext}`
+    const buffer = await rp(url, { encoding: null })
+    files[i].buffer = buffer
+  }
   return files;
 }
 
