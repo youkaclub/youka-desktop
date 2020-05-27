@@ -68,9 +68,9 @@ export default function WatchPage() {
       shell.showItemInFolder(fpath);
       visitor.event("Click", "Download", id).send();
     } catch (e) {
+      setError(e.toString())
       rollbar.error(e);
     } finally {
-      setError(error.toString())
       setDownloading(false);
     }
   }
