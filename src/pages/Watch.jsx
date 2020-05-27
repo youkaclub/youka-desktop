@@ -69,8 +69,8 @@ export default function WatchPage() {
       visitor.event("Click", "Download", id).send();
     } catch (e) {
       rollbar.error(e);
-      console.error(e);
     } finally {
+      setError(error.toString())
       setDownloading(false);
     }
   }
@@ -78,6 +78,10 @@ export default function WatchPage() {
   function handleStatusChanged(s) {
     setStatus(s);
     debug(s);
+  }
+
+  function handleCloseError() {
+    setError(null)
   }
 
   function handleClickClose() {
@@ -173,10 +177,10 @@ export default function WatchPage() {
     <Shell youtubeID={id} defaultPlaylist={PLAYLIST_MIX}>
       <div className="flex flex-col items-center">
         {error ? (
-          <Message className="cursor-pointer" negative onClick={handleRetry}>
+          <Message negative onDismiss={handleCloseError}>
             <Message.Header>Ooops, some error occurred :(</Message.Header>
             <div className="py-1">{error}</div>
-            <div className="py-1">Click here to retry...</div>
+            <div className="py-1 cursor-pointer" onClick={handleRetry}>Click here to retry...</div>
           </Message>
         ) : null}
         {progress ? (
