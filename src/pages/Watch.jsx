@@ -68,7 +68,7 @@ export default function WatchPage() {
       shell.showItemInFolder(fpath);
       visitor.event("Click", "Download", id).send();
     } catch (e) {
-      setError(e.toString())
+      setError(e.toString());
       rollbar.error(e);
     } finally {
       setDownloading(false);
@@ -81,7 +81,7 @@ export default function WatchPage() {
   }
 
   function handleCloseError() {
-    setError(null)
+    setError(null);
   }
 
   function handleClickClose() {
@@ -180,7 +180,9 @@ export default function WatchPage() {
           <Message negative onDismiss={handleCloseError}>
             <Message.Header>Ooops, some error occurred :(</Message.Header>
             <div className="py-1">{error}</div>
-            <div className="py-1 cursor-pointer" onClick={handleRetry}>Click here to retry...</div>
+            <div className="py-1 cursor-pointer" onClick={handleRetry}>
+              Click here to retry...
+            </div>
           </Message>
         ) : null}
         {progress ? (

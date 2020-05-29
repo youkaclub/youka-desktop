@@ -5,6 +5,8 @@ const ffmpeg = require("fluent-ffmpeg");
 
 const lyricsFinder = require("./lyrics");
 const gt = require("./google-translate");
+const { Alignments } = require("./alignment");
+const { alignmentsToAss } = require("./ass-alignment");
 const rollbar = require("./rollbar");
 const youtube = require("./youtube");
 const youtubeDL = require("./youtube-dl");
@@ -100,7 +102,16 @@ export async function files(youtubeID) {
           videos[mode] = fvurl;
         }
         break;
-      case FILE_ASS:
+      case FILE_JSON:
+        if ([MODE_CAPTIONS_LINE, MODE_CAPTIONS_WORD].includes(mode)) {
+          const json = await fs.promises.readFile(
+            join(ROOT, youtubeID, file),
+            "utf-8"
+          );
+          const alignments = Alignments(json);
+          captions[mode] = alignmentsToAss(alignments).toString();
+        }
+        break;
       case FILE_VTT:
         const fcurl = fileurl(youtubeID, mode, ext);
         if (fcurl) {
@@ -262,14 +273,18 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode) {
   if (await exists(fpath)) {
     return fpath;
   }
-  const captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
-  if (
-    [MODE_CAPTIONS_FULL, MODE_CAPTIONS_OFF].includes(captionsMode) ||
-    !(await exists(captionsPath))
-  ) {
+
+  const alignmentsPath = filepath(youtubeID, captionsMode, FILE_JSON);
+  if (!(await exists(alignmentsPath))) {
     await fs.promises.copyFile(filepath(youtubeID, mediaMode, FILE_MP4), fpath);
     return fpath;
   }
+  const json = await fs.promises.readFile(alignmentsPath, "utf-8");
+  const alignments = new Alignments(json);
+  const ass = alignmentsToAss(alignments);
+  const captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
+  await fs.promises.writeFile(captionsPath, ass, "utf-8");
+
   await new Promise((resolve, reject) => {
     ffmpeg()
       .on("error", (error) => reject(error))

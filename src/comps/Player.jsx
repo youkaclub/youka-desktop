@@ -1,4 +1,3 @@
-import fs from "fs";
 import React, { useRef, useEffect } from "react";
 import Plyr from "plyr";
 import "plyr/dist/plyr.css";
@@ -50,13 +49,11 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
   useEffect(() => {
     async function setTrack(captionsURL) {
       if (!assRef.current && captionsURL) {
-        if (!captionsURL.endsWith(".ass")) return;
-        captionsURL = captionsURL.replace("file://", "");
-        const content = await fs.promises.readFile(captionsURL, "utf-8");
+        if (!captionsURL.startsWith("[Script Info]")) return;
         var options = {
           video: videoRef.current,
           workerUrl: `${process.env.PUBLIC_URL}/js/subtitles-octopus-worker.js`,
-          subContent: content,
+          subContent: captionsURL,
         };
         assRef.current = new SubtitlesOctopus(options);
       } else if (assRef.current && !captionsURL) {
@@ -64,11 +61,9 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
       } else if (
         assRef.current &&
         captionsURL &&
-        captionsURL.endsWith(".ass")
+        captionsURL.startsWith("[Script Info]")
       ) {
-        captionsURL = captionsURL.replace("file://", "");
-        const content = await fs.promises.readFile(captionsURL, "utf-8");
-        assRef.current.setTrack(content);
+        assRef.current.setTrack(captionsURL);
       }
     }
 
