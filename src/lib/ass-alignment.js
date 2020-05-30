@@ -4,7 +4,7 @@ function alignmentsToAss(alignments, options) {
   options = options || {};
   const primaryColor = options.primaryColor || "&HFFFFFF&";
   const secondaryColor = options.secondaryColor || "&HD08521&";
-  const waitLine = options.waitLine || 2;
+  const waitLine = options.waitLine || 1;
   const style = options.style || "Youka";
 
   const lines = {};
@@ -77,9 +77,14 @@ function alignmentsToAss(alignments, options) {
     if (i - 1 >= 0) {
       prevAlignment = newAlignments[i - 1];
     }
+    let nextAlignment;
+    if (i + 1 < newAlignments.length) {
+      nextAlignment = newAlignments[i + 1];
+    }
 
     const alignment = newAlignments[i];
     let start = alignment.start;
+    let end = alignment.end;
     let text = alignment.text;
 
     if (prevAlignment) {
@@ -93,7 +98,16 @@ function alignmentsToAss(alignments, options) {
       text = `{\\K${(alignment.start - start) * 100}}${text}`;
     }
 
+    if (nextAlignment) {
+      if (alignment.end + waitLine <= nextAlignment.start) {
+        end = alignment.end + waitLine;
+      } else {
+        end = nextAlignment.start;
+      }
+    }
+
     newAlignments[i].start = start;
+    newAlignments[i].end = end;
     newAlignments[i].text = text;
   }
 

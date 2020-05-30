@@ -16,7 +16,7 @@ class ScriptInfo {
     options = options || {};
     this.header = "[Script Info]";
     this.wrapStyle = options.wrapStyle || 0;
-    this.playResX = options.playResX || 480;
+    this.playResX = options.playResX || 640;
     this.playResY = options.playResY || 360;
   }
 
@@ -54,10 +54,10 @@ class Style {
     options = options || {};
     this.styleName = options.styleName || "Youka";
     this.fontName = options.fontName || "Arial";
-    this.fontSize = options.fontSize || 34;
+    this.fontSize = options.fontSize || 30;
   }
   toString() {
-    return `Style: ${this.styleName},${this.fontName},${this.fontSize},&H00D08521,&H00FFFFFF,&H00000000,&H00FFFFFF,0,0,0,0,100,100,0,0,1,1,0,2,10,10,10,1`;
+    return `Style: ${this.styleName},${this.fontName},${this.fontSize},&H00D08521,&H00FFFFFF,&H00000000,&H00FFFFFF,0,0,0,0,100,100,0,0,1,1,0,2,10,10,35,1`;
   }
 }
 

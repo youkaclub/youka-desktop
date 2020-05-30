@@ -56,6 +56,9 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
           subContent: captionsURL,
         };
         assRef.current = new SubtitlesOctopus(options);
+        setTimeout(() => {
+          playerRef.current.toggleCaptions(false);
+        }, 0);
       } else if (assRef.current && !captionsURL) {
         assRef.current.freeTrack();
       } else if (
