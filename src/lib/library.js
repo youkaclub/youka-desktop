@@ -104,12 +104,18 @@ export async function files(youtubeID) {
         break;
       case FILE_JSON:
         if ([MODE_CAPTIONS_LINE, MODE_CAPTIONS_WORD].includes(mode)) {
-          const json = await fs.promises.readFile(
-            join(ROOT, youtubeID, file),
-            "utf-8"
-          );
-          const alignments = Alignments(json);
-          captions[mode] = alignmentsToAss(alignments).toString();
+          try {
+            const json = await fs.promises.readFile(
+              join(ROOT, youtubeID, file),
+              "utf-8"
+            );
+            const alignments = Alignments(json);
+            if (alignments) {
+              captions[mode] = alignmentsToAss(alignments).toString();
+            }
+          } catch (e) {
+            rollbar.error(e);
+          }
         }
         break;
       case FILE_VTT:

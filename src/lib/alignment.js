@@ -9,6 +9,7 @@ class Alignment {
 
 function Alignments(s) {
   const obj = JSON.parse(s);
+  if (!obj) return;
   return obj.map((o) => new Alignment(o));
 }
 
