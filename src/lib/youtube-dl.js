@@ -18,7 +18,9 @@ const urls = {
 async function install() {
   try {
     const ex = await exists(YOUTUBE_DL_PATH);
-    if (ex) return;
+    if (ex) {
+      return update();
+    }
     debug("install youtube-dl");
 
     const url = urls[platform];
@@ -34,6 +36,10 @@ async function install() {
   }
 }
 
+async function update() {
+  return ytdl(["-U"]);
+}
+
 async function ytdl(args) {
   return execa(YOUTUBE_DL_PATH, args);
 }
@@ -41,4 +47,5 @@ async function ytdl(args) {
 module.exports = {
   ytdl,
   install,
+  update,
 };
