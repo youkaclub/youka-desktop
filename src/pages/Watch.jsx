@@ -6,7 +6,6 @@ import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
 import Player from "../comps/Player";
-import ReportButton from "../comps/ReportButton";
 import { usePageView } from "../lib/hooks";
 import { visitor } from "../lib/ua";
 import rollbar from "../lib/rollbar";
@@ -220,6 +219,7 @@ export default function WatchPage() {
                   loading={downloading}
                   text="Download"
                   value={null}
+                  selectOnBlur={false}
                   onChange={handleDownload}
                   options={[
                     {
@@ -246,13 +246,6 @@ export default function WatchPage() {
                   options={ccoptions}
                   onChange={handleChangeCaptions}
                 />
-                <ReportButton
-                  category="Click"
-                  action="Report out of sync"
-                  label={id}
-                >
-                  Report out of sync
-                </ReportButton>
               </div>
             </div>
             {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
