@@ -31,6 +31,7 @@ async function downloadV1(youtubeID, format) {
   const filename = await tmp.tmpName();
   const args = [
     "-v",
+    "--no-check-certificate",
     "-f",
     format,
     "--output",
