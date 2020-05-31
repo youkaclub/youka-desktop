@@ -151,11 +151,17 @@ export async function saveBase64(youtubeID, obj, file) {
 }
 
 async function validateDiskSpace() {
-  const { free } = await checkDiskSpace(HOME_PATH);
-  const freeMB = free / 1000 / 1000;
+  let freeMB = 200
+  try {
+    const { free } = await checkDiskSpace(HOME_PATH);
+    freeMB = free / 1000 / 1000;
+  } catch (e) {
+    rollbar.error(e)
+    return
+  }
   if (freeMB < 200) {
     throw new Error(
-      "Your hard disk is full, please delete unimportant files and try again"
+      "Your disk is almost full, please delete unimportant files and try again"
     );
   }
 }
