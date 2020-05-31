@@ -147,7 +147,13 @@ export async function init(youtubeID) {
   await mkdirp(join(ROOT, youtubeID));
   await mkdirp(BINARIES_PATH);
   await mkdirp(DOWNLOAD_PATH);
-  await Promise.all([ffmpegi.install(), youtubeDL.install()]);
+  await ffmpegi.install();
+  try {
+    await youtubeDL.install();
+    await youtubeDL.update();
+  } catch (e) {
+    rollbar.error(e);
+  }
   process.env.FFMPEG_PATH = FFMPEG_PATH;
   ffmpeg.setFfmpegPath(FFMPEG_PATH);
 }

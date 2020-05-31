@@ -19,7 +19,7 @@ async function install() {
   try {
     const ex = await exists(YOUTUBE_DL_PATH);
     if (ex) {
-      return update();
+      return;
     }
     debug("install youtube-dl");
 
@@ -37,7 +37,13 @@ async function install() {
 }
 
 async function update() {
-  return ytdl(["-U"]);
+  try {
+    debug("update youtube-dl");
+    await ytdl(["-U"]);
+  } catch (e) {
+    rollbar.error(e);
+    throw new Error("Update youtube-dl failed");
+  }
 }
 
 async function ytdl(args) {
