@@ -2,6 +2,7 @@ const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
 const ffmpeg = require("fluent-ffmpeg");
+const checkDiskSpace = require("check-disk-space");
 
 const lyricsFinder = require("./lyrics");
 const gt = require("./google-translate");
@@ -12,7 +13,13 @@ const youtube = require("./youtube");
 const youtubeDL = require("./youtube-dl");
 const ffmpegi = require("./ffmpeg");
 const { exists } = require("./utils");
-const { ROOT, FFMPEG_PATH, BINARIES_PATH, DOWNLOAD_PATH } = require("./path");
+const {
+  HOME_PATH,
+  ROOT,
+  FFMPEG_PATH,
+  BINARIES_PATH,
+  DOWNLOAD_PATH,
+} = require("./path");
 
 export const FILE_MP4 = ".mp4";
 export const FILE_MP3 = ".mp3";
@@ -143,7 +150,18 @@ export async function saveBase64(youtubeID, obj, file) {
   return Promise.all(ps);
 }
 
+async function validateDiskSpace() {
+  const { free } = await checkDiskSpace(HOME_PATH);
+  const freeMB = free / 1000 / 1000;
+  if (freeMB < 200) {
+    throw new Error(
+      "Your hard disk is full, please delete unimportant files and try again"
+    );
+  }
+}
+
 export async function init(youtubeID) {
+  await validateDiskSpace();
   await mkdirp(join(ROOT, youtubeID));
   await mkdirp(BINARIES_PATH);
   await mkdirp(DOWNLOAD_PATH);

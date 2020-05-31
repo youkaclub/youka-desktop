@@ -38,6 +38,7 @@
     "adm-zip": "^0.4.14",
     "arch": "^2.1.2",
     "async-graph-resolver": "^1.0.1",
+    "check-disk-space": "^2.1.0",
     "cheerio": "^1.0.0-rc.3",
     "concurrently": "^5.1.0",
     "copy-webpack-plugin": "^6.0.1",
