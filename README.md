@@ -1,6 +1,6 @@
 <p align="center"><img src="public/logo.ico" width='80px'/></p>
 <h2 align="center"><b>Youka</b></h2>
-<h4 align="center">sing karaoke, any song, any language</h4>
+<h4 align="center">The Best Karaoke Maker</h4>
 
 - Read about Youka on [The Verge](https://www.theverge.com/tldr/2020/2/19/21144452/youtube-youka-club-karaoke-lyrics).
 - Visit the project's website at <https://www.youka.club>.
@@ -17,19 +17,9 @@
 $ git clone https://github.com/youkaclub/youka-desktop.git
 $ cd youka-desktop
 $ npm install
-$ npm start
+$ NODE_ENV=production npm start
 # wait for "Compiled successfully!" message then refresh (Cmd+R) the electron window.
 ```
-
-## How it works
-
-- Search on YouTube using [youka@youtube](https://github.com/youkaclub/youka-youtube)
-- Search lyrics using [youka@lyrics](https://github.com/youkaclub/youka-lyrics)
-- Download video using [ytdl-core](https://github.com/fent/node-ytdl-core)
-- Split vocals from instruments using [spleeter](https://github.com/deezer/spleeter)
-- Align lyrics to vocals using [aeneas](https://github.com/readbeyond/aeneas)
-- Create 3 videos (instruments only, vocals only, original video) using [FFmpeg](https://www.ffmpeg.org)
-- Show you the results using [Plyr](https://github.com/sampotts/plyr)
 
 ---
 
