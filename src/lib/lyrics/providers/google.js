@@ -18,7 +18,9 @@ const provider = {
     const html = await rp(url);
     const $ = cheerio.load(html);
     const lines = [];
-    $('span[jsname="YS01Ge"]').map((i, el) => lines.push($(el).text().trim()));
+    $(
+      'g-expandable-content[jsname="WbKHeb"] span[jsname="YS01Ge"]'
+    ).map((i, el) => lines.push($(el).text().trim()));
     if (!lines.length) return;
     const l = lines.join("\n").trim();
     return l;
