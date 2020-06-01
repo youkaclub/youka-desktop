@@ -3,7 +3,6 @@ const os = require("os");
 const fs = require("fs");
 const execa = require("execa");
 const rp = require("request-promise");
-const rollbar = require("./rollbar");
 
 const { YOUTUBE_DL_PATH } = require("./path");
 const { exists } = require("./utils");
@@ -16,23 +15,18 @@ const urls = {
 };
 
 async function install() {
-  try {
-    const ex = await exists(YOUTUBE_DL_PATH);
-    if (ex) {
-      return;
-    }
-    debug("install youtube-dl");
+  const ex = await exists(YOUTUBE_DL_PATH);
+  if (ex) {
+    return;
+  }
+  debug("install youtube-dl");
 
-    const url = urls[platform];
-    if (!url) throw new Error(`unsupported platform (${platform})`);
-    const ytdl = await rp({ url, encoding: null });
-    await fs.promises.writeFile(YOUTUBE_DL_PATH, ytdl);
-    if (platform === "linux" || platform === "darwin") {
-      await fs.promises.chmod(YOUTUBE_DL_PATH, "755");
-    }
-  } catch (e) {
-    rollbar.error(e);
-    throw new Error("Install youtube-dl failed");
+  const url = urls[platform];
+  if (!url) throw new Error(`unsupported platform (${platform})`);
+  const ytdl = await rp({ url, encoding: null });
+  await fs.promises.writeFile(YOUTUBE_DL_PATH, ytdl);
+  if (platform === "linux" || platform === "darwin") {
+    await fs.promises.chmod(YOUTUBE_DL_PATH, "755");
   }
 }
 
@@ -41,8 +35,7 @@ async function update() {
     debug("update youtube-dl");
     await ytdl(["-U"]);
   } catch (e) {
-    rollbar.error(e);
-    throw new Error("Update youtube-dl failed");
+    console.error(e);
   }
 }
 

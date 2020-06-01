@@ -151,13 +151,13 @@ export async function saveBase64(youtubeID, obj, file) {
 }
 
 async function validateDiskSpace() {
-  let freeMB = 200
+  let freeMB = 200;
   try {
     const { free } = await checkDiskSpace(HOME_PATH);
     freeMB = free / 1000 / 1000;
   } catch (e) {
-    rollbar.error(e)
-    return
+    rollbar.error(e);
+    return;
   }
   if (freeMB < 200) {
     throw new Error(
@@ -209,7 +209,10 @@ export async function getVideo(youtubeID, mode) {
 
   await new Promise((resolve, reject) => {
     ffmpeg()
-      .on("error", (error) => reject(error))
+      .on("error", (error, stdout, stderr) => {
+        rollbar.error(error, stdout, stderr);
+        reject(error);
+      })
       .on("end", () => resolve())
       .input(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_MP4))
       .input(filepath(youtubeID, mode, FILE_M4A))
@@ -228,12 +231,6 @@ export async function getLyrics(youtubeID, title) {
     return l;
   }
   const lyrics = await lyricsFinder(title);
-  if (!lyrics) {
-    const sendWarn = Math.floor(Math.random() * 5) + 1 === 1;
-    if (sendWarn) {
-      rollbar.warning("missing lyrics", { youtubeID, title });
-    }
-  }
   await fs.promises.writeFile(fp, lyrics, "utf8");
 
   return lyrics;
@@ -290,7 +287,10 @@ export async function downloadAudio(youtubeID, mediaMode) {
   if (await exists(srcPath)) {
     await new Promise((resolve, reject) => {
       ffmpeg()
-        .on("error", (error) => reject(error))
+        .on("error", (error, stdout, stderr) => {
+          rollbar.error(error, stdout, stderr);
+          reject(error);
+        })
         .on("end", () => resolve())
         .input(srcPath)
         .audioCodec("libmp3lame")
@@ -323,7 +323,10 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode) {
 
   await new Promise((resolve, reject) => {
     ffmpeg()
-      .on("error", (error) => reject(error))
+      .on("error", (error, stdout, stderr) => {
+        rollbar.error(error, stdout, stderr);
+        reject(error);
+      })
       .on("end", () => resolve())
       .input(filepath(youtubeID, mediaMode, FILE_MP4))
       .addOptions(["-vf", `ass=${captionsPath}`])

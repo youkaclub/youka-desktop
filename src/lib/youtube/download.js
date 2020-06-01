@@ -17,7 +17,7 @@ async function download(youtubeID, format) {
     const fileV1 = await downloadV1(youtubeID, format);
     return fileV1;
   } catch (e) {
-    rollbar.error("Download from YouTube V1 failed", e.stderr);
+    console.error(e);
   }
   try {
     const fileV2 = await downloadV2(youtubeID, format);
