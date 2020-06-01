@@ -6,7 +6,6 @@ import { Input, Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
 import Update from "./Update";
 import rollbar from "../lib/rollbar";
-import { visitor } from "../lib/ua";
 import * as library from "../lib/library";
 
 const { shell } = require("electron");
@@ -32,8 +31,6 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
   }, [youtubeID]);
 
   function handlePlaylistChange(pl) {
-    visitor.event("Click", "Change Playlist", pl).send();
-
     switch (pl) {
       case PLAYLIST_SEARCH:
         handleSearch();
@@ -53,12 +50,10 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
   }
 
   function handleClickDonate() {
-    visitor.event("Click", "Donate").send();
     shell.openExternal("https://www.patreon.com/getyouka");
   }
 
   function handleClickDiscord() {
-    visitor.event("Click", "Discord").send();
     shell.openExternal("https://discord.gg/yMXv8qw");
   }
 

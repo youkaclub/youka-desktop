@@ -7,9 +7,9 @@ import * as karaoke from "../lib/karaoke";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
 import Player from "../comps/Player";
 import { usePageView } from "../lib/hooks";
-import { visitor } from "../lib/ua";
 import rollbar from "../lib/rollbar";
 const querystring = require("querystring");
+const amplitude = require("amplitude-js");
 const debug = require("debug")("youka:desktop");
 
 export default function WatchPage() {
@@ -62,10 +62,12 @@ export default function WatchPage() {
   async function handleDownload(e, data) {
     try {
       setDownloading(true);
+      amplitude
+        .getInstance()
+        .logEvent("DOWNLOAD", { video: videoMode, captions: captionsMode });
       const file = data.value;
       const fpath = await library.download(id, videoMode, captionsMode, file);
       shell.showItemInFolder(fpath);
-      visitor.event("Click", "Download", id).send();
     } catch (e) {
       setError(e.toString());
       rollbar.error(e);
@@ -85,17 +87,14 @@ export default function WatchPage() {
 
   function handleClickClose() {
     setVideoURL(null);
-    visitor.event("Click", "Close Video").send();
   }
 
   function handleChangeVideo(e, data) {
     changeVideo(data.value);
-    visitor.event("Click", "Change Video", data.value).send();
   }
 
   function handleChangeCaptions(e, data) {
     changeCaptions(data.value);
-    visitor.event("Click", "Change Captions", data.value).send();
   }
 
   function changeVideo(mode, modes) {
@@ -129,9 +128,9 @@ export default function WatchPage() {
           const start = new Date();
           await karaoke.generate(id, title, handleStatusChanged);
           const end = new Date();
-          const diff = Math.abs((end.getTime() - start.getTime()) / 1000);
-          debug("generate time", diff);
-          visitor.event("Click", "Generate", "Karaoke", diff).send();
+          const duration = Math.abs((end.getTime() - start.getTime()) / 1000);
+          debug("generate time", duration);
+          amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
           files = await library.files(id);
         }
         setVideoModes(files.videos);
