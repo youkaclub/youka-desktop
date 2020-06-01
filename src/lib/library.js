@@ -176,6 +176,7 @@ export async function init(youtubeID) {
     await youtubeDL.install();
     await youtubeDL.update();
   } catch (e) {
+    console.log(e);
     rollbar.error(e);
   }
   process.env.FFMPEG_PATH = FFMPEG_PATH;

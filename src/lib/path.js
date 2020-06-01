@@ -20,7 +20,11 @@ const ffmpegNames = {
 };
 const FFMPEG_PATH = join(BINARIES_PATH, ffmpegNames[platform]);
 
+const MSVCR_NAME = "msvcr100.dll";
+const MSVCR_PATH = join(BINARIES_PATH, MSVCR_NAME);
+
 module.exports = {
+  MSVCR_PATH,
   HOME_PATH,
   ROOT,
   BINARIES_PATH,

@@ -4,7 +4,7 @@ const fs = require("fs");
 const execa = require("execa");
 const rp = require("request-promise");
 
-const { YOUTUBE_DL_PATH } = require("./path");
+const { YOUTUBE_DL_PATH, MSVCR_PATH } = require("./path");
 const { exists } = require("./utils");
 
 const platform = os.platform();
@@ -14,7 +14,14 @@ const urls = {
   linux: "https://static.youka.club/binaries/youtube-dl",
 };
 
+const msvcrURL = "http://static.youka.club/binaries/msvcr100.dll";
+
 async function install() {
+  if (platform === "win32" && !(await exists(MSVCR_PATH))) {
+    const buffer = await rp({ url: msvcrURL, encoding: null });
+    await fs.promises.writeFile(MSVCR_PATH, buffer);
+  }
+
   const ex = await exists(YOUTUBE_DL_PATH);
   if (ex) {
     return;
