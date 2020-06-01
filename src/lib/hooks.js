@@ -6,9 +6,3 @@ export function usePageView(path) {
     visitor.pageview(path).send();
   }, [path]);
 }
-
-export function useEvent(category, action, label) {
-  useEffect(() => {
-    visitor.event(category, action, label).send();
-  }, [category, action, label]);
-}
