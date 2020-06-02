@@ -1,3 +1,4 @@
+const os = require("os");
 const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
@@ -319,8 +320,15 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode) {
   const json = await fs.promises.readFile(alignmentsPath, "utf-8");
   const alignments = new Alignments(json);
   const ass = alignmentsToAss(alignments);
-  const captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
+  let captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
   await fs.promises.writeFile(captionsPath, ass, "utf-8");
+
+  if (os.platform() === "win32") {
+    captionsPath = captionsPath.replace(/\\/g, "/");
+    captionsPath = captionsPath.replace(":", "\\:");
+  }
+
+  const assfilter = `ass='${captionsPath}'`;
 
   await new Promise((resolve, reject) => {
     ffmpeg()
@@ -330,7 +338,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode) {
       })
       .on("end", () => resolve())
       .input(filepath(youtubeID, mediaMode, FILE_MP4))
-      .addOptions(["-vf", `ass=${captionsPath}`])
+      .addOptions(["-vf", assfilter])
       .save(fpath);
   });
   return fpath;

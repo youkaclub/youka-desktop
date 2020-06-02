@@ -196,7 +196,7 @@ export default function WatchPage() {
         ) : null}
         {videoURL && !error && !progress ? (
           <div>
-            <div style={{ width: "60vw" }}>
+            <div>
               <Player
                 youtubeID={id}
                 videoURL={videoURL}
