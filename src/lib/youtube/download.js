@@ -32,6 +32,7 @@ async function downloadV1(youtubeID, format) {
   const args = [
     "-v",
     "--no-check-certificate",
+    "--no-cache-dir",
     "-f",
     format,
     "--output",
