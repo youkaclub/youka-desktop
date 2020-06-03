@@ -6,6 +6,13 @@ function alignmentsToAss(alignments, options) {
   const secondaryColor = options.secondaryColor || "&HD08521&";
   const waitLine = options.waitLine || 1;
   const style = options.style || "Youka";
+  const delta = options.delta || 0.2;
+
+  for (let i = 0; i < alignments.length; i++) {
+    if (alignments[i].start < delta) continue;
+    alignments[i].start -= delta;
+    alignments[i].end -= delta;
+  }
 
   const lines = {};
   for (let i = 0; i < alignments.length; i++) {
