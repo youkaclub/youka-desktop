@@ -69,11 +69,11 @@ function alignmentsToAss(alignments, options) {
       if (mod > 0) {
         newAlignments[i].text = `{\\c${secondaryColor}}${
           newAlignments[i].text
-        }\\N{\\c${secondaryColor}}${newAlignments[i - 1].otext}`;
+        }\\N{\\2c${secondaryColor}}${newAlignments[i - 1].otext}`;
       } else {
-        newAlignments[i].text = `{\\c${secondaryColor}}${
+        newAlignments[i].text = `{\\2c${secondaryColor}}${
           newAlignments[i - 1].otext
-        }\\N{\\c${secondaryColor}}${newAlignments[i].text}`;
+        }\\N{\\c${secondaryColor}\\2c${primaryColor}}${newAlignments[i].text}`;
       }
     }
   }
