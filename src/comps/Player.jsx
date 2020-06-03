@@ -79,8 +79,6 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
     <video
       controls
       playsInline
-      width="480"
-      height="360"
       id="player"
       crossOrigin="true"
       ref={videoRef}
