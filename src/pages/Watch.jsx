@@ -66,7 +66,9 @@ export default function WatchPage() {
         .getInstance()
         .logEvent("DOWNLOAD", { video: videoMode, captions: captionsMode });
       const file = data.value;
+      if (!file) return;
       const fpath = await library.download(id, videoMode, captionsMode, file);
+      if (!fpath) return;
       shell.showItemInFolder(fpath);
     } catch (e) {
       setError(e.toString());
@@ -217,7 +219,6 @@ export default function WatchPage() {
                   button
                   loading={downloading}
                   text="Download"
-                  value={null}
                   selectOnBlur={false}
                   onChange={handleDownload}
                   options={[
