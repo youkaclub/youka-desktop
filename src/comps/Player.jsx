@@ -1,13 +1,18 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Plyr from "plyr";
 import "plyr/dist/plyr.css";
 import SubtitlesOctopus from "libass-wasm";
+import { useWindowSize } from "@react-hook/window-size";
 
-export default function Player({ youtubeID, videoURL, captionsURL }) {
+export default function Player({ youtubeID, videoURL, captionsURL, title }) {
   const playerRef = useRef();
   const videoRef = useRef();
   const captionsRef = useRef();
   const assRef = useRef();
+
+  const [windowWidth, windowHeight] = useWindowSize();
+  const [videoHeight, setVideoHeight] = useState(360);
+  const [videoWidth, setVideoWidth] = useState(640);
 
   useEffect(() => {
     const plyrOptions = {
@@ -25,6 +30,8 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
       videoRef.current.setAttribute("src", videoURL);
       try {
         await playerRef.current.play();
+        setVideoWidth(videoRef.current.videoWidth);
+        setVideoHeight(videoRef.current.videoHeight);
       } catch (e) {}
       if (isSame) {
         playerRef.current.currentTime = currentTime;
@@ -73,20 +80,39 @@ export default function Player({ youtubeID, videoURL, captionsURL }) {
     setTrack(captionsURL);
   }, [captionsURL]);
 
+  function calcStyle() {
+    const windowRatio = windowWidth / windowHeight;
+    const ratio = windowRatio;
+    const calcHeight = `${videoHeight * ratio}px`;
+    const calcWidth = `${videoWidth * ratio}px`;
+    const style = {
+      width: calcWidth,
+      height: calcHeight,
+    };
+
+    return style;
+  }
+
   if (!videoURL) return null;
 
   return (
-    <video
-      controls
-      playsInline
-      id="player"
-      crossOrigin="true"
-      ref={videoRef}
-      type="video/mp4"
-      className="object-cover"
-      preload="auto"
-    >
-      <track default kind="captions" srcLang="en" ref={captionsRef} />
-    </video>
+    <div className="self-center">
+      <div style={calcStyle()}>
+        <video
+          controls
+          playsInline
+          id="player"
+          crossOrigin="true"
+          type="video/mp4"
+          preload="auto"
+          ref={videoRef}
+        >
+          <track default kind="captions" srcLang="en" ref={captionsRef} />
+        </video>
+      </div>
+      <div className="flex flex-row justify-between p-1">
+        <div className="text-2xl leading-tight p-1">{title}</div>
+      </div>
+    </div>
   );
 }

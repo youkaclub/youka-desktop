@@ -197,18 +197,14 @@ export default function WatchPage() {
           </div>
         ) : null}
         {videoURL && !error && !progress ? (
-          <div>
-            <div style={{ width: "80vh" }}>
-              <Player
-                youtubeID={id}
-                videoURL={videoURL}
-                captionsURL={captionsURL}
-              />
-            </div>
-            <div className="flex flex-row justify-between p-1">
-              <div className="text-2xl leading-tight m-1">{title}</div>
-            </div>
-            <div className="flex flex-row w-full m-2 justify-center">
+          <div className="flex flex-col justify-center">
+            <Player
+              youtubeID={id}
+              videoURL={videoURL}
+              captionsURL={captionsURL}
+              title={title}
+            />
+            <div className="flex flex-row w-full p-2 justify-center">
               <div className="flex flex-row p-2 mx-4">
                 <Button
                   icon="close"
