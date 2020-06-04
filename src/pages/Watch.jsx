@@ -60,19 +60,20 @@ export default function WatchPage() {
   }, [videoModes, captionsModes, lyrics]);
 
   async function handleDownload(e, data) {
+    setDownloading(true);
+    const file = data.value;
+    const obj = {
+      file,
+      audio: videoMode,
+      captions: captionsMode,
+    };
     try {
-      setDownloading(true);
-      amplitude
-        .getInstance()
-        .logEvent("DOWNLOAD", { video: videoMode, captions: captionsMode });
-      const file = data.value;
-      if (!file) return;
+      amplitude.getInstance().logEvent("DOWNLOAD", obj);
       const fpath = await library.download(id, videoMode, captionsMode, file);
-      if (!fpath) return;
       shell.showItemInFolder(fpath);
     } catch (e) {
       setError(e.toString());
-      rollbar.error(e);
+      rollbar.error(e, obj);
     } finally {
       setDownloading(false);
     }
