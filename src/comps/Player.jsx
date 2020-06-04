@@ -81,13 +81,22 @@ export default function Player({ youtubeID, videoURL, captionsURL, title }) {
   }, [captionsURL]);
 
   function calcStyle() {
-    const windowRatio = windowWidth / windowHeight;
-    const ratio = windowRatio;
-    const calcHeight = `${videoHeight * ratio}px`;
-    const calcWidth = `${videoWidth * ratio}px`;
+    const videoRatio = videoWidth / videoHeight;
+
+    let calcHeight = windowHeight * 0.7;
+    let calcWidth = calcHeight * videoRatio;
+
+    if (calcWidth > windowWidth * 0.8) {
+      calcWidth = windowWidth * 0.8;
+      calcHeight = calcWidth / videoRatio;
+    }
+
+    const height = `${calcHeight}px`;
+    const width = `${calcWidth}px`;
+
     const style = {
-      width: calcWidth,
-      height: calcHeight,
+      width,
+      height,
     };
 
     return style;
