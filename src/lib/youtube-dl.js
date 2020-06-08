@@ -41,7 +41,7 @@ async function install() {
 async function update() {
   try {
     debug("update youtube-dl");
-    await ytdl(["v", "-U", "--no-check-certificate"]);
+    await ytdl(["-v", "-U", "--no-check-certificate"]);
   } catch (e) {
     rollbar.error(e)
   }
