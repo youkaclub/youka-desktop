@@ -29,6 +29,7 @@ const provider = {
         }
       );
     } catch (e) {
+      console.log(e);
       return null;
     }
     const obj = await parseXML(xml);
