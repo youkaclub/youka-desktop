@@ -20,12 +20,17 @@ const provider = {
   supported: (lang) => ["ja", "ko", "zh"].includes(lang),
 
   search: async (query) => {
-    const xml = await rp(
-      `http://ttlyrics.com/api/search?title=${encodeURIComponent(query)}`,
-      {
-        jar,
-      }
-    );
+    let xml;
+    try {
+      xml = await rp(
+        `http://ttlyrics.com/api/search?title=${encodeURIComponent(query)}`,
+        {
+          jar,
+        }
+      );
+    } catch (e) {
+      return null;
+    }
     const obj = await parseXML(xml);
     if (!obj || !obj.result || !obj.result.lrc || !obj.result.lrc.length)
       return;
