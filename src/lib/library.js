@@ -140,17 +140,6 @@ export async function files(youtubeID) {
   return { videos, captions };
 }
 
-export async function saveBase64(youtubeID, obj, file) {
-  const ps = [];
-  if (obj) {
-    for (const [mode, value] of Object.entries(obj)) {
-      const fpath = filepath(youtubeID, mode, file);
-      ps.push(fs.promises.writeFile(fpath, value, "base64"));
-    }
-  }
-  return Promise.all(ps);
-}
-
 async function validateDiskSpace() {
   let freeMB = 200;
   try {
@@ -263,11 +252,9 @@ export async function getLanguage(youtubeID, s) {
   }
 }
 
-export async function saveFiles(youtubeID, files) {
-  const promises = files.map((file) =>
-    fs.promises.writeFile(filepath(youtubeID, file.name, file.ext), file.buffer)
-  );
-  return Promise.all(promises);
+export async function saveFile(youtubeID, mode, file, buffer) {
+  const fp = filepath(youtubeID, mode, file);
+  return fs.promises.writeFile(fp, buffer);
 }
 
 export async function download(youtubeID, mediaMode, captionsMode, file) {
