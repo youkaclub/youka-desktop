@@ -62,6 +62,7 @@
     "needle": "^2.3.3",
     "node-loader": "^0.6.0",
     "plyr": "^3.5.10",
+    "promise-retry": "^1.1.1",
     "promise.retry": "^0.3.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

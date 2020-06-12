@@ -2,67 +2,26 @@ const debug = require("debug")("youka:desktop");
 const rp = require("request-promise");
 const library = require("./library");
 const Client = require("./client");
+const retry = require("promise-retry");
 
 const client = new Client();
 
-async function align(youtubeID, audioUrl, transcriptUrl, lang, mode) {
-  const queue = lang === "en" ? "alignen" : "align";
-  const jobId = await client.enqueue(queue, {
-    audioUrl,
-    transcriptUrl,
-    options: { mode, lang },
-  });
-  await client.wait(queue, jobId);
-  const { alignmentsUrl } = await client.result(queue, jobId);
-  const alignments = await rp({
-    uri: alignmentsUrl,
-    encoding: "utf-8",
-  });
-  await library.saveFile(youtubeID, mode, library.FILE_JSON, alignments);
-}
-
-async function split(youtubeID, audioUrl) {
-  const splitJobId = await client.enqueue("split", { audioUrl });
-  await client.wait("split", splitJobId);
-  const splitResult = await client.result("split", splitJobId);
-  const [vocals, instruments] = await Promise.all([
-    rp({ uri: splitResult.vocalsUrl, encoding: null }),
-    rp({
-      uri: splitResult.instrumentsUrl,
-      encoding: null,
-    }),
-  ]);
-  await library.saveFile(
-    youtubeID,
-    library.MODE_MEDIA_INSTRUMENTS,
-    library.FILE_M4A,
-    instruments
-  );
-  await library.saveFile(
-    youtubeID,
-    library.MODE_MEDIA_VOCALS,
-    library.FILE_M4A,
-    vocals
-  );
-
-  return splitResult;
-}
-async function generate(youtubeID, title, onStatusChanged) {
+async function generate(youtubeID, title, onStatus) {
   debug("youtube-id", youtubeID);
 
-  onStatusChanged("Initializing");
+  onStatus("Initializing");
   await library.init(youtubeID);
 
-  onStatusChanged("Searching lyrics");
+  onStatus("Searching lyrics");
   const lyrics = await library.getLyrics(youtubeID, title);
 
-  onStatusChanged("Downloading audio");
+  onStatus("Downloading audio");
   const originalAudio = await library.getAudio(
     youtubeID,
     library.MODE_MEDIA_ORIGINAL
   );
 
-  onStatusChanged("Uploading files");
+  onStatus("Uploading files");
   const audioUrl = await client.upload(originalAudio);
 
   let lang, transcriptUrl;
@@ -79,7 +38,7 @@ async function generate(youtubeID, title, onStatusChanged) {
   if (lang === "en") {
     promises.push(align(youtubeID, audioUrl, transcriptUrl, lang, "word"));
   }
-  onStatusChanged("Server is processing your song");
+  onStatus("Server is processing your song");
   const [splitResult] = await Promise.all(promises);
   const vocalsUrl = splitResult.vocalsUrl;
 
@@ -99,4 +58,55 @@ async function generate(youtubeID, title, onStatusChanged) {
   await library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS);
 }
 
-export { generate };
+async function align(youtubeID, audioUrl, transcriptUrl, lang, mode) {
+  const queue = lang === "en" ? "alignen" : "align";
+  const jobId = await client.enqueue(queue, {
+    audioUrl,
+    transcriptUrl,
+    options: { mode, lang },
+  });
+  const success = await client.wait(queue, jobId);
+  if (!success) return;
+  const { alignmentsUrl } = await client.result(queue, jobId);
+  const alignments = await retry((r) =>
+    rp({
+      uri: alignmentsUrl,
+      encoding: "utf-8",
+    }).catch(r)
+  );
+  await library.saveFile(youtubeID, mode, library.FILE_JSON, alignments);
+}
+
+async function split(youtubeID, audioUrl) {
+  const splitJobId = await client.enqueue("split", { audioUrl });
+  const success = await client.wait("split", splitJobId);
+  if (!success) throw new Error("Processing failed");
+  const splitResult = await client.result("split", splitJobId);
+  const [vocals, instruments] = await Promise.all([
+    retry((r) => rp({ uri: splitResult.vocalsUrl, encoding: null }).catch(r)),
+    retry((r) =>
+      rp({
+        uri: splitResult.instrumentsUrl,
+        encoding: null,
+      }).catch(r)
+    ),
+  ]);
+  await library.saveFile(
+    youtubeID,
+    library.MODE_MEDIA_INSTRUMENTS,
+    library.FILE_M4A,
+    instruments
+  );
+  await library.saveFile(
+    youtubeID,
+    library.MODE_MEDIA_VOCALS,
+    library.FILE_M4A,
+    vocals
+  );
+
+  return splitResult;
+}
+
+module.exports = {
+  generate,
+};

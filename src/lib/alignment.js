@@ -1,5 +1,6 @@
 class Alignment {
-  constructor({ line, start, end, text }) {
+  constructor({ paragraph, line, start, end, text }) {
+    this.paragraph = paragraph;
     this.line = line;
     this.start = start;
     this.end = end;

@@ -17,13 +17,18 @@ const provider = {
   lyrics: async (url) => {
     const html = await rp(url);
     const $ = cheerio.load(html);
-    const lines = [];
-    $(
-      'g-expandable-content[jsname="WbKHeb"] span[jsname="YS01Ge"]'
-    ).map((i, el) => lines.push($(el).text().trim()));
-    if (!lines.length) return;
-    const l = lines.join("\n").trim();
-    return l;
+    const paragraph = [];
+
+    $('g-expandable-content[jsname="WbKHeb"] div[jsname="U8S5sf"]').map(
+      (i, el) => {
+        $(el).find("br").replaceWith("\n");
+        paragraph.push($(el).text().trim());
+        return null;
+      }
+    );
+
+    if (!paragraph.length) return;
+    return paragraph.join("\n\n").trim();
   },
 };
 
