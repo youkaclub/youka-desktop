@@ -3,6 +3,10 @@ const rp = require("request-promise");
 const api = require("../config").api;
 const retry = require("promise-retry");
 
+const QUEUE_ALIGN = "align";
+const QUEUE_ALIGN_EN = "alignen";
+const QUEUE_SPLIT = "split";
+
 class Client {
   async enqueue(queue, body) {
     const { id } = await retry((r) =>
@@ -32,28 +36,37 @@ class Client {
     return url;
   }
 
-  async result(queue, id) {
+  async job(queue, id) {
     return retry((r) =>
-      rp({ uri: `${api}/queues/${queue}/${id}/result`, json: true }).catch(r)
+      rp({ uri: `${api}/queues/${queue}/${id}`, json: true }).catch(r)
     );
   }
 
-  async status(queue, id) {
-    return retry((r) =>
-      rp({ uri: `${api}/queues/${queue}/${id}/status`, json: true }).catch(r)
-    );
-  }
-
-  async wait(queue, id) {
+  async wait(queue, id, onStatus) {
     while (true) {
-      const { status } = await this.status(queue, id);
-      debug(queue, status, id);
-      switch (status) {
+      const job = await this.job(queue, id);
+      debug(queue, id, job);
+
+      if (!job || !job.status) return null;
+
+      switch (job.status) {
+        case "waiting":
+          onStatus("Waiting in the queue");
+          break;
+        case "active": {
+          onStatus("Server is processing your song");
+          break;
+        }
+        default: {
+          break;
+        }
+      }
+
+      switch (job.status) {
         case "succeeded":
-          return true;
+          return job;
         case "failed":
-        case "?":
-          return false;
+          return null;
         default:
           await (async () =>
             new Promise((resolve) => setTimeout(resolve, 10000)))();
@@ -62,4 +75,9 @@ class Client {
   }
 }
 
-module.exports = Client;
+module.exports = {
+  Client,
+  QUEUE_ALIGN,
+  QUEUE_ALIGN_EN,
+  QUEUE_SPLIT,
+};

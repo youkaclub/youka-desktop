@@ -28,6 +28,7 @@ export default function WatchPage() {
   const [error, setError] = useState();
   const [progress, setProgress] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [realigning, setRealigning] = useState(false);
   const [status, setStatus] = useState();
   const [lyrics, setLyrics] = useState();
   const [ddoptions, setddoptions] = useState([]);
@@ -120,6 +121,18 @@ export default function WatchPage() {
     window.location.reload();
   }
 
+  async function handleRealign() {
+    try {
+      setRealigning(true);
+      await karaoke.realign(id, title, captionsMode, handleStatusChanged);
+    } catch (e) {
+      console.log(e);
+      setError(e);
+    } finally {
+      setRealigning(false);
+    }
+  }
+
   useEffect(() => {
     (async function () {
       try {
@@ -140,17 +153,14 @@ export default function WatchPage() {
         setCaptionsModes(files.captions);
 
         const currVideo = defaultVideo;
-        const lang = await library.getLanguage(id);
         handleStatusChanged("Searching lyrics");
         const lyr = await library.getLyrics(id, title);
 
         let currCaptions;
-        if (library.MODE_CAPTIONS_WORD in files.captions && lang === "en") {
+        if (library.MODE_CAPTIONS_WORD) {
           currCaptions = library.MODE_CAPTIONS_WORD;
         } else if (library.MODE_CAPTIONS_LINE in files.captions) {
           currCaptions = library.MODE_CAPTIONS_LINE;
-        } else if (library.MODE_CAPTIONS_WORD in files.captions) {
-          currCaptions = library.MODE_CAPTIONS_WORD;
         } else if (lyr) {
           currCaptions = library.MODE_CAPTIONS_FULL;
         } else {
@@ -165,6 +175,7 @@ export default function WatchPage() {
         setLyrics(lyr);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
+        console.log(error);
         setError(error.toString());
         setProgress(false);
         rollbar.error(error);
@@ -243,6 +254,14 @@ export default function WatchPage() {
                   options={ccoptions}
                   onChange={handleChangeCaptions}
                 />
+                {process.env.NODE_ENV === "production" ? null : (
+                  <Button
+                    icon="recycle"
+                    content="Realign"
+                    loading={realigning}
+                    onClick={handleRealign}
+                  />
+                )}
               </div>
             </div>
             {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
