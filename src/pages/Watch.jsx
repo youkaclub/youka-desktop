@@ -82,7 +82,6 @@ export default function WatchPage() {
 
   function handleStatusChanged(s) {
     setStatus(s);
-    debug(s);
   }
 
   function handleCloseError() {
@@ -127,7 +126,7 @@ export default function WatchPage() {
       await karaoke.realign(id, title, captionsMode, handleStatusChanged);
     } catch (e) {
       console.log(e);
-      setError(e);
+      setError(e.toString());
     } finally {
       setRealigning(false);
     }
@@ -157,7 +156,7 @@ export default function WatchPage() {
         const lyr = await library.getLyrics(id, title);
 
         let currCaptions;
-        if (library.MODE_CAPTIONS_WORD) {
+        if (library.MODE_CAPTIONS_WORD in files.captions) {
           currCaptions = library.MODE_CAPTIONS_WORD;
         } else if (library.MODE_CAPTIONS_LINE in files.captions) {
           currCaptions = library.MODE_CAPTIONS_LINE;
