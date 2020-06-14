@@ -6,7 +6,7 @@ const AdmZip = require("adm-zip");
 const { exists } = require("./utils");
 const { FFMPEG_PATH } = require("./path");
 const rollbar = require("./rollbar");
-const arch = require('arch')
+const arch = require("arch");
 
 const FFMPEG_ZIP_PATH = `${FFMPEG_PATH}.zip`;
 const platform = `${os.platform()}-${arch()}`;
@@ -31,17 +31,16 @@ async function install() {
     const zipfile = await rp({ url, encoding: null });
     await fs.promises.writeFile(FFMPEG_ZIP_PATH, zipfile);
     const zip = new AdmZip(FFMPEG_ZIP_PATH);
-    let entryName
+    let entryName;
     if (platform.startsWith("win32")) {
-      entryName = "ffmpeg.exe"
+      entryName = "ffmpeg.exe";
     } else {
-      entryName = "ffmpeg"
+      entryName = "ffmpeg";
     }
     const entry = zip.getEntry(entryName);
-    if (!entry) throw new Error("Malformed ffmpeg zip file")
+    if (!entry) throw new Error("Malformed ffmpeg zip file");
     const buffer = zip.readFile(entry);
     await fs.promises.writeFile(FFMPEG_PATH, buffer);
-    await fs.promises.unlink(FFMPEG_ZIP_PATH);
     if (platform.startsWith("linux") || platform.startsWith("darwin")) {
       await fs.promises.chmod(FFMPEG_PATH, "755");
     }
