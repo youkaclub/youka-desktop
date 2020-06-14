@@ -9,21 +9,18 @@ const QUEUE_SPLIT = "split";
 
 class Client {
   async enqueue(queue, body) {
-    const { id } = await retry((r) =>
-      rp({
-        uri: `${api}/queues/${queue}/enqueue`,
-        method: "POST",
-        json: true,
-        body,
-      }).catch(r)
-    );
+    const { id } = await rp({
+      uri: `${api}/queues/${queue}/enqueue`,
+      method: "POST",
+      json: true,
+      body,
+    });
+
     return id;
   }
 
   async upload(body) {
-    const { url } = await retry((r) =>
-      rp({ uri: `${api}/upload`, json: true }).catch(r)
-    );
+    const { url } = await rp({ uri: `${api}/upload`, json: true });
 
     await retry((r) =>
       rp({
