@@ -32,6 +32,7 @@ async function generate(youtubeID, title, onStatus) {
   let lang, transcriptUrl;
   if (lyrics) {
     lang = await library.getLanguage(youtubeID, lyrics);
+    debug("lang", lang);
     transcriptUrl = await client.upload(lyrics);
   }
 
@@ -40,7 +41,7 @@ async function generate(youtubeID, title, onStatus) {
     library.getVideo(youtubeID, library.MODE_MEDIA_ORIGINAL),
     library.getInfo(youtubeID),
   ];
-  if (lang === "en") {
+  if (lyrics && lang === "en") {
     promises.push(
       align(youtubeID, audioUrl, transcriptUrl, lang, "word", onStatus)
     );
@@ -93,7 +94,7 @@ async function realign(youtubeID, title, mode, onStatus) {
 }
 
 async function align(youtubeID, audioUrl, transcriptUrl, lang, mode, onStatus) {
-  const queue = lang === "en" ? QUEUE_ALIGN_EN : QUEUE_ALIGN;
+  const queue = lang === "en" && mode === "word" ? QUEUE_ALIGN_EN : QUEUE_ALIGN;
   const jobId = await client.enqueue(queue, {
     audioUrl,
     transcriptUrl,
