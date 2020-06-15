@@ -8,15 +8,38 @@ function alignmentsToAss(alignments, options) {
   const style = options.style || "Youka";
   const delta = options.delta || 0.2;
 
+  if (!alignments.length) return null;
+
   for (let i = 0; i < alignments.length; i++) {
     if (alignments[i].start < delta) continue;
     alignments[i].start -= delta;
     alignments[i].end -= delta;
   }
 
+  let lineIndex = 1;
   const lines = {};
   for (let i = 0; i < alignments.length; i++) {
-    const line = alignments[i].line;
+    let line;
+    const alignment = alignments[i];
+    if (alignment.paragraph) {
+      if (i > 0) {
+        const prevAlignment = alignments[i - 1];
+        if (
+          alignment.line > prevAlignment.line ||
+          alignment.paragraph > prevAlignment.paragraph
+        ) {
+          lineIndex++;
+          line = lineIndex;
+        } else {
+          line = lineIndex;
+        }
+      } else {
+        line = lineIndex;
+      }
+    } else {
+      line = alignment.line;
+    }
+
     if (!(line in lines)) {
       lines[line] = [alignments[i]];
     } else {

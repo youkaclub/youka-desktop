@@ -28,7 +28,18 @@ async function download(youtubeID, format) {
   throw new Error("Download from YouTube failed");
 }
 async function downloadV1(youtubeID, format) {
-  const filename = await tmp.tmpName();
+  let postfix;
+  switch (format) {
+    case "140":
+      postfix = ".m4a";
+      break;
+    case "18":
+      postfix = ".mp4";
+      break;
+    default:
+      break;
+  }
+  const filename = await tmp.tmpName({ postfix });
   const args = [
     "-v",
     "--no-check-certificate",
