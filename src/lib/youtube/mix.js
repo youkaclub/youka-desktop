@@ -3,7 +3,17 @@ const utils = require("./utils");
 module.exports = async function (youtubeID) {
   const videoURL = `https://www.youtube.com/watch?v=${youtubeID}`;
   const videoObj = await utils.initialData(videoURL);
-  if (!videoObj) return [];
+  if (
+    !videoObj ||
+    !videoObj.contents ||
+    !videoObj.contents.twoColumnWatchNextResults ||
+    !videoObj.contents.twoColumnWatchNextResults.secondaryResults ||
+    !videoObj.contents.twoColumnWatchNextResults.secondaryResults
+      .secondaryResults ||
+    !videoObj.contents.twoColumnWatchNextResults.secondaryResults
+      .secondaryResults.results
+  )
+    return [];
   const el = videoObj.contents.twoColumnWatchNextResults.secondaryResults.secondaryResults.results.find(
     (r) => "compactRadioRenderer" in r
   );
