@@ -7,9 +7,26 @@ function alignmentsToAss(alignments, options) {
   const waitLine = options.waitLine || 1;
   const style = options.style || "Youka";
   const delta = options.delta || 0.2;
+  const fixDelta = options.fixDelta || 0.1;
 
   if (!alignments.length) return null;
 
+  // fix start === end or end < start
+  for (let i = 0; i < alignments.length; i++) {
+    if (alignments[i].start === alignments[i].end) {
+      alignments[i].end += fixDelta;
+    } else if (alignments[i].end < alignments[i].start) {
+      alignments[i].start = alignments[i].end;
+      alignments[i].end += fixDelta;
+    } else {
+      continue;
+    }
+    if (i + 1 < alignments.length - 1) {
+      alignments[i + 1].start += fixDelta;
+    }
+  }
+
+  // add delta
   for (let i = 0; i < alignments.length; i++) {
     if (alignments[i].start < delta) continue;
     alignments[i].start -= delta;
