@@ -71,7 +71,13 @@ function cleanResults(results) {
 }
 
 async function initialData(url) {
-  const html = await rp(url);
+  let html;
+  try {
+    html = await rp(url);
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
   const $ = cheerio.load(html);
   let found = false;
   const scriptEl = $("script").map((i, el) => {
