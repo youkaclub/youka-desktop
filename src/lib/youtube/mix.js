@@ -11,7 +11,15 @@ module.exports = async function (youtubeID) {
   const mixID = el.compactRadioRenderer.playlistId;
   const mixURL = `https://www.youtube.com/watch?v=${youtubeID}&list=${mixID}&start_radio=1`;
   const obj = await utils.initialData(mixURL);
-  if (!obj) return [];
+  if (
+    !obj ||
+    !obj.contents ||
+    !obj.contents.twoColumnWatchNextResults ||
+    !obj.contents.twoColumnWatchNextResults.playlist ||
+    !obj.contents.twoColumnWatchNextResults.playlist.playlist ||
+    !obj.contents.twoColumnWatchNextResults.playlist.playlist.contents
+  )
+    return [];
   const results = [];
   const items =
     obj.contents.twoColumnWatchNextResults.playlist.playlist.contents;

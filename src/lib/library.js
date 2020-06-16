@@ -119,7 +119,10 @@ export async function files(youtubeID) {
             );
             const alignments = Alignments(json);
             if (alignments) {
-              captions[mode] = alignmentsToAss(alignments).toString();
+              const ass = alignmentsToAss(alignments);
+              if (ass) {
+                captions[mode] = ass.toString();
+              }
             }
           } catch (e) {
             rollbar.error(e);
