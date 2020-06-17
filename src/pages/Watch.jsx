@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
+import {
+  Message,
+  Icon,
+  Dropdown,
+  Button,
+  Form,
+  TextArea,
+} from "semantic-ui-react";
 import { shell } from "electron";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
@@ -31,6 +38,7 @@ export default function WatchPage() {
   const [realigning, setRealigning] = useState(false);
   const [status, setStatus] = useState();
   const [lyrics, setLyrics] = useState();
+  const [editLyricsOpen, setEditLyricsOpen] = useState();
   const [ddoptions, setddoptions] = useState([]);
   const [ccoptions, setccoptions] = useState([]);
 
@@ -80,6 +88,15 @@ export default function WatchPage() {
     }
   }
 
+  function handleEditLyrics() {
+    setEditLyricsOpen(!editLyricsOpen);
+  }
+
+  async function handleLyricsChange(e, data) {
+    setLyrics(data.value);
+    return library.setLyrics(id, data.value);
+  }
+
   function handleStatusChanged(s) {
     setStatus(s);
   }
@@ -124,6 +141,7 @@ export default function WatchPage() {
     try {
       setRealigning(true);
       await karaoke.realign(id, title, captionsMode, handleStatusChanged);
+      window.location.reload(true);
     } catch (e) {
       console.log(e);
       setError(e.toString());
@@ -253,14 +271,23 @@ export default function WatchPage() {
                   options={ccoptions}
                   onChange={handleChangeCaptions}
                 />
-                {process.env.NODE_ENV === "production" ? null : (
+                <Button
+                  icon="edit"
+                  content={
+                    editLyricsOpen
+                      ? "Close Lyrics Editor"
+                      : "Open Lyrics Editor"
+                  }
+                  onClick={handleEditLyrics}
+                />
+                {editLyricsOpen || realigning ? (
                   <Button
-                    icon="recycle"
-                    content="Realign"
+                    icon="repeat"
+                    content="Resync Lyrics"
                     loading={realigning}
                     onClick={handleRealign}
                   />
-                )}
+                ) : null}
               </div>
             </div>
             {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
@@ -275,6 +302,17 @@ export default function WatchPage() {
                 </div>
               </div>
             ) : null}
+          </div>
+        ) : null}
+        {lyrics && editLyricsOpen ? (
+          <div className="w-2/4">
+            <Form>
+              <TextArea
+                value={lyrics}
+                rows={(lyrics || "").split("\n").length}
+                onChange={handleLyricsChange}
+              />
+            </Form>
           </div>
         ) : null}
       </div>

@@ -217,6 +217,11 @@ export async function getVideo(youtubeID, mode) {
   return fs.promises.readFile(fp);
 }
 
+export async function setLyrics(youtubeID, lyrics) {
+  const fp = filepath(youtubeID, MODE_LYRICS, FILE_TEXT);
+  return fs.promises.writeFile(fp, lyrics, "utf8");
+}
+
 export async function getLyrics(youtubeID, title) {
   const fp = filepath(youtubeID, MODE_LYRICS, FILE_TEXT);
   if (await exists(fp)) {
@@ -240,10 +245,10 @@ export async function getInfo(youtubeID) {
   return info;
 }
 
-export async function getLanguage(youtubeID, s) {
+export async function getLanguage(youtubeID, s, force) {
   try {
     const fp = filepath(youtubeID, MODE_LANG, FILE_TEXT);
-    if (await exists(fp)) {
+    if (!force && (await exists(fp))) {
       return fs.promises.readFile(fp, "utf8");
     }
     const lang = await gt.language(s);

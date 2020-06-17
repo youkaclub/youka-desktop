@@ -68,7 +68,7 @@ async function generate(youtubeID, title, onStatus) {
 async function realign(youtubeID, title, mode, onStatus) {
   const lyrics = await library.getLyrics(youtubeID, title);
   if (!lyrics) return;
-  const lang = await library.getLanguage(youtubeID, lyrics);
+  const lang = await library.getLanguage(youtubeID, lyrics, true);
   if (!lang) return;
   const audioMode =
     lang === "en" ? library.MODE_MEDIA_ORIGINAL : library.MODE_MEDIA_VOCALS;
