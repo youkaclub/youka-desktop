@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import {
   Message,
   Icon,
@@ -21,9 +21,11 @@ const debug = require("debug")("youka:desktop");
 const capitalize = require("capitalize");
 
 export default function WatchPage() {
+  let history = useHistory();
   const location = useLocation();
   usePageView(location.pathname);
-  const { id, title } = querystring.parse(location.search.slice(1));
+  const params = querystring.parse(location.search.slice(1));
+  const { id, title } = params;
 
   const defaultVideo = library.MODE_MEDIA_INSTRUMENTS;
 
@@ -92,6 +94,18 @@ export default function WatchPage() {
   async function handleLyricsChange(e, data) {
     setLyrics(data.value);
     return library.setLyrics(id, data.value);
+  }
+
+  function handleOpenSyncEditor() {
+    const vmode = [
+      library.MODE_MEDIA_ORIGINAL,
+      library.MODE_MEDIA_VOCALS,
+    ].includes(videoMode)
+      ? videoMode
+      : library.MODE_MEDIA_ORIGINAL;
+    history.push(
+      `/sync?id=${id}&title=${title}&videoMode=${vmode}&captionsMode=${captionsMode}`
+    );
   }
 
   function handleStatusChanged(s) {
@@ -172,7 +186,9 @@ export default function WatchPage() {
         const lyr = await library.getLyrics(id, title);
 
         let currCaptions;
-        if (library.MODE_CAPTIONS_WORD in files.captions) {
+        if (params.captionsMode) {
+          currCaptions = params.captionsMode;
+        } else if (library.MODE_CAPTIONS_WORD in files.captions) {
           currCaptions = library.MODE_CAPTIONS_WORD;
         } else if (library.MODE_CAPTIONS_LINE in files.captions) {
           currCaptions = library.MODE_CAPTIONS_LINE;
@@ -196,7 +212,7 @@ export default function WatchPage() {
         rollbar.error(error);
       }
     })();
-  }, [id, title, defaultVideo]);
+  }, [id, title, defaultVideo, params.captionsMode]);
 
   if (!id) return null;
 
@@ -233,11 +249,7 @@ export default function WatchPage() {
             />
             <div className="flex flex-row w-full p-2 justify-center">
               <div className="flex flex-row p-2 mx-4">
-                <Button
-                  icon="close"
-                  content="Close"
-                  onClick={handleClickClose}
-                />
+                <Button content="Close Video" onClick={handleClickClose} />
                 <Dropdown
                   button
                   loading={downloading}
@@ -271,20 +283,25 @@ export default function WatchPage() {
                   onChange={handleChangeCaptions}
                 />
                 <Button
-                  icon="edit"
                   content={
-                    editLyricsOpen
-                      ? "Close Lyrics Editor"
-                      : "Open Lyrics Editor"
+                    editLyricsOpen ? "Close Lyrics Editor" : "Lyrics Editor"
                   }
                   onClick={handleEditLyrics}
                 />
                 {editLyricsOpen || realigning ? (
                   <Button
-                    icon="repeat"
                     content="Resync Lyrics"
                     loading={realigning}
                     onClick={handleRealign}
+                  />
+                ) : null}
+                {[
+                  library.MODE_CAPTIONS_LINE,
+                  library.MODE_CAPTIONS_WORD,
+                ].includes(captionsMode) ? (
+                  <Button
+                    content="Sync Editor"
+                    onClick={handleOpenSyncEditor}
                   />
                 ) : null}
               </div>
