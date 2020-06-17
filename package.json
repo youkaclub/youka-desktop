@@ -40,6 +40,7 @@
     "amplitude-js": "^6.1.0-debug-cookie.1",
     "arch": "^2.1.2",
     "async-graph-resolver": "^1.0.1",
+    "capitalize": "^2.0.3",
     "check-disk-space": "^2.1.0",
     "cheerio": "^1.0.0-rc.3",
     "concurrently": "^5.1.0",

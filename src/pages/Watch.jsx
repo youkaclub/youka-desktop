@@ -18,6 +18,7 @@ import rollbar from "../lib/rollbar";
 const querystring = require("querystring");
 const amplitude = require("amplitude-js");
 const debug = require("debug")("youka:desktop");
+const capitalize = require("capitalize");
 
 export default function WatchPage() {
   const location = useLocation();
@@ -41,10 +42,6 @@ export default function WatchPage() {
   const [editLyricsOpen, setEditLyricsOpen] = useState();
   const [ddoptions, setddoptions] = useState([]);
   const [ccoptions, setccoptions] = useState([]);
-
-  function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
 
   useEffect(() => {
     const tmpddoptions = Object.keys(videoModes).map((mode, i) => {
@@ -246,6 +243,7 @@ export default function WatchPage() {
                   loading={downloading}
                   text="Download"
                   selectOnBlur={false}
+                  value={null}
                   onChange={handleDownload}
                   options={[
                     {

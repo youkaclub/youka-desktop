@@ -3,7 +3,7 @@ const os = require("os");
 const fs = require("fs");
 const execa = require("execa");
 const rp = require("request-promise");
-const rollbar = require("./rollbar")
+const rollbar = require("./rollbar");
 
 const { YOUTUBE_DL_PATH, MSVCR_PATH } = require("./path");
 const { exists } = require("./utils");
@@ -43,7 +43,7 @@ async function update() {
     debug("update youtube-dl");
     await ytdl(["-v", "-U", "--no-check-certificate"]);
   } catch (e) {
-    rollbar.error(e)
+    rollbar.error(e);
   }
 }
 

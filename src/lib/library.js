@@ -4,6 +4,7 @@ const join = require("path").join;
 const mkdirp = require("mkdirp");
 const ffmpeg = require("fluent-ffmpeg");
 const checkDiskSpace = require("check-disk-space");
+const capitalize = require("capitalize");
 
 const lyricsFinder = require("./lyrics");
 const gt = require("./google-translate");
@@ -260,6 +261,11 @@ export async function getLanguage(youtubeID, s, force) {
   }
 }
 
+export async function getTitle(youtubeID) {
+  const info = await getInfo(youtubeID);
+  return youtube.utils.cleanTitle(info.title);
+}
+
 export async function saveFile(youtubeID, mode, file, buffer) {
   const fp = filepath(youtubeID, mode, file);
   return fs.promises.writeFile(fp, buffer);
@@ -276,7 +282,11 @@ export async function download(youtubeID, mediaMode, captionsMode, file) {
 }
 
 export async function downloadAudio(youtubeID, mediaMode) {
-  const fpath = join(DOWNLOAD_PATH, `${youtubeID}-${mediaMode}${FILE_MP3}`);
+  const title = await getTitle(youtubeID);
+  const fpath = join(
+    DOWNLOAD_PATH,
+    `${title} - ${capitalize(mediaMode)}${FILE_MP3}`
+  );
   if (await exists(fpath)) {
     return fpath;
   }
@@ -299,9 +309,12 @@ export async function downloadAudio(youtubeID, mediaMode) {
 }
 
 export async function downloadVideo(youtubeID, mediaMode, captionsMode) {
+  const title = await getTitle(youtubeID);
   const fpath = join(
     DOWNLOAD_PATH,
-    `${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`
+    `${title} - ${capitalize(mediaMode)} - ${capitalize(
+      captionsMode
+    )}${FILE_MP4}`
   );
   if (await exists(fpath)) {
     return fpath;
