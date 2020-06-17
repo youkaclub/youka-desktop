@@ -28,7 +28,7 @@ export default function Sync(props) {
     <div className="flex flex-col items-center">
       {alignments
         ? alignments.map((alignment, index) => (
-            <div className="w-3/4" key={index + 1}>
+            <div className="w-2/4" key={index + 1}>
               <SyncLine
                 alignment={alignment}
                 onPlay={handlePlay}
