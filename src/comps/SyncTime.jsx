@@ -75,7 +75,7 @@ export default function SyncTime({ time, deltams, onChange }) {
   }
 
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row synctime">
       <div className="flex flex-col items-center">
         <Icon
           className="cursor-pointer"
