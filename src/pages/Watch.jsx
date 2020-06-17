@@ -140,6 +140,7 @@ export default function WatchPage() {
   async function handleRealign() {
     try {
       setRealigning(true);
+      amplitude.getInstance().logEvent("RESYNC");
       await karaoke.realign(id, title, captionsMode, handleStatusChanged);
       window.location.reload(true);
     } catch (e) {
@@ -304,12 +305,22 @@ export default function WatchPage() {
             ) : null}
           </div>
         ) : null}
-        {lyrics && editLyricsOpen ? (
-          <div className="w-2/4">
+        {videoURL && editLyricsOpen ? (
+          <div className="w-2/4 text-xl">
+            <Message>
+              NOTE: To maximize lyrics sync accuracy, keep an empty line between
+              verses
+            </Message>
             <Form>
               <TextArea
-                value={lyrics}
-                rows={(lyrics || "").split("\n").length}
+                className="text-xl"
+                value={
+                  lyrics ||
+                  Array(10)
+                    .map(() => "\n")
+                    .join("")
+                }
+                rows={lyrics ? lyrics.split("\n").length : 10}
                 onChange={handleLyricsChange}
               />
             </Form>
