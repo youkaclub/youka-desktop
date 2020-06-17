@@ -261,6 +261,24 @@ export async function getLanguage(youtubeID, s, force) {
   }
 }
 
+export async function getAlignments(youtubeID, mode) {
+  const fpath = filepath(youtubeID, mode, FILE_JSON);
+  if (await exists(fpath)) {
+    const alignments = JSON.parse(await fs.promises.readFile(fpath, "utf-8"));
+    return alignments;
+  }
+  return [];
+}
+
+export async function setAlignments(youtubeID, mode, alignments) {
+  const fpath = filepath(youtubeID, mode, FILE_JSON);
+  await fs.promises.writeFile(
+    fpath,
+    JSON.stringify(alignments, null, 2),
+    "utf-8"
+  );
+}
+
 export async function getTitle(youtubeID) {
   const info = await getInfo(youtubeID);
   return youtube.utils.cleanTitle(info.title);

@@ -8,6 +8,7 @@ import "./index.css";
 
 const Home = React.lazy(() => import("./pages/Home"));
 const Watch = React.lazy(() => import("./pages/Watch"));
+const Sync = React.lazy(() => import("./pages/Sync"));
 const Eula = React.lazy(() => import("./pages/Eula"));
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <Switch>
           <Route path="/" exact component={Home} />
           <Route path="/watch" component={Watch} />
+          <Route path="/sync" component={Sync} />
           <Route path="/eula" component={Eula} />
         </Switch>
       </Suspense>

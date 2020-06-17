@@ -63,3 +63,7 @@ a:hover {
 textarea {
   font-size: 1.75rem !important;
 }
+
+i.icon {
+  margin: 0 !important;
+}
