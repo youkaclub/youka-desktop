@@ -28,12 +28,7 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
   }, [alignment.end]);
 
   function handleTextChange(e, data) {
-    onChange({
-      ...alignment,
-      start,
-      end,
-      text: data.value,
-    });
+    setText(data.value);
   }
 
   function handleStartChange(time) {
@@ -72,6 +67,15 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
     onPlay(start, time);
   }
 
+  function handleTextBlur() {
+    onChange({
+      ...alignment,
+      start,
+      end,
+      text,
+    });
+  }
+
   return (
     <div className="flex flex-row p-2">
       <SyncTime time={start} deltams={deltams} onChange={handleStartChange} />
@@ -80,6 +84,7 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
         size="big"
         value={text}
         onChange={handleTextChange}
+        onBlur={handleTextBlur}
       />
       <SyncTime time={end} deltams={deltams} onChange={handleEndChange} />
     </div>
