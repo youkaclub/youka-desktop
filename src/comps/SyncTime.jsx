@@ -9,18 +9,15 @@ export default function SyncTime({ time, deltams, onChange }) {
   const [mseconds, setMseconds] = useState();
 
   useEffect(() => {
-    const tmpTime = parseFloat(time).toFixed(2);
+    const tmpTime = parseFloat(time).toFixed(3);
     const tmpMinutes = Math.floor(tmpTime / 60) % 60;
     setMinutes(tmpMinutes);
     setSeconds(Math.floor(tmpTime - tmpMinutes * 60));
-    setMseconds(parseInt(tmpTime.slice(-2)));
+    setMseconds(parseInt(tmpTime.slice(-3)));
   }, [time]);
 
   function handleChange(m, s, ms) {
-    setMinutes(m);
-    setSeconds(s);
-    setMseconds(ms);
-    const t = m * 60 + s + ms / 100;
+    const t = m * 60 + s + ms / 1000;
     onChange(t);
   }
 
@@ -51,7 +48,7 @@ export default function SyncTime({ time, deltams, onChange }) {
   }
 
   function handleMsecondsUp() {
-    if (mseconds + deltams < 100) {
+    if (mseconds + deltams < 1000) {
       handleChange(
         minutes,
         seconds,
@@ -76,48 +73,45 @@ export default function SyncTime({ time, deltams, onChange }) {
 
   return (
     <div className="flex flex-row synctime">
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center justify-between p-1 w-10">
+        <div>min</div>
         <Icon
           className="cursor-pointer"
-          name="caret up"
-          size="big"
+          name="plus"
           onClick={handleMinutesUp}
         />
-        <div>{minutes}</div>
+        <div className="pt-2">{minutes}</div>
         <Icon
           className="cursor-pointer"
-          name="caret down"
-          size="big"
+          name="minus"
           onClick={handleMinutesDown}
         />
       </div>
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center justify-between p-1 w-10">
+        <div>sec</div>
         <Icon
           className="cursor-pointer"
-          name="caret up"
-          size="big"
+          name="plus"
           onClick={handleSecondsUp}
         />
-        <div>{seconds}</div>
+        <div className="pt-2">{seconds}</div>
         <Icon
           className="cursor-pointer"
-          name="caret down"
-          size="big"
+          name="minus"
           onClick={handleSecondsDown}
         />
       </div>
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center justify-between p-1 w-10">
+        <div>ms</div>
         <Icon
           className="cursor-pointer"
-          name="caret up"
-          size="big"
+          name="plus"
           onClick={handleMsecondsUp}
         />
-        <div>{mseconds}</div>
+        <div className="pt-2">{mseconds}</div>
         <Icon
           className="cursor-pointer"
-          name="caret down"
-          size="big"
+          name="minus"
           onClick={handleMsecondsDown}
         />
       </div>
