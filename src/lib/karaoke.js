@@ -79,7 +79,7 @@ async function alignline(youtubeID, onStatus) {
   if (!lang) throw new Error("Can't detect language");
 
   const audio = await library.getAudio(youtubeID, library.MODE_MEDIA_VOCALS);
-  if (!audio) throw new Error("Can't find vocalsxw");
+  if (!audio) throw new Error("Can't find vocals");
   onStatus("Uploading files");
   const audioUrl = await client.upload(audio);
   const alignmentsUrl = await client.upload(JSON.stringify(alignments));
@@ -90,8 +90,7 @@ async function alignline(youtubeID, onStatus) {
   });
   const job = await client.wait(queue, jobId, onStatus);
   if (!job || !job.result || !job.result.alignmentsUrl)
-    throw new Error("Align line failed");
-  console.log(job);
+    throw new Error("Sync failed");
   const wordAlignments = await rp({
     uri: job.result.alignmentsUrl,
     encoding: "utf-8",
@@ -122,7 +121,7 @@ async function realign(youtubeID, title, mode, onStatus) {
   });
   const job = await client.wait(queue, jobId, onStatus);
   if (!job || !job.result || !job.result.alignmentsUrl)
-    throw new Error("Realign failed");
+    throw new Error("Sync failed");
   const alignments = await retry((r) =>
     rp({
       uri: job.result.alignmentsUrl,
