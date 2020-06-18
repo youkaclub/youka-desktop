@@ -98,7 +98,7 @@ function alignmentsToAss(alignments, options) {
       if (mod > 0) {
         newAlignments[
           i
-        ].text = `{\\c${secondaryColor}}${newAlignments[i].text}\\N{\\c${primaryColor}}${nextAlignment.otext}`;
+        ].text = `{\\c${secondaryColor}}${newAlignments[i].text}\\N{\\K\\c${primaryColor}}${nextAlignment.otext}`;
       } else {
         newAlignments[
           i
@@ -109,7 +109,7 @@ function alignmentsToAss(alignments, options) {
       if (mod > 0) {
         newAlignments[i].text = `{\\c${secondaryColor}}${
           newAlignments[i].text
-        }\\N{\\2c${secondaryColor}}${newAlignments[i - 1].otext}`;
+        }\\N{\\K\\2c${secondaryColor}}${newAlignments[i - 1].otext}`;
       } else {
         newAlignments[i].text = `{\\2c${secondaryColor}}${
           newAlignments[i - 1].otext

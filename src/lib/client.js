@@ -4,6 +4,7 @@ const api = require("../config").api;
 const retry = require("promise-retry");
 
 const QUEUE_ALIGN = "align";
+const QUEUE_ALIGN_LINE = "alignline";
 const QUEUE_ALIGN_EN = "alignen";
 const QUEUE_SPLIT = "split";
 
@@ -77,4 +78,5 @@ module.exports = {
   QUEUE_ALIGN,
   QUEUE_ALIGN_EN,
   QUEUE_SPLIT,
+  QUEUE_ALIGN_LINE,
 };

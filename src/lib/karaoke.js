@@ -4,6 +4,7 @@ const library = require("./library");
 const {
   Client,
   QUEUE_ALIGN,
+  QUEUE_ALIGN_LINE,
   QUEUE_ALIGN_EN,
   QUEUE_SPLIT,
 } = require("./client");
@@ -63,6 +64,44 @@ async function generate(youtubeID, title, onStatus) {
 
   await library.getVideo(youtubeID, library.MODE_MEDIA_INSTRUMENTS);
   await library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS);
+}
+
+async function alignline(youtubeID, onStatus) {
+  const queue = QUEUE_ALIGN_LINE;
+  const alignments = await library.getAlignments(
+    youtubeID,
+    library.MODE_CAPTIONS_LINE
+  );
+  if (!alignments || !alignments.length)
+    throw new Error("Line level sync not found");
+
+  const lang = await library.getLanguage(youtubeID);
+  if (!lang) throw new Error("Can't detect language");
+
+  const audio = await library.getAudio(youtubeID, library.MODE_MEDIA_VOCALS);
+  if (!audio) throw new Error("Can't find vocalsxw");
+  onStatus("Uploading files");
+  const audioUrl = await client.upload(audio);
+  const alignmentsUrl = await client.upload(JSON.stringify(alignments));
+  const jobId = await client.enqueue(queue, {
+    audioUrl,
+    alignmentsUrl,
+    options: { lang },
+  });
+  const job = await client.wait(queue, jobId, onStatus);
+  if (!job || !job.result || !job.result.alignmentsUrl)
+    throw new Error("Align line failed");
+  console.log(job);
+  const wordAlignments = await rp({
+    uri: job.result.alignmentsUrl,
+    encoding: "utf-8",
+  });
+  await library.saveFile(
+    youtubeID,
+    library.MODE_CAPTIONS_WORD,
+    library.FILE_JSON,
+    wordAlignments
+  );
 }
 
 async function realign(youtubeID, title, mode, onStatus) {
@@ -150,4 +189,5 @@ async function split(youtubeID, audioUrl, onStatus) {
 module.exports = {
   generate,
   realign,
+  alignline,
 };

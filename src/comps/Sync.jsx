@@ -1,21 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import SyncLine from "./SyncLine";
 
 export default function Sync(props) {
-  const audioRef = useRef();
   const [alignments, setAlignments] = useState([]);
 
   useEffect(() => {
     setAlignments(props.alignments);
   }, [props.alignments]);
-
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-    };
-  }, []);
 
   function handleChange(alignment, index) {
     const tmp = [...alignments];
@@ -50,25 +41,16 @@ export default function Sync(props) {
     props.onChange(tmp);
   }
 
-  function handlePlay(s, e) {
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    if (e <= s || s < 0 || e < 0) return;
-    const url = `${props.audioUrl}#t=${s},${e}`;
-    audioRef.current = new Audio(url);
-    audioRef.current.play();
-  }
-
   return (
     <div className="flex flex-col items-center">
       {alignments
-        ? alignments.map((alignment, index) => (
-            <div className="w-2/4" key={index + 1}>
+        ? alignments.map((alignment, i) => (
+            <div className="w-3/6" key={i + 1}>
               <SyncLine
                 alignment={alignment}
-                onPlay={handlePlay}
-                onChange={(a) => handleChange(a, index)}
+                prevAlignment={i > 0 ? alignments[i - 1] : null}
+                onChange={(a) => handleChange(a, i)}
+                audioUrl={props.audioUrl}
               ></SyncLine>
             </div>
           ))
