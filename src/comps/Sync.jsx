@@ -47,8 +47,11 @@ export default function Sync(props) {
         ? alignments.map((alignment, i) => (
             <div className="w-3/6" key={i + 1}>
               <SyncLine
-                alignment={alignment}
                 prevAlignment={i > 0 ? alignments[i - 1] : null}
+                alignment={alignment}
+                nextAlignment={
+                  i < alignments.length - 1 ? alignments[i + 1] : null
+                }
                 onChange={(a) => handleChange(a, i)}
                 audioUrl={props.audioUrl}
               ></SyncLine>

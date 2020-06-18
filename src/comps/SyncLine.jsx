@@ -3,8 +3,9 @@ import { Input, Button, Icon } from "semantic-ui-react";
 import SyncTime from "./SyncTime";
 
 export default function SyncLine({
-  alignment,
   prevAlignment,
+  alignment,
+  nextAlignment,
   onChange,
   audioUrl,
 }) {
@@ -100,11 +101,17 @@ export default function SyncLine({
   }
 
   function handleBackward() {
-    handleStartChange(prevAlignment.end);
+    if (prevAlignment) {
+      handleStartChange(prevAlignment.end);
+    } else {
+      handleStartChange(0);
+    }
   }
 
   function handleForward() {
-    handleEndChange(prevAlignment.end);
+    if (nextAlignment) {
+      handleEndChange(nextAlignment.start);
+    }
   }
 
   function handleEnter() {
