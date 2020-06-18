@@ -67,7 +67,7 @@ export default function SyncTime({ time, deltams, onChange }) {
         Math.round((mseconds - deltams) / deltams) * deltams
       );
     } else {
-      handleChange(minutes, seconds - 1, 99);
+      handleChange(minutes, seconds - 1, 999);
     }
   }
 

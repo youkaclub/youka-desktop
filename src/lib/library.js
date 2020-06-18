@@ -119,9 +119,9 @@ export async function files(youtubeID) {
               join(ROOT, youtubeID, file),
               "utf-8"
             );
-            const alignments = Alignments(json);
-            if (alignments) {
-              const ass = alignmentsToAss(alignments);
+            const als = JSON.parse(json);
+            if (als) {
+              const ass = alignmentsToAss(als);
               if (ass) {
                 captions[mode] = ass.toString();
               }

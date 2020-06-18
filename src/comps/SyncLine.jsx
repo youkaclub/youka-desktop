@@ -1,12 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { Input } from "semantic-ui-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Input, Button, Icon } from "semantic-ui-react";
 import SyncTime from "./SyncTime";
 
-export default function SyncLine({ alignment, onPlay, onChange }) {
+export default function SyncLine({
+  alignment,
+  prevAlignment,
+  onChange,
+  audioUrl,
+}) {
   const [text, setText] = useState(alignment.text);
   const [start, setStart] = useState(alignment.start);
   const [end, setEnd] = useState(alignment.end);
+  const [visible, setVisible] = useState(false);
   const [deltams, setDeltams] = useState(100);
+  const [paused, setPaused] = useState(true);
+
+  const audioRef = useRef(new Audio());
+  audioRef.current.onplaying = () => setPaused(false);
+  audioRef.current.onpause = () => setPaused(true);
 
   const delta = 1;
 
@@ -46,7 +57,7 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
       text,
     });
 
-    onPlay(time, end);
+    play(time, end);
   }
 
   function handleEndChange(time) {
@@ -64,7 +75,7 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
       text,
     });
 
-    onPlay(start, time);
+    play(start, time);
   }
 
   function handleTextBlur() {
@@ -76,17 +87,96 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
     });
   }
 
+  function handlePlay() {
+    play(start, end);
+  }
+
+  function handleStart() {
+    handleStartChange(audioRef.current.currentTime);
+  }
+
+  function handleEnd() {
+    handleEndChange(audioRef.current.currentTime);
+  }
+
+  function handleBackward() {
+    handleStartChange(prevAlignment.end);
+  }
+
+  function handleForward() {
+    handleEndChange(prevAlignment.end);
+  }
+
+  function handleEnter() {
+    setVisible(true);
+  }
+
+  function handleLeave() {
+    setVisible(false);
+    audioRef.current.pause();
+  }
+
+  function handlePause() {
+    audioRef.current.pause();
+  }
+
+  function play(s, e) {
+    audioRef.current.pause();
+    if (e <= s || s < 0 || e < 0) return;
+    const url = `${audioUrl}#t=${s},${e}`;
+    audioRef.current.src = url;
+    audioRef.current.play();
+  }
+
   return (
-    <div className="flex flex-row p-2">
-      <SyncTime time={start} deltams={deltams} onChange={handleStartChange} />
-      <Input
-        className="p-2 w-3/4"
-        size="big"
-        value={text}
-        onChange={handleTextChange}
-        onBlur={handleTextBlur}
-      />
-      <SyncTime time={end} deltams={deltams} onChange={handleEndChange} />
+    <div
+      className={visible ? "bg-blue-100 p-4" : "p-4"}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      {visible ? (
+        <div className="flex flex-row justify-center">
+          <Button
+            className="self-center cursor-pointer p-4"
+            icon={paused ? "play" : "pause"}
+            onClick={paused ? handlePlay : handlePause}
+          />
+          <Button
+            className="self-center cursor-pointer p-4"
+            content="Set Start"
+            disabled={paused}
+            onClick={handleStart}
+          />
+          <Button
+            className="self-center cursor-pointer p-4"
+            content="Set End"
+            disabled={paused}
+            onClick={handleEnd}
+          />
+        </div>
+      ) : null}
+
+      <div className="flex flex-row p-2">
+        <Icon
+          className="self-center cursor-pointer"
+          name="backward"
+          onClick={handleBackward}
+        />
+        <SyncTime time={start} deltams={deltams} onChange={handleStartChange} />
+        <Input
+          className="p-2 w-3/4"
+          size="big"
+          value={text}
+          onChange={handleTextChange}
+          onBlur={handleTextBlur}
+        />
+        <SyncTime time={end} deltams={deltams} onChange={handleEndChange} />
+        <Icon
+          className="px-2 self-center cursor-pointer"
+          name="forward"
+          onClick={handleForward}
+        />
+      </div>
     </div>
   );
 }
