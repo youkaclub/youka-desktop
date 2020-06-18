@@ -12,6 +12,14 @@ export default function Sync(props) {
   function handleChange(alignment, index) {
     const tmp = [...alignments];
     tmp[index] = alignment;
+    if (index + 1 < alignments.length - 1) {
+      if (alignments[index + 1].start < alignments[index].end) {
+        alignments[index + 1].start = alignments[index].end;
+      }
+      if (alignments[index + 1].start >= alignments[index + 1].end) {
+        alignments[index + 1].end = alignments[index + 1].start + 1;
+      }
+    }
     props.onChange(tmp);
   }
 

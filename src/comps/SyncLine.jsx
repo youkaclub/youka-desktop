@@ -8,6 +8,8 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
   const [end, setEnd] = useState(alignment.end);
   const [deltams, setDeltams] = useState(10);
 
+  const delta = 1;
+
   useEffect(() => {
     if (alignment.text.split(" ").length > 1) {
       setDeltams(10);
@@ -27,24 +29,32 @@ export default function SyncLine({ alignment, onPlay, onChange }) {
   }
 
   function handleStartChange(time) {
+    const e = end > time ? end : time + delta;
     setStart(time);
+    setEnd(e);
+
     onChange({
       ...alignment,
       start: time,
-      end,
+      end: e,
       text,
     });
+
     onPlay(time, end);
   }
 
   function handleEndChange(time) {
+    const s = start < time ? start : end - delta;
+    setStart(s);
     setEnd(time);
+
     onChange({
       ...alignment,
-      start,
+      start: s,
       end: time,
       text,
     });
+
     onPlay(start, time);
   }
 
