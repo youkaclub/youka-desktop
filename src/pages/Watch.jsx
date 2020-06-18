@@ -252,6 +252,7 @@ export default function WatchPage() {
                 <Button content="Close Video" onClick={handleClickClose} />
                 <Dropdown
                   button
+                  disabled={downloading}
                   loading={downloading}
                   text="Download"
                   selectOnBlur={false}
@@ -291,6 +292,7 @@ export default function WatchPage() {
                 {editLyricsOpen || realigning ? (
                   <Button
                     content="Resync Lyrics"
+                    disabled={realigning}
                     loading={realigning}
                     onClick={handleRealign}
                   />
