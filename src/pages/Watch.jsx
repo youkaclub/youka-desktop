@@ -38,7 +38,8 @@ export default function WatchPage() {
   const [error, setError] = useState();
   const [progress, setProgress] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [realigning, setRealigning] = useState(false);
+  const [syncingLines, setSyncingLines] = useState(false);
+  const [syncingWords, setSyncingWords] = useState(false);
   const [status, setStatus] = useState();
   const [lyrics, setLyrics] = useState();
   const [editLyricsOpen, setEditLyricsOpen] = useState();
@@ -97,14 +98,8 @@ export default function WatchPage() {
   }
 
   function handleOpenSyncEditor() {
-    const vmode = [
-      library.MODE_MEDIA_ORIGINAL,
-      library.MODE_MEDIA_VOCALS,
-    ].includes(videoMode)
-      ? videoMode
-      : library.MODE_MEDIA_ORIGINAL;
     history.push(
-      `/sync?id=${id}&title=${title}&videoMode=${vmode}&captionsMode=${captionsMode}`
+      `/sync?id=${id}&title=${title}&videoMode=${library.MODE_MEDIA_ORIGINAL}&captionsMode=${captionsMode}`
     );
   }
 
@@ -148,17 +143,25 @@ export default function WatchPage() {
     window.location.reload();
   }
 
-  async function handleRealign() {
+  async function handleSync(mode) {
     try {
-      setRealigning(true);
+      if (mode === library.MODE_CAPTIONS_LINE) {
+        setSyncingLines(true);
+      } else {
+        setSyncingWords(true);
+      }
       amplitude.getInstance().logEvent("RESYNC");
-      await karaoke.realign(id, title, captionsMode, handleStatusChanged);
+      await karaoke.realign(id, title, mode, handleStatusChanged);
       window.location.reload(true);
     } catch (e) {
       console.log(e);
       setError(e.toString());
     } finally {
-      setRealigning(false);
+      if (mode === library.MODE_CAPTIONS_LINE) {
+        setSyncingLines(false);
+      } else {
+        setSyncingWords(false);
+      }
     }
   }
 
@@ -283,29 +286,8 @@ export default function WatchPage() {
                   options={ccoptions}
                   onChange={handleChangeCaptions}
                 />
-                <Button
-                  content={
-                    editLyricsOpen ? "Close Lyrics Editor" : "Lyrics Editor"
-                  }
-                  onClick={handleEditLyrics}
-                />
-                {editLyricsOpen || realigning ? (
-                  <Button
-                    content="Resync Lyrics"
-                    disabled={realigning}
-                    loading={realigning}
-                    onClick={handleRealign}
-                  />
-                ) : null}
-                {[
-                  library.MODE_CAPTIONS_LINE,
-                  library.MODE_CAPTIONS_WORD,
-                ].includes(captionsMode) ? (
-                  <Button
-                    content="Sync Editor"
-                    onClick={handleOpenSyncEditor}
-                  />
-                ) : null}
+                <Button content="Lyrics Editor" onClick={handleEditLyrics} />
+                <Button content="Sync Editor" onClick={handleOpenSyncEditor} />
               </div>
             </div>
             {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
@@ -328,6 +310,20 @@ export default function WatchPage() {
               NOTE: To maximize lyrics sync accuracy, keep an empty line between
               verses
             </Message>
+            <div className="flex flex-row pb-4 justify-center">
+              <Button
+                content="Sync Lines"
+                disabled={syncingLines}
+                loading={syncingLines}
+                onClick={() => handleSync(library.MODE_CAPTIONS_LINE)}
+              />
+              <Button
+                content="Sync Words"
+                disabled={syncingWords}
+                loading={syncingWords}
+                onClick={() => handleSync(library.MODE_CAPTIONS_WORD)}
+              />
+            </div>
             <Form>
               <TextArea
                 className="text-xl"

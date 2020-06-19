@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
-import { Message, Button } from "semantic-ui-react";
+import { Message, Button, Dropdown } from "semantic-ui-react";
 import Sync from "../comps/Sync";
 import * as library from "../lib/library";
 import karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
 const querystring = require("querystring");
+const capitalize = require("capitalize");
 
 export default function SyncPage() {
   let history = useHistory();
   const location = useLocation();
-  const { id, title, videoMode, captionsMode } = querystring.parse(
-    location.search.slice(1)
-  );
+  const { id, title, videoMode } = querystring.parse(location.search.slice(1));
   const [audioUrl, setAudioUrl] = useState();
   const [saving, setSaving] = useState();
   const [syncing, setSyncing] = useState();
   const [alignments, setAlignments] = useState();
+  const [captionsMode, setCaptionsMode] = useState(library.MODE_CAPTIONS_LINE);
 
   useEffect(() => {
     async function init() {
@@ -57,9 +57,29 @@ export default function SyncPage() {
     setAlignments(als);
   }
 
+  function handleChangeCaptions(e, data) {
+    setCaptionsMode(data.value);
+  }
+
   return (
     <div>
       <div className="flex flex-row p-4 justify-center">
+        <Dropdown
+          button
+          text={" Captions: " + capitalize(captionsMode)}
+          value={captionsMode}
+          options={[
+            {
+              text: capitalize(library.MODE_CAPTIONS_LINE),
+              value: library.MODE_CAPTIONS_LINE,
+            },
+            {
+              text: capitalize(library.MODE_CAPTIONS_WORD),
+              value: library.MODE_CAPTIONS_WORD,
+            },
+          ]}
+          onChange={handleChangeCaptions}
+        />
         <Button
           content={saving ? "Saving" : "Save"}
           onClick={handleSave}
@@ -97,6 +117,10 @@ export default function SyncPage() {
             <Message.Item>
               Click on the forward button to set the end of the {captionsMode}{" "}
               as the start of the next {captionsMode}
+            </Message.Item>
+            <Message.Item>
+              Click on the Sync Words button to re-sync words automatically
+              using the manually fixed lines
             </Message.Item>
           </Message.List>
         </Message>
