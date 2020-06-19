@@ -15,6 +15,7 @@ import Shell, { PLAYLIST_MIX } from "../comps/Shell";
 import Player from "../comps/Player";
 import { usePageView } from "../lib/hooks";
 import rollbar from "../lib/rollbar";
+import { platform } from "os";
 const querystring = require("querystring");
 const amplitude = require("amplitude-js");
 const debug = require("debug")("youka:desktop");
@@ -337,15 +338,17 @@ export default function WatchPage() {
                   options={ccoptions}
                   onChange={handleChangeCaptions}
                 />
-                <Dropdown
-                  button
-                  text={`Pitch: ${pitch}`}
-                  value={pitch}
-                  options={poptions}
-                  disabled={pitching}
-                  loading={pitching}
-                  onChange={handleChangePitch}
-                />
+                {["win32", "darwin"].includes(platform()) ? (
+                  <Dropdown
+                    button
+                    text={`Pitch: ${pitch}`}
+                    value={pitch}
+                    options={poptions}
+                    disabled={pitching}
+                    loading={pitching}
+                    onChange={handleChangePitch}
+                  />
+                ) : null}
                 <Button content="Lyrics Editor" onClick={handleEditLyrics} />
                 <Button content="Sync Editor" onClick={handleOpenSyncEditor} />
               </div>
