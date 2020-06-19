@@ -23,6 +23,12 @@ const FFMPEG_PATH = join(BINARIES_PATH, ffmpegNames[platform]);
 const MSVCR_NAME = "msvcr100.dll";
 const MSVCR_PATH = join(BINARIES_PATH, MSVCR_NAME);
 
+const soundStretchNames = {
+  win32: "soundstretch.exe",
+  darwin: "soundstretch",
+};
+const SOUND_STRETCH_PATH = join(BINARIES_PATH, soundStretchNames[platform]);
+
 module.exports = {
   MSVCR_PATH,
   HOME_PATH,
@@ -31,4 +37,5 @@ module.exports = {
   FFMPEG_PATH,
   YOUTUBE_DL_PATH,
   DOWNLOAD_PATH,
+  SOUND_STRETCH_PATH,
 };

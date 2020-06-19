@@ -42,9 +42,20 @@ export default function WatchPage() {
   const [syncingWords, setSyncingWords] = useState(false);
   const [status, setStatus] = useState();
   const [lyrics, setLyrics] = useState();
+  const [pitch, setPitch] = useState(0);
+  const [pitching, setPitching] = useState();
+  const [changingMediaMode, setChangingMediaMode] = useState();
   const [editLyricsOpen, setEditLyricsOpen] = useState();
   const [ddoptions, setddoptions] = useState([]);
   const [ccoptions, setccoptions] = useState([]);
+
+  const poptions = [];
+  for (var i = -6; i <= 6; i++) {
+    poptions.push({
+      text: `${i}`,
+      value: i,
+    });
+  }
 
   useEffect(() => {
     const tmpddoptions = Object.keys(videoModes).map((mode, i) => {
@@ -78,7 +89,13 @@ export default function WatchPage() {
     };
     try {
       amplitude.getInstance().logEvent("DOWNLOAD", obj);
-      const fpath = await library.download(id, videoMode, captionsMode, file);
+      const fpath = await library.download(
+        id,
+        videoMode,
+        captionsMode,
+        file,
+        pitch
+      );
       shell.showItemInFolder(fpath);
     } catch (e) {
       setError(e.toString());
@@ -115,20 +132,33 @@ export default function WatchPage() {
     setVideoURL(null);
   }
 
-  function handleChangeVideo(e, data) {
-    changeVideo(data.value);
+  async function handleChangeMedia(e, data) {
+    return changeMedia(data.value);
   }
 
   function handleChangeCaptions(e, data) {
     changeCaptions(data.value);
   }
 
-  function changeVideo(mode, modes) {
-    const m = modes || videoModes;
-    const url = m[mode];
-    if (url) {
-      setVideoMode(mode);
-      setVideoURL(url);
+  async function changeMedia(mode, modes) {
+    try {
+      setChangingMediaMode(true);
+      if (pitch === 0) {
+        const m = modes || videoModes;
+        const url = m[mode];
+        if (url) {
+          setVideoMode(mode);
+          setVideoURL(url);
+        }
+      } else {
+        await changePitch(pitch, mode);
+        setVideoMode(mode);
+      }
+    } catch (e) {
+      console.log(e);
+      rollbar.error(e);
+    } finally {
+      setChangingMediaMode(false);
     }
   }
 
@@ -141,6 +171,25 @@ export default function WatchPage() {
 
   function handleRetry() {
     window.location.reload();
+  }
+
+  async function changePitch(n, mode) {
+    try {
+      setPitch(n);
+      setPitching(true);
+      let url = await library.getPitch(id, mode, n);
+      url = url + `?r=${Math.random()}`;
+      setVideoURL(url);
+    } catch (e) {
+      console.log(e);
+      rollbar.error(e);
+    } finally {
+      setPitching(false);
+    }
+  }
+
+  async function handleChangePitch(e, data) {
+    return changePitch(data.value, videoMode);
   }
 
   async function handleSync(mode) {
@@ -277,7 +326,9 @@ export default function WatchPage() {
                   text={" Audio: " + capitalize(videoMode)}
                   value={videoMode}
                   options={ddoptions}
-                  onChange={handleChangeVideo}
+                  disabled={changingMediaMode}
+                  loading={changingMediaMode}
+                  onChange={handleChangeMedia}
                 />
                 <Dropdown
                   button
@@ -285,6 +336,15 @@ export default function WatchPage() {
                   value={captionsMode}
                   options={ccoptions}
                   onChange={handleChangeCaptions}
+                />
+                <Dropdown
+                  button
+                  text={`Pitch: ${pitch}`}
+                  value={pitch}
+                  options={poptions}
+                  disabled={pitching}
+                  loading={pitching}
+                  onChange={handleChangePitch}
                 />
                 <Button content="Lyrics Editor" onClick={handleEditLyrics} />
                 <Button content="Sync Editor" onClick={handleOpenSyncEditor} />
