@@ -8,73 +8,74 @@ const QUEUE_ALIGN_LINE = "alignline";
 const QUEUE_ALIGN_EN = "alignen";
 const QUEUE_SPLIT = "split";
 
-class Client {
-  async enqueue(queue, body) {
-    const { id } = await rp({
-      uri: `${api}/queues/${queue}/enqueue`,
-      method: "POST",
-      json: true,
+async function enqueue(queue, body) {
+  const { id } = await rp({
+    uri: `${api}/queues/${queue}/enqueue`,
+    method: "POST",
+    json: true,
+    body,
+  });
+
+  return id;
+}
+
+async function upload(body) {
+  const { url } = await rp({ uri: `${api}/upload`, json: true });
+
+  await retry((r) =>
+    rp({
+      uri: url,
       body,
-    });
+      method: "PUT",
+    }).catch(r)
+  );
 
-    return id;
-  }
+  return url;
+}
 
-  async upload(body) {
-    const { url } = await rp({ uri: `${api}/upload`, json: true });
+async function job(queue, id) {
+  return retry((r) =>
+    rp({ uri: `${api}/queues/${queue}/${id}`, json: true }).catch(r)
+  );
+}
 
-    await retry((r) =>
-      rp({
-        uri: url,
-        body,
-        method: "PUT",
-      }).catch(r)
-    );
+async function wait(queue, id, onStatus) {
+  while (true) {
+    const job = await this.job(queue, id);
+    debug(queue, id, job);
 
-    return url;
-  }
+    if (!job || !job.status) return null;
 
-  async job(queue, id) {
-    return retry((r) =>
-      rp({ uri: `${api}/queues/${queue}/${id}`, json: true }).catch(r)
-    );
-  }
-
-  async wait(queue, id, onStatus) {
-    while (true) {
-      const job = await this.job(queue, id);
-      debug(queue, id, job);
-
-      if (!job || !job.status) return null;
-
-      switch (job.status) {
-        case "waiting":
-          onStatus("Waiting in the queue");
-          break;
-        case "active": {
-          onStatus("Server is processing your song");
-          break;
-        }
-        default: {
-          break;
-        }
+    switch (job.status) {
+      case "waiting":
+        onStatus("Waiting in the queue");
+        break;
+      case "active": {
+        onStatus("Server is processing your song");
+        break;
       }
-
-      switch (job.status) {
-        case "succeeded":
-          return job;
-        case "failed":
-          return null;
-        default:
-          await (async () =>
-            new Promise((resolve) => setTimeout(resolve, 10000)))();
+      default: {
+        break;
       }
+    }
+
+    switch (job.status) {
+      case "succeeded":
+        return job;
+      case "failed":
+        return null;
+      default:
+        await (async () =>
+          new Promise((resolve) => setTimeout(resolve, 5000)))();
     }
   }
 }
 
 module.exports = {
-  Client,
+  job,
+  wait,
+  enqueue,
+  upload,
   QUEUE_ALIGN,
   QUEUE_ALIGN_EN,
   QUEUE_SPLIT,

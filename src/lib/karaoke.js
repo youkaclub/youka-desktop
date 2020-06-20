@@ -1,25 +1,14 @@
 const debug = require("debug")("youka:desktop");
 const rp = require("request-promise");
 const library = require("./library");
-const {
-  Client,
-  QUEUE_ALIGN,
-  QUEUE_ALIGN_LINE,
-  QUEUE_ALIGN_EN,
-  QUEUE_SPLIT,
-} = require("./client");
-const retry = require("promise-retry");
-
-const client = new Client();
+const client = require("./client");
+const rollbar = require("./rollbar");
 
 async function generate(youtubeID, title, onStatus) {
   debug("youtube-id", youtubeID);
 
   onStatus("Initializing");
   await library.init(youtubeID);
-
-  onStatus("Searching lyrics");
-  const lyrics = await library.getLyrics(youtubeID, title);
 
   onStatus("Downloading audio");
   const originalAudio = await library.getAudio(
@@ -29,66 +18,149 @@ async function generate(youtubeID, title, onStatus) {
 
   onStatus("Uploading files");
   const audioUrl = await client.upload(originalAudio);
+  const splitJobId = await client.enqueue(client.QUEUE_SPLIT, { audioUrl });
 
-  let lang, transcriptUrl;
+  onStatus("Searching lyrics");
+  const lyrics = await library.getLyrics(youtubeID, title);
+
+  let shouldAlign = false;
+  let lang;
+  let alignWordJobId;
+  let alignLineJobId;
+  let alignWordQueue;
+  let transcriptUrl;
+
   if (lyrics) {
     lang = await library.getLanguage(youtubeID, lyrics);
     debug("lang", lang);
+    shouldAlign = SUPPORTED_LANGS.includes(lang);
     transcriptUrl = await client.upload(lyrics);
-  }
-
-  const promises = [
-    split(youtubeID, audioUrl, onStatus),
-    library.getVideo(youtubeID, library.MODE_MEDIA_ORIGINAL),
-    library.getInfo(youtubeID),
-  ];
-  if (lyrics && lang === "en") {
-    promises.push(
-      align(
-        youtubeID,
+    if (lang === "en") {
+      alignWordQueue = client.QUEUE_ALIGN_EN;
+      alignWordJobId = await client.enqueue(client.QUEUE_ALIGN_EN, {
         audioUrl,
         transcriptUrl,
-        lang,
-        library.MODE_CAPTIONS_WORD,
-        onStatus
-      )
-    );
-  }
-  const [splitResult] = await Promise.all(promises);
-  const vocalsUrl = splitResult.vocalsUrl;
-
-  if (lyrics && lang && SUPPORTED_LANGS.includes(lang)) {
-    const alignPromises = [
-      align(
-        youtubeID,
-        vocalsUrl,
-        transcriptUrl,
-        lang,
-        library.MODE_CAPTIONS_LINE,
-        onStatus
-      ),
-    ];
-    if (lang !== "en") {
-      alignPromises.push(
-        align(
-          youtubeID,
-          vocalsUrl,
-          transcriptUrl,
-          lang,
-          library.MODE_CAPTIONS_WORD,
-          onStatus
-        )
-      );
+      });
+    } else if (shouldAlign) {
+      alignWordQueue = client.QUEUE_ALIGN;
     }
-    await Promise.all(alignPromises);
   }
 
-  await library.getVideo(youtubeID, library.MODE_MEDIA_INSTRUMENTS);
-  await library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS);
+  onStatus("Downloading video");
+  await library.getVideo(youtubeID, library.MODE_MEDIA_ORIGINAL);
+  await library.getInfo(youtubeID);
+
+  const splitJob = await client.wait(client.QUEUE_SPLIT, splitJobId, onStatus);
+  if (
+    !splitJob ||
+    !splitJob.result ||
+    !splitJob.result.vocalsUrl ||
+    !splitJob.result.instrumentsUrl
+  ) {
+    throw new Error("Processing failed");
+  }
+
+  if (shouldAlign) {
+    alignLineJobId = await client.enqueue(client.QUEUE_ALIGN, {
+      audioUrl: splitJob.result.vocalsUrl,
+      transcriptUrl,
+      options: { mode: library.MODE_CAPTIONS_LINE, lang },
+    });
+
+    if (lang !== "en") {
+      alignWordJobId = await client.enqueue(client.QUEUE_ALIGN, {
+        audioUrl: splitJob.result.vocalsUrl,
+        transcriptUrl,
+        options: { mode: library.MODE_CAPTIONS_WORD, lang },
+      });
+    }
+  }
+
+  onStatus("Downloading files");
+  const [instruments, vocals] = await Promise.all([
+    rp({ uri: splitJob.result.instrumentsUrl, encoding: null }),
+    rp({ uri: splitJob.result.vocalsUrl, encoding: null }),
+  ]);
+
+  if (shouldAlign) {
+    try {
+      const alignLineJob = await client.wait(
+        client.QUEUE_ALIGN,
+        alignLineJobId,
+        onStatus
+      );
+      if (
+        alignLineJob &&
+        alignLineJob.result &&
+        alignLineJob.result.alignmentsUrl
+      ) {
+        const lineAlignments = await rp({
+          uri: alignLineJob.result.alignmentsUrl,
+          encoding: "utf-8",
+        });
+        await library.saveFile(
+          youtubeID,
+          library.MODE_CAPTIONS_LINE,
+          library.FILE_JSON,
+          lineAlignments
+        );
+      }
+    } catch (e) {
+      console.log(e);
+      rollbar.error(e);
+    }
+
+    try {
+      const alignWordJob = await client.wait(
+        alignWordQueue,
+        alignWordJobId,
+        onStatus
+      );
+      if (
+        alignWordJob &&
+        alignWordJob.result &&
+        alignWordJob.result.alignmentsUrl
+      ) {
+        const wordAlignments = await rp({
+          uri: alignWordJob.result.alignmentsUrl,
+          encoding: "utf-8",
+        });
+        await library.saveFile(
+          youtubeID,
+          library.MODE_CAPTIONS_WORD,
+          library.FILE_JSON,
+          wordAlignments
+        );
+      }
+    } catch (e) {
+      console.log(e);
+      rollbar.error(e);
+    }
+  }
+
+  await Promise.all([
+    library.saveFile(
+      youtubeID,
+      library.MODE_MEDIA_INSTRUMENTS,
+      library.FILE_M4A,
+      instruments
+    ),
+    library.saveFile(
+      youtubeID,
+      library.MODE_MEDIA_VOCALS,
+      library.FILE_M4A,
+      vocals
+    ),
+  ]);
+
+  await Promise.all([
+    library.getVideo(youtubeID, library.MODE_MEDIA_INSTRUMENTS),
+    library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS),
+  ]);
 }
 
 async function alignline(youtubeID, onStatus) {
-  const queue = QUEUE_ALIGN_LINE;
+  const queue = client.QUEUE_ALIGN_LINE;
   const alignments = await library.getAlignments(
     youtubeID,
     library.MODE_CAPTIONS_LINE
@@ -131,7 +203,7 @@ async function realign(youtubeID, title, mode, onStatus) {
   if (!lang) throw new Error("Can't detect language");
   const audioMode =
     lang === "en" ? library.MODE_MEDIA_ORIGINAL : library.MODE_MEDIA_VOCALS;
-  const queue = lang === "en" ? QUEUE_ALIGN_EN : QUEUE_ALIGN;
+  const queue = lang === "en" ? client.QUEUE_ALIGN_EN : client.QUEUE_ALIGN;
   const audio = await library.getAudio(youtubeID, audioMode);
   const audioUrl = await client.upload(audio);
   const transcriptUrl = await client.upload(lyrics);
@@ -143,70 +215,11 @@ async function realign(youtubeID, title, mode, onStatus) {
   const job = await client.wait(queue, jobId, onStatus);
   if (!job || !job.result || !job.result.alignmentsUrl)
     throw new Error("Sync failed");
-  const alignments = await retry((r) =>
-    rp({
-      uri: job.result.alignmentsUrl,
-      encoding: "utf-8",
-    }).catch(r)
-  );
-  await library.saveFile(youtubeID, mode, library.FILE_JSON, alignments);
-}
-
-async function align(youtubeID, audioUrl, transcriptUrl, lang, mode, onStatus) {
-  const queue =
-    lang === "en" && mode === library.MODE_CAPTIONS_WORD
-      ? QUEUE_ALIGN_EN
-      : QUEUE_ALIGN;
-  const jobId = await client.enqueue(queue, {
-    audioUrl,
-    transcriptUrl,
-    options: { mode, lang },
+  const alignments = await rp({
+    uri: job.result.alignmentsUrl,
+    encoding: "utf-8",
   });
-  const job = await client.wait(queue, jobId, onStatus);
-  if (!job || !job.result || !job.result.alignmentsUrl) return;
-  const alignments = await retry((r) =>
-    rp({
-      uri: job.result.alignmentsUrl,
-      encoding: "utf-8",
-    }).catch(r)
-  );
   await library.saveFile(youtubeID, mode, library.FILE_JSON, alignments);
-}
-
-async function split(youtubeID, audioUrl, onStatus) {
-  const splitJobId = await client.enqueue(QUEUE_SPLIT, { audioUrl });
-  const job = await client.wait(QUEUE_SPLIT, splitJobId, onStatus);
-  if (
-    !job ||
-    !job.result ||
-    !job.result.instrumentsUrl ||
-    !job.result.vocalsUrl
-  )
-    throw new Error("Processing failed");
-  onStatus("Downloading files");
-  const [vocals, instruments] = await Promise.all([
-    retry((r) => rp({ uri: job.result.vocalsUrl, encoding: null }).catch(r)),
-    retry((r) =>
-      rp({
-        uri: job.result.instrumentsUrl,
-        encoding: null,
-      }).catch(r)
-    ),
-  ]);
-  await library.saveFile(
-    youtubeID,
-    library.MODE_MEDIA_INSTRUMENTS,
-    library.FILE_M4A,
-    instruments
-  );
-  await library.saveFile(
-    youtubeID,
-    library.MODE_MEDIA_VOCALS,
-    library.FILE_M4A,
-    vocals
-  );
-
-  return job.result;
 }
 
 const SUPPORTED_LANGS = [
