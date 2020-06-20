@@ -24,7 +24,8 @@ async function search(query) {
       debug(lyrics);
       return lyrics;
     } catch (e) {
-      rollbar.error(e);
+      const msg = `lyrics provider error (${provider.name})`;
+      rollbar.error(msg, e);
     }
   }
 }
