@@ -367,7 +367,7 @@ export default function WatchPage() {
                 {["win32", "darwin"].includes(platform()) ? (
                   <Dropdown
                     button
-                    text={`Pitch: ${pitch}`}
+                    text={`Key: ${pitch}`}
                     value={pitch}
                     options={poptions}
                     disabled={pitching}
