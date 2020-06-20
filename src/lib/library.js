@@ -2,9 +2,9 @@ const os = require("os");
 const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
+const tmp = require("tmp-promise");
 const ffmpeg = require("fluent-ffmpeg");
 const checkDiskSpace = require("check-disk-space");
-const capitalize = require("capitalize");
 const filenamify = require("filenamify");
 
 const lyricsFinder = require("./lyrics");
@@ -366,8 +366,7 @@ export async function download(
 }
 
 export async function downloadAudio(youtubeID, mediaMode, pitch) {
-  const title = await getTitle(youtubeID);
-  const filename = `${title} - ${capitalize(mediaMode)}${FILE_MP3}`;
+  const filename = `${youtubeID}-${mediaMode}${FILE_MP3}`;
   const fpath = join(DOWNLOAD_PATH, filenamify(filename, { replacement: "" }));
   const srcPath =
     pitch === 0
@@ -391,11 +390,7 @@ export async function downloadAudio(youtubeID, mediaMode, pitch) {
 }
 
 export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
-  const title = await getTitle(youtubeID);
-  const filename = `${title} - ${capitalize(mediaMode)} - ${capitalize(
-    captionsMode
-  )}${FILE_MP4}`;
-
+  const filename = `${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`;
   const fpath = join(DOWNLOAD_PATH, filenamify(filename, { replacement: "" }));
   const alignmentsPath = filepath(youtubeID, captionsMode, FILE_JSON);
   if (!(await exists(alignmentsPath))) {
@@ -405,19 +400,20 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   const json = await fs.promises.readFile(alignmentsPath, "utf-8");
   const alignments = new Alignments(json);
   const ass = alignmentsToAss(alignments);
-  let captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
+  let captionsPath = await tmp.tmpName({ postfix: FILE_ASS });
   await fs.promises.writeFile(captionsPath, ass, "utf-8");
 
   if (os.platform() === "win32") {
     captionsPath = captionsPath.replace(/\\/g, "/");
     captionsPath = captionsPath.replace(":", "\\:");
   }
+  const assfilter = `ass='${captionsPath}'`;
+  console.log(captionsPath);
 
   const videofile =
     pitch === 0
       ? filepath(youtubeID, mediaMode, FILE_MP4)
       : filepath(youtubeID, MODE_MEDIA_PITCH, FILE_MKV);
-  const assfilter = `ass='${captionsPath}'`;
 
   await new Promise((resolve, reject) => {
     ffmpeg()
