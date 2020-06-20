@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import {
   Message,
@@ -49,6 +49,8 @@ export default function WatchPage() {
   const [editLyricsOpen, setEditLyricsOpen] = useState();
   const [ddoptions, setddoptions] = useState([]);
   const [ccoptions, setccoptions] = useState([]);
+
+  const lyricsRef = useRef();
 
   const poptions = [];
   for (var i = 10; i >= -10; i--) {
@@ -107,7 +109,15 @@ export default function WatchPage() {
   }
 
   function handleEditLyrics() {
+    if (captionsMode === library.MODE_CAPTIONS_FULL) {
+      changeCaptions(library.MODE_CAPTIONS_OFF);
+    }
     setEditLyricsOpen(!editLyricsOpen);
+    setTimeout(() => {
+      if (!editLyricsOpen && lyricsRef.current) {
+        lyricsRef.current.focus();
+      }
+    }, 100);
   }
 
   async function handleLyricsChange(e, data) {
@@ -165,7 +175,7 @@ export default function WatchPage() {
 
   function changeCaptions(mode, modes) {
     const m = modes || captionsModes;
-    const url = m[mode];
+    const url = m[mode] + `?r=${Math.random()}`;
     setCaptionsMode(mode);
     setCaptionsURL(url);
   }
@@ -193,25 +203,41 @@ export default function WatchPage() {
     return changePitch(data.value, videoMode);
   }
 
-  async function handleSync(mode) {
+  async function handleSyncLines() {
     try {
-      if (mode === library.MODE_CAPTIONS_LINE) {
-        setSyncingLines(true);
-      } else {
-        setSyncingWords(true);
-      }
+      setSyncingLines(true);
       amplitude.getInstance().logEvent("RESYNC");
-      await karaoke.realign(id, title, mode, handleStatusChanged);
-      window.location.reload(true);
+      await karaoke.realign(
+        id,
+        title,
+        library.MODE_CAPTIONS_LINE,
+        handleStatusChanged
+      );
+      changeCaptions(library.MODE_CAPTIONS_LINE);
     } catch (e) {
       console.log(e);
       setError(e.toString());
     } finally {
-      if (mode === library.MODE_CAPTIONS_LINE) {
-        setSyncingLines(false);
-      } else {
-        setSyncingWords(false);
-      }
+      setSyncingLines(false);
+    }
+  }
+
+  async function handleSyncWords() {
+    try {
+      setSyncingWords(true);
+      amplitude.getInstance().logEvent("RESYNC");
+      await karaoke.realign(
+        id,
+        title,
+        library.MODE_CAPTIONS_WORD,
+        handleStatusChanged
+      );
+      changeCaptions(library.MODE_CAPTIONS_WORD);
+    } catch (e) {
+      console.log(e);
+      setError(e.toString());
+    } finally {
+      setSyncingWords(false);
     }
   }
 
@@ -333,7 +359,7 @@ export default function WatchPage() {
                 />
                 <Dropdown
                   button
-                  text={" Captions: " + capitalize(captionsMode)}
+                  text={" Sync Mode: " + capitalize(captionsMode)}
                   value={captionsMode}
                   options={ccoptions}
                   onChange={handleChangeCaptions}
@@ -350,7 +376,13 @@ export default function WatchPage() {
                   />
                 ) : null}
                 <Button content="Lyrics Editor" onClick={handleEditLyrics} />
-                <Button content="Sync Editor" onClick={handleOpenSyncEditor} />
+                {captionsModes[library.MODE_CAPTIONS_LINE] ||
+                captionsModes[library.MODE_CAPTIONS_WORD] ? (
+                  <Button
+                    content="Sync Editor"
+                    onClick={handleOpenSyncEditor}
+                  />
+                ) : null}
               </div>
             </div>
             {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
@@ -376,27 +408,33 @@ export default function WatchPage() {
             <div className="flex flex-row pb-4 justify-center">
               <Button
                 content="Sync Lines"
-                disabled={syncingLines}
+                disabled={syncingLines || !lyrics || lyrics.length < 100}
                 loading={syncingLines}
-                onClick={() => handleSync(library.MODE_CAPTIONS_LINE)}
+                onClick={handleSyncLines}
               />
               <Button
                 content="Sync Words"
-                disabled={syncingWords}
+                disabled={syncingWords || !lyrics || lyrics.length < 100}
                 loading={syncingWords}
-                onClick={() => handleSync(library.MODE_CAPTIONS_WORD)}
+                onClick={handleSyncWords}
               />
             </div>
             <Form>
               <TextArea
+                placeholder="Paste here the song lyrics"
                 className="text-xl"
+                ref={lyricsRef}
                 value={
                   lyrics ||
                   Array(10)
                     .map(() => "\n")
                     .join("")
                 }
-                rows={lyrics ? lyrics.split("\n").length : 10}
+                rows={
+                  lyrics && lyrics.split("\n").length > 10
+                    ? lyrics.split("\n").length
+                    : 10
+                }
                 onChange={handleLyricsChange}
               />
             </Form>

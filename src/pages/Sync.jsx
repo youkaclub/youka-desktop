@@ -13,7 +13,6 @@ export default function SyncPage() {
   const location = useLocation();
   const { id, title, videoMode } = querystring.parse(location.search.slice(1));
   const [audioUrl, setAudioUrl] = useState();
-  const [saving, setSaving] = useState();
   const [syncing, setSyncing] = useState();
   const [alignments, setAlignments] = useState();
   const [captionsMode, setCaptionsMode] = useState(library.MODE_CAPTIONS_LINE);
@@ -28,16 +27,9 @@ export default function SyncPage() {
     init();
   }, [id, videoMode, captionsMode]);
 
-  function handleClose() {
-    history.push(`/watch?id=${id}&title=${title}&captionsMode=${captionsMode}`);
-  }
-
-  async function handleSave() {
-    setSaving(true);
+  async function handleClose() {
     await library.setAlignments(id, captionsMode, alignments);
-    setTimeout(() => {
-      setSaving(false);
-    }, 1000);
+    history.push(`/watch?id=${id}&title=${title}&captionsMode=${captionsMode}`);
   }
 
   async function handleSync() {
@@ -66,7 +58,7 @@ export default function SyncPage() {
       <div className="flex flex-row p-4 justify-center">
         <Dropdown
           button
-          text={" Captions: " + capitalize(captionsMode)}
+          text={" Sync Mode: " + capitalize(captionsMode)}
           value={captionsMode}
           options={[
             {
@@ -79,12 +71,6 @@ export default function SyncPage() {
             },
           ]}
           onChange={handleChangeCaptions}
-        />
-        <Button
-          content={saving ? "Saving" : "Save"}
-          onClick={handleSave}
-          loading={saving}
-          disabled={saving}
         />
         {captionsMode === library.MODE_CAPTIONS_LINE ? (
           <Button
