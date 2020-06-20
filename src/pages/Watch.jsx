@@ -51,7 +51,7 @@ export default function WatchPage() {
   const [ccoptions, setccoptions] = useState([]);
 
   const poptions = [];
-  for (var i = -6; i <= 6; i++) {
+  for (var i = 10; i >= -10; i--) {
     poptions.push({
       text: `${i}`,
       value: i,
