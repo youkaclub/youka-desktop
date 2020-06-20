@@ -44,19 +44,40 @@ async function generate(youtubeID, title, onStatus) {
   ];
   if (lyrics && lang === "en") {
     promises.push(
-      align(youtubeID, audioUrl, transcriptUrl, lang, "word", onStatus)
+      align(
+        youtubeID,
+        audioUrl,
+        transcriptUrl,
+        lang,
+        library.MODE_CAPTIONS_WORD,
+        onStatus
+      )
     );
   }
   const [splitResult] = await Promise.all(promises);
   const vocalsUrl = splitResult.vocalsUrl;
 
-  if (lyrics && lang) {
+  if (lyrics && lang && SUPPORTED_LANGS.includes(lang)) {
     const alignPromises = [
-      align(youtubeID, vocalsUrl, transcriptUrl, lang, "line", onStatus),
+      align(
+        youtubeID,
+        vocalsUrl,
+        transcriptUrl,
+        lang,
+        library.MODE_CAPTIONS_LINE,
+        onStatus
+      ),
     ];
     if (lang !== "en") {
       alignPromises.push(
-        align(youtubeID, vocalsUrl, transcriptUrl, lang, "word", onStatus)
+        align(
+          youtubeID,
+          vocalsUrl,
+          transcriptUrl,
+          lang,
+          library.MODE_CAPTIONS_WORD,
+          onStatus
+        )
       );
     }
     await Promise.all(alignPromises);
@@ -105,9 +126,9 @@ async function alignline(youtubeID, onStatus) {
 
 async function realign(youtubeID, title, mode, onStatus) {
   const lyrics = await library.getLyrics(youtubeID, title);
-  if (!lyrics) return;
+  if (!lyrics) throw new Error("Lyrics is empty");
   const lang = await library.getLanguage(youtubeID, lyrics, true);
-  if (!lang) return;
+  if (!lang) throw new Error("Can't detect language");
   const audioMode =
     lang === "en" ? library.MODE_MEDIA_ORIGINAL : library.MODE_MEDIA_VOCALS;
   const queue = lang === "en" ? QUEUE_ALIGN_EN : QUEUE_ALIGN;
@@ -132,7 +153,10 @@ async function realign(youtubeID, title, mode, onStatus) {
 }
 
 async function align(youtubeID, audioUrl, transcriptUrl, lang, mode, onStatus) {
-  const queue = lang === "en" && mode === "word" ? QUEUE_ALIGN_EN : QUEUE_ALIGN;
+  const queue =
+    lang === "en" && mode === library.MODE_CAPTIONS_WORD
+      ? QUEUE_ALIGN_EN
+      : QUEUE_ALIGN;
   const jobId = await client.enqueue(queue, {
     audioUrl,
     transcriptUrl,
@@ -185,8 +209,108 @@ async function split(youtubeID, audioUrl, onStatus) {
   return job.result;
 }
 
+const SUPPORTED_LANGS = [
+  "af",
+  "am",
+  "an",
+  "ar",
+  "as",
+  "az",
+  "ba",
+  "bg",
+  "bn",
+  "bpy",
+  "bs",
+  "ca",
+  "cmn",
+  "cs",
+  "cy",
+  "da",
+  "de",
+  "el",
+  "en",
+  "eo",
+  "es",
+  "et",
+  "eu",
+  "fa",
+  "fi",
+  "fr",
+  "ga",
+  "gd",
+  "gn",
+  "grc",
+  "gu",
+  "hak",
+  "hi",
+  "hr",
+  "ht",
+  "hu",
+  "hy",
+  "hyw",
+  "ia",
+  "id",
+  "is",
+  "it",
+  "ja",
+  "jbo",
+  "ka",
+  "kk",
+  "kl",
+  "kn",
+  "ko",
+  "kok",
+  "ku",
+  "ky",
+  "la",
+  "lfn",
+  "lt",
+  "lv",
+  "mi",
+  "mk",
+  "ml",
+  "mr",
+  "ms",
+  "mt",
+  "my",
+  "nb",
+  "nci",
+  "ne",
+  "nl",
+  "om",
+  "or",
+  "pa",
+  "pap",
+  "pl",
+  "pt",
+  "py",
+  "quc",
+  "ro",
+  "ru",
+  "sd",
+  "shn",
+  "si",
+  "sk",
+  "sl",
+  "sq",
+  "sr",
+  "sv",
+  "sw",
+  "ta",
+  "te",
+  "tn",
+  "tr",
+  "tt",
+  "ur",
+  "uz",
+  "vi",
+  "yue",
+  "zh",
+];
+
 module.exports = {
   generate,
   realign,
   alignline,
+  SUPPORTED_LANGS,
 };
