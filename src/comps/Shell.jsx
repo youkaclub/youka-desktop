@@ -131,7 +131,9 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
     try {
       setLoading(true);
       const results = await search_memoize(query);
-      const filteredResults = results.filter((r) => !r.hours && r.minutes < 10);
+      const filteredResults = results.filter(
+        (r) => !("minutes" in r) || (!r.hours && r.minutes < 10)
+      );
       setVideos(filteredResults);
     } catch (error) {
       console.error(error);
