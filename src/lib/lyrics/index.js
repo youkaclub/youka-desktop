@@ -14,8 +14,8 @@ async function search(query) {
   }
 
   for (let i = 0; i < providers.length; i++) {
+    const provider = providers[i];
     try {
-      const provider = providers[i];
       const url = await provider.search(query, lang);
       if (!url) continue;
       const lyrics = await provider.lyrics(url);
