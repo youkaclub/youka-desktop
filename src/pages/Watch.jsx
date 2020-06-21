@@ -359,7 +359,7 @@ export default function WatchPage() {
                 />
                 <Dropdown
                   button
-                  text={" Sync Mode: " + capitalize(captionsMode)}
+                  text={" Lyrics Sync: " + capitalize(captionsMode)}
                   value={captionsMode}
                   options={ccoptions}
                   onChange={handleChangeCaptions}
