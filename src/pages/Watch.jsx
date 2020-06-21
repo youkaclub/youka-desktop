@@ -175,7 +175,7 @@ export default function WatchPage() {
 
   function changeCaptions(mode, modes) {
     const m = modes || captionsModes;
-    const url = m[mode] + `?r=${Math.random()}`;
+    let url = m[mode];
     setCaptionsMode(mode);
     setCaptionsURL(url);
   }
