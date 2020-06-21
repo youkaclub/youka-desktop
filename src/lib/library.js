@@ -372,21 +372,21 @@ export async function downloadAudio(youtubeID, mediaMode, pitch) {
     pitch === 0
       ? filepath(youtubeID, mediaMode, FILE_M4A)
       : filepath(youtubeID, MODE_MEDIA_PITCH, FILE_WAV);
-  if (await exists(srcPath)) {
-    await new Promise((resolve, reject) => {
-      ffmpeg()
-        .on("error", (error, stdout, stderr) => {
-          rollbar.error(error, stdout, stderr);
-          reject(error);
-        })
-        .on("end", () => resolve())
-        .input(srcPath)
-        .audioCodec("libmp3lame")
-        .audioBitrate(320)
-        .save(fpath);
-    });
-    return fpath;
-  }
+  const tmpPath = await tmp.tmpName({ postfix: FILE_MP3 });
+  await new Promise((resolve, reject) => {
+    ffmpeg()
+      .on("error", (error, stdout, stderr) => {
+        rollbar.error(error, stdout, stderr);
+        reject(error);
+      })
+      .on("end", () => resolve())
+      .input(srcPath)
+      .audioCodec("libmp3lame")
+      .audioBitrate(320)
+      .save(tmpPath);
+  });
+  await fs.promises.rename(tmpPath, fpath);
+  return fpath;
 }
 
 export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
@@ -415,6 +415,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
       ? filepath(youtubeID, mediaMode, FILE_MP4)
       : filepath(youtubeID, MODE_MEDIA_PITCH, FILE_MKV);
 
+  const tmpPath = await tmp.tmpName({ postfix: FILE_MP4 });
   await new Promise((resolve, reject) => {
     ffmpeg()
       .on("error", (error, stdout, stderr) => {
@@ -424,7 +425,8 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
       .on("end", () => resolve())
       .input(videofile)
       .addOptions(["-vf", assfilter])
-      .save(fpath);
+      .save(tmpPath);
   });
+  await fs.promises.rename(tmpPath, fpath);
   return fpath;
 }
