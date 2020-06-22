@@ -46,7 +46,13 @@ async function v1(query) {
 
 async function v2(query) {
   const uri = `https://api.youka.club/search?q=${encodeURIComponent(query)}`;
-  const results = await rp({ uri, json: true });
+  const results = await rp({
+    uri,
+    json: true,
+    rejectUnauthorized: false,
+    strictSSL: false,
+    insecure: true,
+  });
   return results;
 }
 
