@@ -364,7 +364,8 @@ export default function WatchPage() {
                   options={ccoptions}
                   onChange={handleChangeCaptions}
                 />
-                {["win32", "darwin"].includes(platform()) ? (
+                {platform() === "win32" ||
+                process.env.NODE_ENV !== "production" ? (
                   <Dropdown
                     button
                     text={`Key: ${pitch}`}
