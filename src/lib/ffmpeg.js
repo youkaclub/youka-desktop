@@ -2,6 +2,7 @@ const debug = require("debug")("youka:desktop");
 const os = require("os");
 const fs = require("fs");
 const rp = require("request-promise");
+const retry = require("promise-retry");
 const AdmZip = require("adm-zip");
 const { exists } = require("./utils");
 const { FFMPEG_PATH } = require("./path");
@@ -28,7 +29,7 @@ async function install() {
     const url = urls[platform];
     if (!url) throw new Error(`unsupported platform (${platform})`);
 
-    const zipfile = await rp({ url, encoding: null });
+    const zipfile = await retry((r) => rp({ url, encoding: null }).catch(r));
     await fs.promises.writeFile(FFMPEG_ZIP_PATH, zipfile);
     const zip = new AdmZip(FFMPEG_ZIP_PATH);
     let entryName;
