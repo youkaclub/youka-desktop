@@ -1,4 +1,3 @@
-const os = require("os");
 const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
@@ -402,23 +401,22 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   const json = await fs.promises.readFile(alignmentsPath, "utf-8");
   const alignments = new Alignments(json);
   const ass = alignmentsToAss(alignments);
-  let captionsPath = await tmp.tmpName({ postfix: FILE_ASS });
+  const captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
   await fs.promises.writeFile(captionsPath, ass, "utf-8");
-  if (os.platform() === "win32") {
-    captionsPath = captionsPath.replace(/\\/g, "/");
-    captionsPath = captionsPath.replace(":", "\\:");
-  }
-  console.log(captionsPath);
-
-  const assfilter = `ass='${captionsPath}'`;
-  const videofile =
+  const captionsFilename = `${captionsMode}${FILE_ASS}`;
+  const inputPath =
     pitch === 0
       ? filepath(youtubeID, mediaMode, FILE_MP4)
       : filepath(youtubeID, MODE_MEDIA_PITCH, FILE_MKV);
-
-  const tmpPath = await tmp.tmpName({ postfix: FILE_MP4 });
-  await execa(FFMPEG_PATH, ["-i", videofile, "-vf", assfilter, tmpPath]);
-  await fs.promises.copyFile(tmpPath, fpath);
-  await fs.promises.unlink(tmpPath);
+  const outputPath = await tmp.tmpName({ postfix: FILE_MP4 });
+  await execa(
+    FFMPEG_PATH,
+    ["-i", inputPath, "-vf", `ass=${captionsFilename}`, outputPath],
+    {
+      cwd: join(ROOT, youtubeID),
+    }
+  );
+  await fs.promises.copyFile(outputPath, fpath);
+  await fs.promises.unlink(outputPath);
   return fpath;
 }
