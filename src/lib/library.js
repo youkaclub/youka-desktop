@@ -410,7 +410,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   }
   console.log(captionsPath);
 
-  const assfilter = `ass=${captionsPath}`;
+  const assfilter = `ass='${captionsPath}'`;
   const videofile =
     pitch === 0
       ? filepath(youtubeID, mediaMode, FILE_MP4)
