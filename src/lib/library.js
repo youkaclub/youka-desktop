@@ -1,9 +1,8 @@
-import execa from "execa";
-
 const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
 const tmp = require("tmp-promise");
+const execa = require("execa");
 const ffmpeg = require("fluent-ffmpeg");
 const checkDiskSpace = require("check-disk-space");
 const filenamify = require("filenamify");
