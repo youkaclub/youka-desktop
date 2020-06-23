@@ -245,6 +245,8 @@ export default function WatchPage() {
     (async function () {
       try {
         window.scrollTo({ top: 0, behavior: "smooth" });
+        setDownloading(false);
+        setPitch(0);
         setError(null);
         setProgress(true);
         let files = await library.files(id);
