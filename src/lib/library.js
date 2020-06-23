@@ -385,7 +385,8 @@ export async function downloadAudio(youtubeID, mediaMode, pitch) {
       .audioBitrate(320)
       .save(tmpPath);
   });
-  await fs.promises.rename(tmpPath, fpath);
+  await fs.promises.copyFile(tmpPath, fpath);
+  await fs.promises.unlink(tmpPath);
   return fpath;
 }
 
@@ -427,6 +428,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
       .addOptions(["-vf", assfilter])
       .save(tmpPath);
   });
-  await fs.promises.rename(tmpPath, fpath);
+  await fs.promises.copyFile(tmpPath, fpath);
+  await fs.promises.unlink(tmpPath);
   return fpath;
 }
