@@ -163,7 +163,7 @@ async function validateDiskSpace() {
     const { free } = await checkDiskSpace(HOME_PATH);
     freeMB = free / 1000 / 1000;
   } catch (e) {
-    rollbar.error(e);
+    console.log(e);
     return;
   }
   if (freeMB < 200) {
