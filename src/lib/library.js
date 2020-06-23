@@ -1,4 +1,5 @@
-const os = require("os");
+import execa from "execa";
+
 const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
@@ -401,34 +402,18 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   const json = await fs.promises.readFile(alignmentsPath, "utf-8");
   const alignments = new Alignments(json);
   const ass = alignmentsToAss(alignments);
-  let captionsPath = await tmp.tmpName({ postfix: FILE_ASS });
+  const captionsPath = await tmp.tmpName({ postfix: FILE_ASS });
   await fs.promises.writeFile(captionsPath, ass, "utf-8");
-
-  if (os.platform() === "win32") {
-    captionsPath = captionsPath.replace(/\\/g, "/");
-    captionsPath = captionsPath.replace(":", "\\:");
-    captionsPath = captionsPath.replace(/\s/g, "\\ ");
-  }
-  const assfilter = `ass='${captionsPath}'`;
   console.log(captionsPath);
 
+  const assfilter = `ass=${captionsPath}`;
   const videofile =
     pitch === 0
       ? filepath(youtubeID, mediaMode, FILE_MP4)
       : filepath(youtubeID, MODE_MEDIA_PITCH, FILE_MKV);
 
   const tmpPath = await tmp.tmpName({ postfix: FILE_MP4 });
-  await new Promise((resolve, reject) => {
-    ffmpeg()
-      .on("error", (error, stdout, stderr) => {
-        rollbar.error(error, stdout, stderr);
-        reject(error);
-      })
-      .on("end", () => resolve())
-      .input(videofile)
-      .addOptions(["-vf", assfilter])
-      .save(tmpPath);
-  });
+  await execa(FFMPEG_PATH, ["-i", videofile, "-vf", assfilter, tmpPath]);
   await fs.promises.copyFile(tmpPath, fpath);
   await fs.promises.unlink(tmpPath);
   return fpath;
