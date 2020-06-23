@@ -91,8 +91,8 @@ export default function SyncSimplePage() {
               current line
             </Message.Item>
             <Message.Item>
-              Click on the Set End button when you hear the last word of current
-              line
+              Click on the Set End button after you hear the last word of
+              current line
             </Message.Item>
             <Message.Item>
               Continue until you finish to sync all the lines
@@ -105,8 +105,7 @@ export default function SyncSimplePage() {
               You may adjust the sync results using the Advanced Sync Editor
             </Message.Item>
             <Message.Item>
-              TIP: after the first click on the Set Start button you can use the
-              space key instead
+              Pro tip: Use the space key to set start or end
             </Message.Item>
           </Message.List>
         </Message>

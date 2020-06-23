@@ -16,7 +16,7 @@ export default function SyncSimple({
   const [isStart, setIsStart] = useState(true);
   const [editLyrics, setEditLyrics] = useState();
   const audioRef = useRef(new Audio());
-  audioRef.current.onplaying = () => setPaused(false);
+  audioRef.current.onplay = () => setPaused(false);
   audioRef.current.onpause = () => setPaused(true);
   audioRef.current.ontimeupdate = () =>
     setCurrentTime(audioRef.current.currentTime);
@@ -108,16 +108,23 @@ export default function SyncSimple({
     return Math.trunc(((lineIndex + 1) / lines.length) * 100);
   }
 
+  function handleUndo() {
+    delete alignmentsRef.current[lineIndex - 1];
+    setLineIndex(lineIndex - 1);
+    setIsStart(true);
+    if (lineIndex - 2 < 0) {
+      audioRef.current.currentTime = 0;
+    } else {
+      audioRef.current.currentTime = alignmentsRef.current[lineIndex - 2].end;
+    }
+  }
+
   if (!lines) return null;
 
   return (
     <div className="flex flex-col items-center m-6 h-full w-full justify-center">
       <div className="m-4">
-        <Button
-          icon="undo"
-          disabled={currentTime === 0}
-          onClick={handlePlayBackward}
-        />
+        <Button icon="undo" onClick={handlePlayBackward} />
         <Button
           primary={paused}
           content={paused ? "Start" : "Pause"}
@@ -172,6 +179,11 @@ export default function SyncSimple({
         {lines.length && lineIndex < lines.length ? lines[lineIndex] : null}
       </div>
       <div className="m-4">
+        <Button
+          content={"undo"}
+          disabled={paused || lineIndex === 0}
+          onClick={handleUndo}
+        />
         <Button
           content={isStart ? "Set Start" : "Set End"}
           color={isStart ? "green" : "red"}
