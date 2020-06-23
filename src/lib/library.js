@@ -407,6 +407,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   if (os.platform() === "win32") {
     captionsPath = captionsPath.replace(/\\/g, "/");
     captionsPath = captionsPath.replace(":", "\\:");
+    captionsPath = captionsPath.replace(/\s/g, "\\ ");
   }
   const assfilter = `ass='${captionsPath}'`;
   console.log(captionsPath);
