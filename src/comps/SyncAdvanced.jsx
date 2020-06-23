@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SyncLine from "./SyncLine";
 
-export default function Sync(props) {
+export default function SyncAdvanced(props) {
   const [alignments, setAlignments] = useState([]);
 
   useEffect(() => {

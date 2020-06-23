@@ -1,13 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import {
-  Message,
-  Icon,
-  Dropdown,
-  Button,
-  Form,
-  TextArea,
-} from "semantic-ui-react";
+import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
 import { shell } from "electron";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
@@ -39,18 +32,13 @@ export default function WatchPage() {
   const [error, setError] = useState();
   const [progress, setProgress] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [syncingLines, setSyncingLines] = useState(false);
-  const [syncingWords, setSyncingWords] = useState(false);
   const [status, setStatus] = useState();
   const [lyrics, setLyrics] = useState();
   const [pitch, setPitch] = useState(0);
   const [pitching, setPitching] = useState();
   const [changingMediaMode, setChangingMediaMode] = useState();
-  const [editLyricsOpen, setEditLyricsOpen] = useState();
   const [ddoptions, setddoptions] = useState([]);
   const [ccoptions, setccoptions] = useState([]);
-
-  const lyricsRef = useRef();
 
   const poptions = [];
   for (var i = 10; i >= -10; i--) {
@@ -108,26 +96,9 @@ export default function WatchPage() {
     }
   }
 
-  function handleEditLyrics() {
-    if (captionsMode === library.MODE_CAPTIONS_FULL) {
-      changeCaptions(library.MODE_CAPTIONS_OFF);
-    }
-    setEditLyricsOpen(!editLyricsOpen);
-    setTimeout(() => {
-      if (!editLyricsOpen && lyricsRef.current) {
-        lyricsRef.current.focus();
-      }
-    }, 100);
-  }
-
-  async function handleLyricsChange(e, data) {
-    setLyrics(data.value);
-    return library.setLyrics(id, data.value);
-  }
-
-  function handleOpenSyncEditor() {
+  function handleOpenSyncEditor(e, data) {
     history.push(
-      `/sync?id=${id}&title=${title}&videoMode=${library.MODE_MEDIA_ORIGINAL}&captionsMode=${captionsMode}`
+      `/${data.value}?id=${id}&title=${title}&videoMode=${library.MODE_MEDIA_ORIGINAL}&captionsMode=${captionsMode}`
     );
   }
 
@@ -201,44 +172,6 @@ export default function WatchPage() {
 
   async function handleChangePitch(e, data) {
     return changePitch(data.value, videoMode);
-  }
-
-  async function handleSyncLines() {
-    try {
-      setSyncingLines(true);
-      amplitude.getInstance().logEvent("RESYNC");
-      await karaoke.realign(
-        id,
-        title,
-        library.MODE_CAPTIONS_LINE,
-        handleStatusChanged
-      );
-      changeCaptions(library.MODE_CAPTIONS_LINE);
-    } catch (e) {
-      console.log(e);
-      setError(e.toString());
-    } finally {
-      setSyncingLines(false);
-    }
-  }
-
-  async function handleSyncWords() {
-    try {
-      setSyncingWords(true);
-      amplitude.getInstance().logEvent("RESYNC");
-      await karaoke.realign(
-        id,
-        title,
-        library.MODE_CAPTIONS_WORD,
-        handleStatusChanged
-      );
-      changeCaptions(library.MODE_CAPTIONS_WORD);
-    } catch (e) {
-      console.log(e);
-      setError(e.toString());
-    } finally {
-      setSyncingWords(false);
-    }
   }
 
   useEffect(() => {
@@ -378,14 +311,21 @@ export default function WatchPage() {
                     onChange={handleChangePitch}
                   />
                 ) : null}
-                <Button content="Lyrics Editor" onClick={handleEditLyrics} />
-                {captionsModes[library.MODE_CAPTIONS_LINE] ||
-                captionsModes[library.MODE_CAPTIONS_WORD] ? (
-                  <Button
-                    content="Sync Editor"
-                    onClick={handleOpenSyncEditor}
-                  />
-                ) : null}
+                <Dropdown
+                  button
+                  text="Sync Editor"
+                  options={[
+                    {
+                      text: "Simple",
+                      value: "sync-simple",
+                    },
+                    {
+                      text: "Advanced",
+                      value: "sync-advanced",
+                    },
+                  ]}
+                  onChange={handleOpenSyncEditor}
+                />
               </div>
             </div>
             {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
@@ -400,47 +340,6 @@ export default function WatchPage() {
                 </div>
               </div>
             ) : null}
-          </div>
-        ) : null}
-        {videoURL && editLyricsOpen ? (
-          <div className="w-2/4 text-xl">
-            <Message>
-              NOTE: To maximize lyrics sync accuracy, keep an empty line between
-              verses
-            </Message>
-            <div className="flex flex-row pb-4 justify-center">
-              <Button
-                content="Sync Lines"
-                disabled={syncingLines || !lyrics || lyrics.length < 100}
-                loading={syncingLines}
-                onClick={handleSyncLines}
-              />
-              <Button
-                content="Sync Words"
-                disabled={syncingWords || !lyrics || lyrics.length < 100}
-                loading={syncingWords}
-                onClick={handleSyncWords}
-              />
-            </div>
-            <Form>
-              <TextArea
-                placeholder="Paste here the song lyrics"
-                className="text-xl"
-                ref={lyricsRef}
-                value={
-                  lyrics ||
-                  Array(10)
-                    .map(() => "\n")
-                    .join("")
-                }
-                rows={
-                  lyrics && lyrics.split("\n").length > 10
-                    ? lyrics.split("\n").length
-                    : 10
-                }
-                onChange={handleLyricsChange}
-              />
-            </Form>
           </div>
         ) : null}
       </div>
