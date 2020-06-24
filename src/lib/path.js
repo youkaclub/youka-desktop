@@ -26,6 +26,7 @@ const MSVCR_PATH = join(BINARIES_PATH, MSVCR_NAME);
 const soundStretchNames = {
   win32: "soundstretch.exe",
   darwin: "soundstretch",
+  linux: "soundstretch",
 };
 const SOUND_STRETCH_PATH = join(BINARIES_PATH, soundStretchNames[platform]);
 
