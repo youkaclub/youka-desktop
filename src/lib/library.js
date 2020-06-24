@@ -6,6 +6,7 @@ const execa = require("execa");
 const ffmpeg = require("fluent-ffmpeg");
 const checkDiskSpace = require("check-disk-space");
 const filenamify = require("filenamify");
+const rp = require("request-promise");
 
 const lyricsFinder = require("./lyrics");
 const gt = require("./google-translate");
@@ -178,7 +179,18 @@ export function initffmpeg() {
   ffmpeg.setFfmpegPath(FFMPEG_PATH);
 }
 
+export async function initSSL() {
+  try {
+    await rp("https://static.youka.club/ping.json");
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
+  } catch (e) {
+    rollbar.warn(e);
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  }
+}
+
 export async function init(youtubeID) {
+  await initSSL();
   await validateDiskSpace();
   await mkdirp(join(ROOT, youtubeID));
   await mkdirp(BINARIES_PATH);
