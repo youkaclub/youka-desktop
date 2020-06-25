@@ -1,7 +1,6 @@
 const debug = require("debug")("youka:desktop");
 const os = require("os");
 const fs = require("fs");
-const execa = require("execa");
 const rp = require("request-promise");
 
 const { SOUND_STRETCH_PATH } = require("./path");
@@ -28,13 +27,6 @@ async function install() {
   }
 }
 
-async function pitch(input, output, n) {
-  const args = [input, output, `-pitch=${n}`];
-  await execa(SOUND_STRETCH_PATH, args);
-  return output;
-}
-
 module.exports = {
-  pitch,
   install,
 };

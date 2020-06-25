@@ -1,9 +1,7 @@
 const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
-const tmp = require("tmp-promise");
 const execa = require("execa");
-const ffmpeg = require("fluent-ffmpeg");
 const checkDiskSpace = require("check-disk-space");
 const filenamify = require("filenamify");
 const rp = require("request-promise");
@@ -24,6 +22,7 @@ const {
   FFMPEG_PATH,
   BINARIES_PATH,
   DOWNLOAD_PATH,
+  SOUND_STRETCH_PATH,
 } = require("./path");
 
 export const FILE_MP4 = ".mp4";
@@ -174,11 +173,6 @@ async function validateDiskSpace() {
   }
 }
 
-export function initffmpeg() {
-  process.env.FFMPEG_PATH = FFMPEG_PATH;
-  ffmpeg.setFfmpegPath(FFMPEG_PATH);
-}
-
 export async function initSSL() {
   try {
     await rp("https://static.youka.club/ping.json");
@@ -204,7 +198,6 @@ export async function init(youtubeID) {
     console.log(e);
     rollbar.error(e);
   }
-  initffmpeg();
 }
 
 export async function getAudio(youtubeID, mode) {
@@ -221,31 +214,44 @@ export async function getAudio(youtubeID, mode) {
 }
 
 export async function getVideo(youtubeID, mode) {
-  const fp = filepath(youtubeID, mode, FILE_MP4);
-  if (await exists(fp)) {
-    return fs.promises.readFile(fp);
+  const cwd = join(ROOT, youtubeID);
+  const inputMP4 = `${MODE_MEDIA_ORIGINAL}${FILE_MP4}`;
+  const inputM4A = `${mode}${FILE_M4A}`;
+  const output = `${mode}${FILE_MP4}`;
+  const outputFull = join(cwd, output);
+
+  if (await exists(outputFull)) {
+    return fs.promises.readFile(outputFull);
   }
 
   if (mode === MODE_MEDIA_ORIGINAL) {
     const video = await youtube.downloadVideo(youtubeID);
-    await fs.promises.writeFile(fp, video);
+    await fs.promises.writeFile(outputFull, video);
     return video;
   }
 
-  await new Promise((resolve, reject) => {
-    ffmpeg()
-      .on("error", (error, stdout, stderr) => {
-        rollbar.error(error, stdout, stderr);
-        reject(error);
-      })
-      .on("end", () => resolve())
-      .input(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_MP4))
-      .input(filepath(youtubeID, mode, FILE_M4A))
-      .addOptions(["-vcodec copy", "-acodec copy", "-map 0:0", "-map 1:0"])
-      .save(fp);
-  });
+  await execa(
+    FFMPEG_PATH,
+    [
+      "-y",
+      "-i",
+      inputMP4,
+      "-i",
+      inputM4A,
+      "-vcodec",
+      "copy",
+      "-acodec",
+      "copy",
+      "-map",
+      "0:0",
+      "-map",
+      "1:0",
+      output,
+    ],
+    { cwd }
+  );
 
-  return fs.promises.readFile(fp);
+  return fs.promises.readFile(outputFull);
 }
 
 export async function setLyrics(youtubeID, lyrics) {
@@ -320,44 +326,56 @@ export async function saveFile(youtubeID, mode, file, buffer) {
 }
 
 export async function getWav(youtubeID, mediaMode) {
-  const fpath = filepath(youtubeID, mediaMode, FILE_WAV);
-  if (await exists(fpath)) return fpath;
-  const srcPath = filepath(youtubeID, mediaMode, FILE_M4A);
-  await new Promise((resolve, reject) => {
-    ffmpeg()
-      .on("error", (error, stdout, stderr) => {
-        rollbar.error(error, stdout, stderr);
-        reject(error);
-      })
-      .on("end", () => resolve())
-      .input(srcPath)
-      .audioCodec("pcm_s16le")
-      .save(fpath);
-  });
-  return fpath;
+  const cwd = join(ROOT, youtubeID);
+  const output = `${mediaMode}${FILE_WAV}`;
+  const outputFull = join(cwd, output);
+  if (await exists(outputFull)) return outputFull;
+  const input = `${mediaMode}${FILE_M4A}`;
+  await execa(
+    FFMPEG_PATH,
+    ["-y", "-i", input, "-acodec", "pcm_s16le", output],
+    {
+      cwd,
+    }
+  );
+  return outputFull;
 }
 
 export async function getPitch(youtubeID, mediaMode, n) {
   await soundstretch.install();
-  initffmpeg();
-  const input = await getWav(youtubeID, mediaMode);
-  const pitchWav = filepath(youtubeID, MODE_MEDIA_PITCH, FILE_WAV);
-  const pitchMkv = filepath(youtubeID, MODE_MEDIA_PITCH, FILE_MKV);
-  await soundstretch.pitch(input, pitchWav, n);
-  await new Promise((resolve, reject) => {
-    ffmpeg()
-      .on("error", (error, stdout, stderr) => {
-        rollbar.error(error, stdout, stderr);
-        reject(error);
-      })
-      .on("end", () => resolve())
-      .input(filepath(youtubeID, MODE_MEDIA_ORIGINAL, FILE_MP4))
-      .input(pitchWav)
-      .addOptions(["-vcodec copy", "-acodec copy", "-map 0:0", "-map 1:0"])
-      .save(pitchMkv);
-  });
 
-  const url = fileurl(youtubeID, MODE_MEDIA_PITCH, FILE_MKV);
+  const cwd = join(ROOT, youtubeID);
+  const output = `${MODE_MEDIA_PITCH}${FILE_MKV}`;
+  const inputMP4 = `${MODE_MEDIA_ORIGINAL}${FILE_MP4}`;
+  const modeWAV = `${mediaMode}${FILE_WAV}`;
+  const pitchWAV = `${MODE_MEDIA_PITCH}${FILE_WAV}`;
+  const outputFull = join(cwd, output);
+  await getWav(youtubeID, mediaMode);
+
+  await execa(SOUND_STRETCH_PATH, [modeWAV, pitchWAV, `-pitch=${n}`], { cwd });
+
+  await execa(
+    FFMPEG_PATH,
+    [
+      "-y",
+      "-i",
+      inputMP4,
+      "-i",
+      pitchWAV,
+      "-map",
+      "0:0",
+      "-map",
+      "1:0",
+      "-vcodec",
+      "copy",
+      "-acodec",
+      "copy",
+      output,
+    ],
+    { cwd }
+  );
+
+  const url = `file://${outputFull}`;
   return url;
 }
 
@@ -378,57 +396,85 @@ export async function download(
 }
 
 export async function downloadAudio(youtubeID, mediaMode, pitch) {
-  const filename = `${youtubeID}-${mediaMode}${FILE_MP3}`;
-  const fpath = join(DOWNLOAD_PATH, filenamify(filename, { replacement: "" }));
-  const srcPath =
-    pitch === 0
-      ? filepath(youtubeID, mediaMode, FILE_M4A)
-      : filepath(youtubeID, MODE_MEDIA_PITCH, FILE_WAV);
-  const tmpPath = await tmp.tmpName({ postfix: FILE_MP3 });
-  await new Promise((resolve, reject) => {
-    ffmpeg()
-      .on("error", (error, stdout, stderr) => {
-        rollbar.error(error, stdout, stderr);
-        reject(error);
-      })
-      .on("end", () => resolve())
-      .input(srcPath)
-      .audioCodec("libmp3lame")
-      .audioBitrate(320)
-      .save(tmpPath);
-  });
-  await fs.promises.copyFile(tmpPath, fpath);
-  await fs.promises.unlink(tmpPath);
-  return fpath;
+  let input;
+  let output;
+  if (pitch === 0) {
+    input = `${mediaMode}${FILE_M4A}`;
+    output = filenamify(`${youtubeID}-${mediaMode}${FILE_MP3}`, {
+      replacement: "",
+    });
+  } else {
+    await getPitch(youtubeID, mediaMode, pitch);
+    input = `${MODE_MEDIA_PITCH}${FILE_WAV}`;
+    const pitchStr = pitch > 0 ? `key-plus-${pitch}` : `key-minus${pitch}`;
+    output = filenamify(`${youtubeID}-${mediaMode}-${pitchStr}${FILE_MP3}`, {
+      replacement: "",
+    });
+  }
+
+  const cwd = join(ROOT, youtubeID);
+  const outputFull = join(cwd, output);
+  const downloadFull = join(DOWNLOAD_PATH, output);
+
+  await execa(
+    FFMPEG_PATH,
+    ["-y", "-i", input, "-acodec", "libmp3lame", "-b", "320", output],
+    { cwd }
+  );
+
+  await fs.promises.copyFile(outputFull, downloadFull);
+  await fs.promises.unlink(outputFull);
+
+  return downloadFull;
 }
 
 export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
-  const filename = `${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`;
-  const fpath = join(DOWNLOAD_PATH, filenamify(filename, { replacement: "" }));
-  const alignmentsPath = filepath(youtubeID, captionsMode, FILE_JSON);
-  if (!(await exists(alignmentsPath))) {
-    await fs.promises.copyFile(filepath(youtubeID, mediaMode, FILE_MP4), fpath);
-    return fpath;
+  let input;
+  let output;
+  if (pitch === 0) {
+    input = `${mediaMode}${FILE_MP4}`;
+    output = filenamify(
+      `${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`,
+      { replacement: "" }
+    );
+  } else {
+    await getPitch(youtubeID, mediaMode, pitch);
+    input = `${MODE_MEDIA_PITCH}${FILE_MKV}`;
+    const pitchStr = pitch > 0 ? `key-plus-${pitch}` : `key-minus${pitch}`;
+    output = filenamify(
+      `${youtubeID}-${mediaMode}-${captionsMode}-${pitchStr}${FILE_MP4}`,
+      { replacement: "" }
+    );
   }
-  const json = await fs.promises.readFile(alignmentsPath, "utf-8");
+
+  const cwd = join(ROOT, youtubeID);
+  const downloadFile = output;
+  const downloadFull = join(DOWNLOAD_PATH, downloadFile);
+  const alignmentsFull = filepath(youtubeID, captionsMode, FILE_JSON);
+  const modeFull = filepath(youtubeID, mediaMode, FILE_MP4);
+  const captionsFull = filepath(youtubeID, captionsMode, FILE_ASS);
+  const outputFull = join(cwd, output);
+  const captionsFile = `${captionsMode}${FILE_ASS}`;
+
+  if (!(await exists(alignmentsFull))) {
+    await fs.promises.copyFile(modeFull, downloadFull);
+    return downloadFull;
+  }
+
+  const json = await fs.promises.readFile(alignmentsFull, "utf-8");
   const alignments = new Alignments(json);
   const ass = alignmentsToAss(alignments);
-  const captionsPath = filepath(youtubeID, captionsMode, FILE_ASS);
-  await fs.promises.writeFile(captionsPath, ass, "utf-8");
-  const captionsFilename = `${captionsMode}${FILE_ASS}`;
-  const inputPath =
-    pitch === 0
-      ? filepath(youtubeID, mediaMode, FILE_MP4)
-      : filepath(youtubeID, MODE_MEDIA_PITCH, FILE_MKV);
-  const outputPath = await tmp.tmpName({ postfix: FILE_MP4 });
+
+  await fs.promises.writeFile(captionsFull, ass, "utf-8");
+
   await execa(
     FFMPEG_PATH,
-    ["-i", inputPath, "-vf", `ass=${captionsFilename}`, outputPath],
-    {
-      cwd: join(ROOT, youtubeID),
-    }
+    ["-y", "-i", input, "-vf", `ass=${captionsFile}`, output],
+    { cwd }
   );
-  await fs.promises.copyFile(outputPath, fpath);
-  await fs.promises.unlink(outputPath);
-  return fpath;
+
+  await fs.promises.copyFile(outputFull, downloadFull);
+  await fs.promises.unlink(outputFull);
+
+  return downloadFull;
 }
