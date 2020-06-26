@@ -1,6 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
+import {
+  Message,
+  Icon,
+  Dropdown,
+  Button,
+  Form,
+  TextArea,
+} from "semantic-ui-react";
 import { shell } from "electron";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
@@ -33,12 +40,18 @@ export default function WatchPage() {
   const [progress, setProgress] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [status, setStatus] = useState();
+  const [syncStatus, setSyncStatus] = useState();
   const [lyrics, setLyrics] = useState();
+  const [syncingLines, setSyncingLines] = useState();
+  const [syncingWords, setSyncingWords] = useState();
+  const [editLyrics, setEditLyrics] = useState();
   const [pitch, setPitch] = useState(0);
   const [pitching, setPitching] = useState();
   const [changingMediaMode, setChangingMediaMode] = useState();
   const [ddoptions, setddoptions] = useState([]);
   const [ccoptions, setccoptions] = useState([]);
+
+  const lyricsRef = useRef();
 
   const poptions = [];
   for (var i = 10; i >= -10; i--) {
@@ -170,8 +183,60 @@ export default function WatchPage() {
     }
   }
 
+  function handleEditLyrics() {
+    setEditLyrics(!editLyrics);
+    setTimeout(() => {
+      if (!editLyrics && lyricsRef.current) {
+        lyricsRef.current.focus();
+      }
+    }, 100);
+  }
+
+  async function handleLyricsChange(e, data) {
+    setLyrics(data.value);
+    return library.setLyrics(id, data.value);
+  }
+
   async function handleChangePitch(e, data) {
     return changePitch(data.value, videoMode);
+  }
+
+  async function handleSyncLines() {
+    try {
+      setSyncStatus(null);
+      setSyncingLines(true);
+      amplitude.getInstance().logEvent("RESYNC");
+      await karaoke.realign(id, title, library.MODE_CAPTIONS_LINE, (s) =>
+        setSyncStatus(s)
+      );
+      changeCaptions(library.MODE_CAPTIONS_LINE);
+      setSyncStatus("Sync completed successfully");
+    } catch (e) {
+      console.log(e);
+      setSyncStatus(e.toString());
+      rollbar.error(e);
+    } finally {
+      setSyncingLines(false);
+    }
+  }
+
+  async function handleSyncWords() {
+    try {
+      setSyncStatus(null);
+      setSyncingWords(true);
+      amplitude.getInstance().logEvent("RESYNC");
+      await karaoke.realign(id, title, library.MODE_CAPTIONS_WORD, (s) =>
+        setSyncStatus(s)
+      );
+      changeCaptions(library.MODE_CAPTIONS_WORD);
+      setSyncStatus("Sync completed successfully");
+    } catch (e) {
+      console.log(e);
+      setSyncStatus(e.toString());
+      rollbar.error(e);
+    } finally {
+      setSyncingWords(false);
+    }
   }
 
   useEffect(() => {
@@ -218,6 +283,7 @@ export default function WatchPage() {
         setCaptionsURL(files.captions[currCaptions]);
         setProgress(false);
         setLyrics(lyr);
+        setStatus(null);
         window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
         console.log(error);
@@ -242,8 +308,8 @@ export default function WatchPage() {
             </div>
           </Message>
         ) : null}
-        {progress ? (
-          <div className="w-2/4">
+        {status ? (
+          <div className="mb-2 w-2/4">
             <Message icon>
               <Icon name="circle notched" loading />
               <Message.Content>
@@ -311,6 +377,7 @@ export default function WatchPage() {
                     onChange={handleChangePitch}
                   />
                 ) : null}
+                <Button content="Lyrics Editor" onClick={handleEditLyrics} />
                 <Dropdown
                   button
                   text="Sync Editor"
@@ -340,6 +407,58 @@ export default function WatchPage() {
                 </div>
               </div>
             ) : null}
+          </div>
+        ) : null}
+        {editLyrics ? (
+          <div className="w-2/4 text-xl">
+            <Message>
+              NOTE: To maximize lyrics sync accuracy, keep an empty line between
+              verses
+            </Message>
+            {syncStatus ? (
+              <Message icon>
+                <Icon
+                  name="circle notched"
+                  loading={syncingLines || syncingWords}
+                />
+                <Message.Content>
+                  <Message.Header>Sync Status</Message.Header>
+                  <div className="py-2">{syncStatus}</div>
+                </Message.Content>
+              </Message>
+            ) : null}
+            <div className="flex flex-row pb-4 justify-center">
+              <Button
+                content="Sync Lines"
+                disabled={
+                  syncingWords || syncingLines || !lyrics || lyrics.length < 100
+                }
+                loading={syncingLines}
+                onClick={handleSyncLines}
+              />
+              <Button
+                content="Sync Words"
+                disabled={
+                  syncingWords || syncingLines || !lyrics || lyrics.length < 100
+                }
+                loading={syncingWords}
+                onClick={handleSyncWords}
+              />
+            </div>
+            <Form>
+              <TextArea
+                placeholder="Paste here the song lyrics"
+                className="text-xl"
+                ref={lyricsRef}
+                value={lyrics}
+                rows={
+                  lyrics && lyrics.split("\n").length > 10
+                    ? lyrics.split("\n").length
+                    : 10
+                }
+                onChange={handleLyricsChange}
+              />
+            </Form>
           </div>
         ) : null}
       </div>

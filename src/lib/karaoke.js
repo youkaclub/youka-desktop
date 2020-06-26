@@ -205,6 +205,7 @@ async function realign(youtubeID, title, mode, onStatus) {
     lang === "en" ? library.MODE_MEDIA_ORIGINAL : library.MODE_MEDIA_VOCALS;
   const queue = lang === "en" ? client.QUEUE_ALIGN_EN : client.QUEUE_ALIGN;
   const audio = await library.getAudio(youtubeID, audioMode);
+  onStatus("Uploading files");
   const audioUrl = await client.upload(audio);
   const transcriptUrl = await client.upload(lyrics);
   const jobId = await client.enqueue(queue, {
@@ -215,6 +216,7 @@ async function realign(youtubeID, title, mode, onStatus) {
   const job = await client.wait(queue, jobId, onStatus);
   if (!job || !job.result || !job.result.alignmentsUrl)
     throw new Error("Sync failed");
+  onStatus("Downloading files");
   const alignments = await rp({
     uri: job.result.alignmentsUrl,
     encoding: "utf-8",
