@@ -48,11 +48,6 @@ export default function SyncSimplePage() {
     setFinished(true);
   }
 
-  async function handleLyrics(lyr) {
-    setLyrics(lyr);
-    return library.setLyrics(id, lyr);
-  }
-
   async function handleSync() {
     try {
       setStatus(null);
@@ -83,7 +78,7 @@ export default function SyncSimplePage() {
           <Message.Header>Instructions</Message.Header>
           <Message.List>
             <Message.Item>
-              Click on the Start button to play the song and start the sync
+              Click on the Play button to play the song and start the sync
               process
             </Message.Item>
             <Message.Item>
@@ -171,7 +166,6 @@ export default function SyncSimplePage() {
           audioUrl={audioUrl}
           lyrics={lyrics}
           onAlignments={handleAlignments}
-          onLyrics={handleLyrics}
         />
       ) : null}
     </div>
