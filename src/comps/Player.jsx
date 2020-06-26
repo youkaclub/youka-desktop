@@ -61,6 +61,13 @@ export default function Player({ youtubeID, videoURL, captionsURL, title }) {
           video: videoRef.current,
           workerUrl: `${process.env.PUBLIC_URL}/js/subtitles-octopus-worker.js`,
           subContent: captionsURL,
+          fonts: [
+            "https://static.youka.club/fonts/ko.otf",
+            "https://static.youka.club/fonts/ja.otf",
+            "https://static.youka.club/fonts/zh.otf",
+            "https://static.youka.club/fonts/ar.ttf",
+            "https://static.youka.club/fonts/th.ttf",
+          ],
         };
         assRef.current = new SubtitlesOctopus(options);
         setTimeout(() => {
