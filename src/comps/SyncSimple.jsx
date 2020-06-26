@@ -44,7 +44,6 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
   function handleSetEnd() {
     setIsStart(true);
     alignmentsRef.current[lineIndex].end = audioRef.current.currentTime;
-    console.log(alignmentsRef.current[lineIndex]);
     if (lineIndex + 1 < lines.length) {
       setLineIndex(lineIndex + 1);
     } else {
