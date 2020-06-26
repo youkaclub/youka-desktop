@@ -6,15 +6,14 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
   const [lineIndex, setLineIndex] = useState(0);
   const [paused, setPaused] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
-  const [start, setStart] = useState(0);
   const [speed, setSpeed] = useState("Normal");
   const [isStart, setIsStart] = useState(true);
+
   const audioRef = useRef(new Audio());
   audioRef.current.onplay = () => setPaused(false);
   audioRef.current.onpause = () => setPaused(true);
   audioRef.current.ontimeupdate = () =>
     setCurrentTime(audioRef.current.currentTime);
-
   const alignmentsRef = useRef({});
 
   useEffect(() => {
@@ -35,18 +34,17 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
 
   function handleSetStart() {
     setIsStart(false);
-    setStart(audioRef.current.currentTime);
+    alignmentsRef.current[lineIndex] = {
+      line: lineIndex + 1,
+      start: audioRef.current.currentTime,
+      text: lines[lineIndex],
+    };
   }
 
   function handleSetEnd() {
     setIsStart(true);
-    alignmentsRef.current[lineIndex] = {
-      line: lineIndex + 1,
-      start,
-      end: audioRef.current.currentTime,
-      text: lines[lineIndex],
-    };
-    setStart(0);
+    alignmentsRef.current[lineIndex].end = audioRef.current.currentTime;
+    console.log(alignmentsRef.current[lineIndex]);
     if (lineIndex + 1 < lines.length) {
       setLineIndex(lineIndex + 1);
     } else {
@@ -84,14 +82,15 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
   }
 
   function handleUndo() {
-    delete alignmentsRef.current[lineIndex - 1];
-    setLineIndex(lineIndex - 1);
-    setIsStart(true);
-    if (lineIndex - 2 < 0) {
+    if (lineIndex === 0) {
       audioRef.current.currentTime = 0;
+    } else if (isStart) {
+      audioRef.current.currentTime = alignmentsRef.current[lineIndex - 1].start;
+      setLineIndex(lineIndex - 1);
     } else {
-      audioRef.current.currentTime = alignmentsRef.current[lineIndex - 2].end;
+      audioRef.current.currentTime = alignmentsRef.current[lineIndex - 1].end;
     }
+    setIsStart(!isStart);
   }
 
   if (!lines) return null;
@@ -150,7 +149,7 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
       <div className="m-4">
         <Button
           content={"undo"}
-          disabled={paused || lineIndex === 0}
+          disabled={paused || (lineIndex === 0 && isStart)}
           onClick={handleUndo}
         />
         <Button
