@@ -400,16 +400,19 @@ export async function downloadAudio(youtubeID, mediaMode, pitch) {
   let output;
   if (pitch === 0) {
     input = `${mediaMode}${FILE_M4A}`;
-    output = filenamify(`${youtubeID}-${mediaMode}${FILE_MP3}`, {
+    output = filenamify(`youka-${youtubeID}-${mediaMode}${FILE_MP3}`, {
       replacement: "",
     });
   } else {
     await getPitch(youtubeID, mediaMode, pitch);
     input = `${MODE_MEDIA_PITCH}${FILE_WAV}`;
     const pitchStr = pitch > 0 ? `key-plus-${pitch}` : `key-minus${pitch}`;
-    output = filenamify(`${youtubeID}-${mediaMode}-${pitchStr}${FILE_MP3}`, {
-      replacement: "",
-    });
+    output = filenamify(
+      `youka-${youtubeID}-${mediaMode}-${pitchStr}${FILE_MP3}`,
+      {
+        replacement: "",
+      }
+    );
   }
 
   const cwd = join(ROOT, youtubeID);
@@ -434,7 +437,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   if (pitch === 0) {
     input = `${mediaMode}${FILE_MP4}`;
     output = filenamify(
-      `${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`,
+      `youka-${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`,
       { replacement: "" }
     );
   } else {
@@ -442,7 +445,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
     input = `${MODE_MEDIA_PITCH}${FILE_MKV}`;
     const pitchStr = pitch > 0 ? `key-plus-${pitch}` : `key-minus${pitch}`;
     output = filenamify(
-      `${youtubeID}-${mediaMode}-${captionsMode}-${pitchStr}${FILE_MP4}`,
+      `youka-${youtubeID}-${mediaMode}-${captionsMode}-${pitchStr}${FILE_MP4}`,
       { replacement: "" }
     );
   }
