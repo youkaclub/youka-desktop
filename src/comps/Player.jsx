@@ -67,6 +67,7 @@ export default function Player({ youtubeID, videoURL, captionsURL, title }) {
             "https://static.youka.club/fonts/zh.otf",
             "https://static.youka.club/fonts/ar.ttf",
             "https://static.youka.club/fonts/th.ttf",
+            "https://static.youka.club/fonts/hi.ttf",
           ],
         };
         assRef.current = new SubtitlesOctopus(options);
