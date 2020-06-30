@@ -17,7 +17,7 @@ async function search(name, query, lang) {
   }
   const sites = providers.filter((p) => p.supported(lang)).map((p) => p.site);
   const siteQuery = google_search_query(query, sites);
-  const num = sites.length * 3;
+  const num = 30;
   const results = await google_search(siteQuery, num);
 
   for (let i = 0; i < providers.length; i++) {
@@ -25,7 +25,9 @@ async function search(name, query, lang) {
     const result = results.find(
       (result) =>
         result.url.match(provider.site_re) &&
-        (match(query, result.title) || match(query, result.url))
+        (match(query, result.title) ||
+          match(query, result.url) ||
+          lang === "th")
     );
     const url = result ? result.url : null;
     const pkey = `${provider.name}::${query}`;
@@ -58,6 +60,7 @@ async function google_search(query, num) {
     const title = $(el).find(".r h3").text();
     results.push({ url, title });
   });
+
   return results;
 }
 

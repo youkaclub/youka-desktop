@@ -14,7 +14,7 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "",
-    "test": "craco test"
+    "test": "mocha --recursive --timeout 10000 -r jsdom-global/register"
   },
   "devDependencies": {
     "@craco/craco": "^5.6.4",
@@ -57,9 +57,12 @@
     "he": "^1.2.0",
     "iconv-lite": "git+https://github.com/youkaclub/iconv-lite.git",
     "jest": "^24.9.0",
+    "jsdom": "16.2.2",
+    "jsdom-global": "3.0.2",
     "libass-wasm": "^4.0.0",
     "lodash": "^4.17.15",
     "mkdirp": "^1.0.3",
+    "mocha": "^8.0.1",
     "needle": "^2.3.3",
     "node-loader": "^0.6.0",
     "plyr": "^3.5.10",

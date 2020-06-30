@@ -22,12 +22,13 @@ const provider = {
   search: async (query) => {
     let xml;
     try {
-      xml = await rp(
-        `http://ttlyrics.com/api/search?title=${encodeURIComponent(query)}`,
-        {
-          jar,
-        }
-      );
+      const uri = `http://lyrics.ttlyrics.com:10086/api/search?title=${encodeURIComponent(
+        query
+      )}`;
+      xml = await rp({
+        uri,
+        jar,
+      });
     } catch (e) {
       console.log(e);
       return null;
@@ -45,7 +46,7 @@ const provider = {
     if (match.bestMatch.rating < 0.4) return;
     const id = results[match.bestMatchIndex].id;
     if (!id) return;
-    const url = `http://ttlyrics.com/api/download?id=${id}`;
+    const url = `http://lyrics.ttlyrics.com:10086/api/download?id=${id}`;
     return url;
   },
 

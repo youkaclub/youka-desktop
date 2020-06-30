@@ -15,8 +15,12 @@ const provider = {
   lyrics: async (url) => {
     const html = await rp(url);
     const $ = cheerio.load(html);
-    $("div.pt-4.pb-2 > .text-base").find("br").replaceWith("\n");
-    const l = $("div.pt-4.pb-2 > .text-base").text().trim();
+    const ps = [];
+    $("div.pt-4.pb-2 > .text-base > p").each((i, el) => {
+      const p = $(el).text();
+      ps.push(p);
+    });
+    const l = ps.join("\n\n");
     return l;
   },
 };

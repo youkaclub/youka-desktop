@@ -1,21 +1,21 @@
+const assert = require("assert");
 const crypto = require("crypto");
-const providers = require("../../../lib/lyrics/providers");
+const providers = require("../../../src/lib/lyrics/providers");
 
 const tests = [
   {
     name: "google.com",
     query: "your song ellie goulding",
     lang: "en",
-    url: "https://www.google.com/search?q=your+song+ellie+goulding+lyrics",
-    hash: "b56c646bf8275561c45291314fa2efe3",
+    url: "https://www.google.com/search?q=your+song+ellie+goulding",
+    hash: "074b35d53caa26e545253865aefb6363",
   },
   {
     name: "musixmatch.com",
-    query: "your song ellie goulding",
+    query: "ariana grande 7 rings",
     lang: "en",
-    url:
-      "https://www.musixmatch.com/lyrics/Made-famous-by-Ellie-Goulding/Your-song",
-    hash: "8de3a979f7f8cd799c390bf4f352e02d",
+    url: "https://www.musixmatch.com/lyrics/Ariana-Grande/7-rings",
+    hash: "9d0e954cceb5ae666c56ac11f120c496",
   },
   {
     name: "shazam.com",
@@ -26,11 +26,11 @@ const tests = [
   },
   {
     name: "smule.com",
-    query: "your song ellie goulding",
+    query: "ariana grande 7 rings",
     lang: "en",
     url:
-      "https://www.smule.com/song/ellie-goulding-your-song-karaoke-lyrics/6753696_6753696/arrangement",
-    hash: "73493c61a94065074b095afad118ff0d",
+      "https://www.smule.com/song/ariana-grande-ft-nicki-minaj-jennie-7-rings-karaoke-lyrics/9648312_9648312/arrangement",
+    hash: "5956e623a55ff9684b60f14861398798",
   },
   {
     name: "azlyrics.com",
@@ -115,14 +115,14 @@ const tests = [
     name: "utamap.com",
     query: "あいみょん - マリーゴールド",
     lang: "ja",
-    url: "http://www.utamap.com/showkasi.php?surl=k-180808-030",
+    url: "https://www.utamap.com/showkasi.php?surl=k-180808-030",
     hash: "b5b6e8a4a1037035e47e5e08dbbcd783",
   },
   {
     name: "sanook.com",
     query: "คบไม่ได้ - เต้น นรารักษ์",
     lang: "th",
-    url: "https://www.sanook.com/music/song/qEfi01dneB3vYEQk5OWCFw==/",
+    url: "https://www.sanook.com/music/song/SQRrUvvwPQs5QjSvL1Qt7A==/",
     hash: "841445c7d7022b792e50289c6545513f",
   },
   {
@@ -136,7 +136,7 @@ const tests = [
     name: "ttlyrics.com",
     query: "如果有如果-鄧福如",
     lang: "zh",
-    url: "http://ttlyrics.com/api/download?id=10001",
+    url: "http://lyrics.ttlyrics.com:10086/api/download?id=10002",
     hash: "a528d62fad90468425940fb9128166f4",
   },
   {
@@ -178,23 +178,20 @@ const tests = [
 ];
 
 describe("provider should return url and lyrics", () => {
-  it("should return lyrics", async () => {
-    jest.setTimeout(50000);
-    for (let i = 0; i < tests.length; i++) {
-      const test = tests[i];
-      console.log(test);
+  for (let i = 0; i < tests.length; i++) {
+    const test = tests[i];
+    it(`should return lyrics ${test.name}`, async () => {
       const provider = providers.find((p) => p.name === test.name);
       const actualURL = await provider.search(test.query, test.lang);
-      expect(actualURL).toBe(test.url);
+      assert.equal(actualURL, test.url);
       const actualLyrics = await provider.lyrics(actualURL);
-      console.log(`"""${actualLyrics}"""`);
       const actualHash = crypto
         .createHash("md5")
         .update(actualLyrics)
         .digest("hex");
-      expect(actualHash).toBe(test.hash);
-    }
-  });
+      assert.equal(actualHash, test.hash, actualLyrics);
+    });
+  }
 
   it("should return nothing", async () => {
     for (let i = 0; i < providers.length; i++) {
@@ -202,8 +199,9 @@ describe("provider should return url and lyrics", () => {
       if (["google.com"].includes(provider.name)) continue;
       const query = "abcdefgasdalkjfalddsk";
       provider.supported = () => true;
-      const url = await provider.search(query);
-      expect(url).toBeFalsy();
+      const actual = await provider.search(query);
+      const expected = undefined;
+      assert.equal(actual, expected);
     }
   });
 });

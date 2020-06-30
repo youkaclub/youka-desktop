@@ -1,4 +1,5 @@
 const rp = require("request-promise");
+const match = require("./utils").match;
 
 const name = "genius.com";
 
@@ -21,9 +22,12 @@ async function searchMulti(query, perPage) {
   return rp(options);
 }
 
-function songFromSearch(result) {
+function songFromSearch(result, query) {
+  console.log(JSON.stringify(result, null, 2));
   const section = result.response.sections.find((s) => s.type === "top_hit");
-  const hit = section.hits.find((h) => h.type === "song");
+  const hit = section.hits.find(
+    (h) => h.type === "song" && h.result && match(query, h.result["full_title"])
+  );
   if (hit) return hit.result.id;
 }
 
@@ -50,7 +54,7 @@ const provider = {
 
   search: async (query) => {
     const searchResp = await searchMulti(query, 3);
-    const songID = songFromSearch(searchResp);
+    const songID = songFromSearch(searchResp, query);
     if (!songID) return null;
     const url = `https://api.genius.com/songs/${songID}?text_format=plain`;
     return url;

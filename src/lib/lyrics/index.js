@@ -1,4 +1,5 @@
 const debug = require("debug")("youka:desktop");
+const amplitude = require("amplitude-js");
 const gt = require("../google-translate");
 const rollbar = require("../rollbar");
 const providers = require("./providers");
@@ -28,6 +29,8 @@ async function search(query) {
       rollbar.error(msg, e);
     }
   }
+
+  amplitude.getInstance().logEvent("LYRICS_NOT_FOUND", { query });
 }
 
 module.exports = search;

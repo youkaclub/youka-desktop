@@ -14,6 +14,7 @@ const provider = {
   search: async (query, lang) => google.search(name, query, lang),
 
   lyrics: async (url) => {
+    url = url.replace("https://", "http://");
     const html = await rp(url, { encoding: null });
     const ehtml = iconv.decode(html, "EUC-JP");
     const $ = cheerio.load(ehtml);

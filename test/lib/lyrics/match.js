@@ -1,4 +1,5 @@
-const utils = require("../../../lib/lyrics/providers/utils");
+const assert = require("assert");
+const utils = require("../../../src/lib/lyrics/providers/utils");
 
 const tests = [
   [
@@ -20,8 +21,13 @@ const tests = [
   ],
 ];
 describe("match", () => {
-  it.each(tests)("%s", async (a, b, expected) => {
-    const actual = utils.match(a, b);
-    expect(actual).toBe(expected);
+  describe("match", () => {
+    for (let i = 0; i < tests.length; i++) {
+      it("should match", function () {
+        const [a, b, expected] = tests[i];
+        const actual = utils.match(a, b);
+        assert.equal(actual, expected);
+      });
+    }
   });
 });

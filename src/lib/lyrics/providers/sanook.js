@@ -8,7 +8,7 @@ const provider = {
   name,
   supported: (lang) => lang === "th",
   site: "https://www.sanook.com/music/song",
-  site_re: /https:\/\/www\.sanook\.com\/music\/song\/.*/,
+  site_re: /https:\/\/www\.sanook\.com\/music\/song/,
 
   search: async (query, lang) => google.search(name, query, lang),
 
