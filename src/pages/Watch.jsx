@@ -328,7 +328,7 @@ export default function WatchPage() {
                   />
                 ) : null}
                 <Button content="Lyrics Editor" onClick={handleEditLyrics} />
-                {captionsURL && captionsURL.startsWith("[Script Info]") ? (
+                {lyrics ? (
                   <Dropdown
                     button
                     text="Sync Editor"
@@ -340,6 +340,9 @@ export default function WatchPage() {
                       {
                         text: "Advanced",
                         value: "sync-advanced",
+                        disabled:
+                          !captionsURL ||
+                          !captionsURL.startsWith("[Script Info]"),
                       },
                     ]}
                     onChange={handleOpenSyncEditor}
