@@ -7,6 +7,7 @@ import karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
 
 const querystring = require("querystring");
+const amplitude = require("amplitude-js");
 
 export default function SyncSimplePage() {
   let history = useHistory();
@@ -44,6 +45,7 @@ export default function SyncSimplePage() {
   }
 
   async function handleAlignments(alignments) {
+    amplitude.getInstance().logEvent("SIMPLE_SYNC_FINISHED");
     await library.setAlignments(id, library.MODE_CAPTIONS_LINE, alignments);
     setFinished(true);
   }
@@ -54,6 +56,10 @@ export default function SyncSimplePage() {
       setError(null);
       setSyncing(true);
       setSynced(false);
+      amplitude.getInstance().logEvent("RESYNC", {
+        mode: library.MODE_CAPTIONS_WORD,
+        comp: "sync-editor-simple",
+      });
       await karaoke.alignline(id, (s) => setStatus(s));
       setCaptionsMode(library.MODE_CAPTIONS_WORD);
       setStatus("Sync is completed successfully");

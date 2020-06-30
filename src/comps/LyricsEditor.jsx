@@ -37,7 +37,7 @@ export default function LyricsEditor({ id, onSynced }) {
       setSynced(false);
       amplitude
         .getInstance()
-        .logEvent("LYRICS_EDITOR_SYNC", { mode: selectedMode });
+        .logEvent("RESYNC", { mode: selectedMode, comp: "lyrics-editor" });
       await karaoke.realign(id, null, selectedMode, (s) => setStatus(s));
       setSynced(true);
       onSynced(selectedMode);

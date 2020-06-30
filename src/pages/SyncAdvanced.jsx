@@ -5,7 +5,9 @@ import Sync from "../comps/SyncAdvanced";
 import * as library from "../lib/library";
 import karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
+
 const querystring = require("querystring");
+const amplitude = require("amplitude-js");
 
 export default function SyncAdvancedPage() {
   let history = useHistory();
@@ -40,6 +42,12 @@ export default function SyncAdvancedPage() {
       setError(null);
       setSyncing(true);
       setSynced(false);
+      amplitude
+        .getInstance()
+        .logEvent("RESYNC", {
+          mode: library.MODE_CAPTIONS_WORD,
+          comp: "sync-editor-advanced",
+        });
       await library.setAlignments(id, captionsMode, alignments);
       await karaoke.alignline(id, (s) => setStatus(s));
       setSynced(true);
