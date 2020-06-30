@@ -24,6 +24,13 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
     audioRef.current.src = audioUrl;
   }, [audioUrl]);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    return () => {
+      audio.pause();
+    };
+  }, []);
+
   function handlePlay() {
     audioRef.current.play();
   }
@@ -130,6 +137,7 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
         <div className="px-2">{formatSeconds(currentTime)}</div>
         <Button icon="undo" onClick={handlePlayBackward} />
         <Button
+          className="w-32"
           primary={paused}
           content={paused ? "Play" : "Pause"}
           onClick={paused ? handlePlay : handlePause}
@@ -152,6 +160,7 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
           onClick={handleUndo}
         />
         <Button
+          className="w-40"
           content={isStart ? "Set Start" : "Set End"}
           color={isStart ? "green" : "red"}
           disabled={paused}

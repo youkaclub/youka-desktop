@@ -53,6 +53,7 @@ export default function SyncSimplePage() {
       setStatus(null);
       setError(null);
       setSyncing(true);
+      setSynced(false);
       await karaoke.alignline(id, (s) => setStatus(s));
       setCaptionsMode(library.MODE_CAPTIONS_WORD);
       setStatus("Sync is completed successfully");
@@ -64,11 +65,8 @@ export default function SyncSimplePage() {
       rollbar.error(e);
     } finally {
       setSyncing(false);
+      setStatus(null);
     }
-  }
-
-  function handleCloseError() {
-    setError(null);
   }
 
   function renderInstructions() {
@@ -76,33 +74,28 @@ export default function SyncSimplePage() {
       <div className="flex flex-row p-4 justify-center">
         <Message>
           <Message.Header>Instructions</Message.Header>
-          <Message.List>
-            <Message.Item>
-              Click on the Play button to play the song and start the sync
+          <Message.Content>
+            <div className="py-2"></div>
+            <div className="py-2">
+              1. Click on the Play button to play the song and start the sync
               process
-            </Message.Item>
-            <Message.Item>
-              Click on the Set Start button when you hear the first word of
+            </div>
+            <div className="py-2">
+              2. Click on the Set Start button when you hear the first word of
               current line
-            </Message.Item>
-            <Message.Item>
-              Click on the Set End button after you hear the last word of
+            </div>
+            <div className="py-2">
+              3. Click on the Set End button after you hear the last word of
               current line
-            </Message.Item>
-            <Message.Item>
-              Continue until you finish to sync all the lines
-            </Message.Item>
-            <Message.Item>
-              Now you can improve the word level sync automatically by click on
-              the Sync Words button (it will be available after you finish)
-            </Message.Item>
-            <Message.Item>
-              You may adjust the sync results using the Advanced Sync Editor
-            </Message.Item>
-            <Message.Item>
-              Pro tip: Use the space key to set start or end
-            </Message.Item>
-          </Message.List>
+            </div>
+            <div className="py-2">
+              4. Continue until you finish to sync all the lines
+            </div>
+            <div className="py-2">
+              When you finish, you may click on the Sync Words button to improve
+              the word level sync
+            </div>
+          </Message.Content>
         </Message>
       </div>
     );
@@ -112,24 +105,23 @@ export default function SyncSimplePage() {
     <div className="flex flex-col p-4 items-center">
       <div className="flex flex-col items-center w-2/4">
         <div>
-          {finished &&
-          !synced &&
-          lang &&
-          karaoke.SUPPORTED_LANGS.includes(lang) ? (
-            <Button
-              primary
-              content={syncing ? "Syncing" : "Sync Words"}
-              onClick={handleSync}
-              loading={syncing}
-              disabled={syncing}
-            />
-          ) : null}
+          <Button
+            content="Sync Words"
+            onClick={handleSync}
+            loading={syncing}
+            disabled={syncing || !finished}
+          />
           <Button content="Close" onClick={handleClose} />
         </div>
-
+        {synced ? (
+          <Message color="green" icon>
+            <Icon name="circle check" />
+            <Message.Header>Sync is completed successfully</Message.Header>
+          </Message>
+        ) : null}
         {status ? (
           <Message icon>
-            <Icon name="circle notched" loading={syncing} />
+            <Icon name="circle notched" loading />
             <Message.Content>
               <Message.Header>Sync Status</Message.Header>
               <div className="py-2">{status}</div>
@@ -137,14 +129,17 @@ export default function SyncSimplePage() {
           </Message>
         ) : null}
         {error ? (
-          <Message negative onDismiss={handleCloseError}>
-            <Message.Header>Ooops, some error occurred :(</Message.Header>
-            <div className="py-1">{error}</div>
+          <Message icon negative>
+            <Icon name="exclamation circle" />
+            <Message.Content>
+              <Message.Header>Sync processing is failed</Message.Header>
+              <div className="py-1">{error}</div>
+            </Message.Content>
           </Message>
         ) : null}
         {finished ? null : renderInstructions()}
       </div>
-      {finished && !synced ? (
+      {finished && !syncing && !synced ? (
         <div className="m-8 text-2xl">
           <div>Good job!</div>
           <br />

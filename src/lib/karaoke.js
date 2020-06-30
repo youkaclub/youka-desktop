@@ -201,9 +201,16 @@ async function realign(youtubeID, title, mode, onStatus) {
   if (!lyrics) throw new Error("Lyrics is empty");
   const lang = await library.getLanguage(youtubeID, lyrics, true);
   if (!lang) throw new Error("Can't detect language");
+
+  const queue =
+    mode === library.MODE_CAPTIONS_WORD && lang === "en"
+      ? client.QUEUE_ALIGN_EN
+      : client.QUEUE_ALIGN;
   const audioMode =
-    lang === "en" ? library.MODE_MEDIA_ORIGINAL : library.MODE_MEDIA_VOCALS;
-  const queue = lang === "en" ? client.QUEUE_ALIGN_EN : client.QUEUE_ALIGN;
+    queue === client.QUEUE_ALIGN_EN
+      ? library.MODE_MEDIA_ORIGINAL
+      : library.MODE_MEDIA_VOCALS;
+
   const audio = await library.getAudio(youtubeID, audioMode);
   onStatus("Uploading files");
   const audioUrl = await client.upload(audio);

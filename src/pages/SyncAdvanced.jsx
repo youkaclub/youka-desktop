@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { useHistory, useLocation } from "react-router-dom";
-import { Icon, Message, Button, Dropdown } from "semantic-ui-react";
+import { Icon, Message, Button } from "semantic-ui-react";
 import Sync from "../comps/SyncAdvanced";
 import * as library from "../lib/library";
 import karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
 const querystring = require("querystring");
-const capitalize = require("capitalize");
 
 export default function SyncAdvancedPage() {
   let history = useHistory();
   const location = useLocation();
-  const { id, title, videoMode } = querystring.parse(location.search.slice(1));
+  const { id, title, videoMode, captionsMode } = querystring.parse(
+    location.search.slice(1)
+  );
   const [audioUrl, setAudioUrl] = useState();
   const [syncing, setSyncing] = useState();
   const [alignments, setAlignments] = useState();
-  const [captionsMode, setCaptionsMode] = useState(library.MODE_CAPTIONS_LINE);
   const [status, setStatus] = useState();
+  const [synced, setSynced] = useState();
   const [error, setError] = useState();
 
   useEffect(() => {
@@ -38,15 +39,16 @@ export default function SyncAdvancedPage() {
     try {
       setError(null);
       setSyncing(true);
+      setSynced(false);
       await library.setAlignments(id, captionsMode, alignments);
       await karaoke.alignline(id, (s) => setStatus(s));
-      setStatus("Sync is completed successfully");
+      setSynced(true);
     } catch (e) {
-      setStatus(null);
       setError(e.toString());
       console.log(e);
       rollbar.error(e);
     } finally {
+      setStatus(null);
       setSyncing(false);
     }
   }
@@ -55,62 +57,46 @@ export default function SyncAdvancedPage() {
     setAlignments(als);
   }
 
-  function handleCloseError() {
-    setError(null);
-  }
-
-  function handleChangeCaptions(e, data) {
-    setCaptionsMode(data.value);
-  }
-
   return (
     <div className="flex flex-col p-4">
-      <div className="flex flex-row justify-center">
-        <Dropdown
-          button
-          text={" Sync Mode: " + capitalize(captionsMode)}
-          value={captionsMode}
-          options={[
-            {
-              text: capitalize(library.MODE_CAPTIONS_LINE),
-              value: library.MODE_CAPTIONS_LINE,
-            },
-            {
-              text: capitalize(library.MODE_CAPTIONS_WORD),
-              value: library.MODE_CAPTIONS_WORD,
-            },
-          ]}
-          onChange={handleChangeCaptions}
-        />
+      <div className="flex flex-row justify-center pb-4">
         {captionsMode === library.MODE_CAPTIONS_LINE ? (
           <Button
-            content={syncing ? "Syncing" : "Sync Words"}
+            content="Sync Words"
             onClick={handleSync}
-            loading={syncing}
             disabled={syncing}
           />
         ) : null}
         <Button content="Close" onClick={handleClose} />
       </div>
-      {status ? (
-        <div className="flex flex-row w-2/4 p-4 self-center">
-          <Message icon>
-            <Icon name="circle notched" loading={syncing} />
-            <Message.Content>
-              <Message.Header>Sync Status</Message.Header>
-              <div className="py-2">{status}</div>
-            </Message.Content>
-          </Message>
+      <div className="flex flex-row justify-center">
+        <div className="w-2/4">
+          {synced ? (
+            <Message color="green" icon>
+              <Icon name="circle check" />
+              <Message.Header>Sync is completed successfully</Message.Header>
+            </Message>
+          ) : null}
+          {status ? (
+            <Message icon>
+              <Icon name="circle notched" loading={syncing} />
+              <Message.Content>
+                <Message.Header>Sync Status</Message.Header>
+                <div className="py-2">{status}</div>
+              </Message.Content>
+            </Message>
+          ) : null}
+          {error ? (
+            <Message icon negative>
+              <Icon name="exclamation circle" />
+              <Message.Content>
+                <Message.Header>Sync processing is failed</Message.Header>
+                <div className="py-1">{error}</div>
+              </Message.Content>
+            </Message>
+          ) : null}
         </div>
-      ) : null}
-      {error ? (
-        <div className="flex flex-row justify-center p-4">
-          <Message negative onDismiss={handleCloseError}>
-            <Message.Header>Ooops, some error occurred :(</Message.Header>
-            <div className="py-1">{error}</div>
-          </Message>
-        </div>
-      ) : null}
+      </div>
       <div className="flex flex-row p-4 justify-center">
         <Message>
           <Message.Header>Instructions</Message.Header>

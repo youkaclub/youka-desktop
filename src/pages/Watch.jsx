@@ -1,18 +1,12 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
-import {
-  Message,
-  Icon,
-  Dropdown,
-  Button,
-  Form,
-  TextArea,
-} from "semantic-ui-react";
+import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
 import { shell } from "electron";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
 import Shell, { PLAYLIST_MIX } from "../comps/Shell";
 import Player from "../comps/Player";
+import LyricsEditor from "../comps/LyricsEditor";
 import { usePageView } from "../lib/hooks";
 import rollbar from "../lib/rollbar";
 import { platform } from "os";
@@ -28,22 +22,16 @@ export default function WatchPage() {
   const params = querystring.parse(location.search.slice(1));
   const { id, title } = params;
 
-  const defaultVideo = library.MODE_MEDIA_INSTRUMENTS;
-
   const [videoModes, setVideoModes] = useState({});
   const [captionsModes, setCaptionsModes] = useState({});
-  const [videoMode, setVideoMode] = useState(defaultVideo);
+  const [videoMode, setVideoMode] = useState();
   const [captionsMode, setCaptionsMode] = useState();
   const [videoURL, setVideoURL] = useState();
   const [captionsURL, setCaptionsURL] = useState();
   const [error, setError] = useState();
-  const [progress, setProgress] = useState(true);
-  const [downloading, setDownloading] = useState(false);
+  const [downloading, setDownloading] = useState();
   const [status, setStatus] = useState();
-  const [syncStatus, setSyncStatus] = useState();
   const [lyrics, setLyrics] = useState();
-  const [syncingLines, setSyncingLines] = useState();
-  const [syncingWords, setSyncingWords] = useState();
   const [editLyrics, setEditLyrics] = useState();
   const [pitch, setPitch] = useState(0);
   const [pitching, setPitching] = useState();
@@ -51,12 +39,10 @@ export default function WatchPage() {
   const [ddoptions, setddoptions] = useState([]);
   const [ccoptions, setccoptions] = useState([]);
 
-  const lyricsRef = useRef();
-
   const poptions = [];
   for (var i = 10; i >= -10; i--) {
     poptions.push({
-      text: `${i}`,
+      text: i,
       value: i,
     });
   }
@@ -119,10 +105,6 @@ export default function WatchPage() {
     setStatus(s);
   }
 
-  function handleCloseError() {
-    setError(null);
-  }
-
   function handleClickClose() {
     setVideoURL(null);
   }
@@ -164,10 +146,6 @@ export default function WatchPage() {
     setCaptionsURL(url);
   }
 
-  function handleRetry() {
-    window.location.reload();
-  }
-
   async function changePitch(n, mode) {
     try {
       setPitch(n);
@@ -185,131 +163,99 @@ export default function WatchPage() {
 
   function handleEditLyrics() {
     setEditLyrics(!editLyrics);
-    setTimeout(() => {
-      if (!editLyrics && lyricsRef.current) {
-        lyricsRef.current.focus();
-      }
-    }, 100);
-  }
-
-  async function handleLyricsChange(e, data) {
-    setLyrics(data.value);
-    return library.setLyrics(id, data.value);
   }
 
   async function handleChangePitch(e, data) {
     return changePitch(data.value, videoMode);
   }
 
-  async function handleSyncLines() {
-    try {
-      setSyncStatus(null);
-      setSyncingLines(true);
-      amplitude.getInstance().logEvent("RESYNC");
-      await karaoke.realign(id, title, library.MODE_CAPTIONS_LINE, (s) =>
-        setSyncStatus(s)
-      );
-      changeCaptions(library.MODE_CAPTIONS_LINE);
-      setSyncStatus("Sync completed successfully");
-    } catch (e) {
-      console.log(e);
-      setSyncStatus(e.toString());
-      rollbar.error(e);
-    } finally {
-      setSyncingLines(false);
-    }
+  async function handleSynced(mode) {
+    init(mode);
   }
 
-  async function handleSyncWords() {
+  async function init(customCaptionsMode) {
     try {
-      setSyncStatus(null);
-      setSyncingWords(true);
-      amplitude.getInstance().logEvent("RESYNC");
-      await karaoke.realign(id, title, library.MODE_CAPTIONS_WORD, (s) =>
-        setSyncStatus(s)
-      );
-      changeCaptions(library.MODE_CAPTIONS_WORD);
-      setSyncStatus("Sync completed successfully");
-    } catch (e) {
-      console.log(e);
-      setSyncStatus(e.toString());
-      rollbar.error(e);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setVideoURL(null);
+      setDownloading(false);
+      setPitch(0);
+      setError(null);
+      setStatus(null);
+      let files = await library.files(id);
+      if (!files) {
+        const start = new Date();
+        await karaoke.generate(id, title, handleStatusChanged);
+        const end = new Date();
+        const duration = Math.abs((end.getTime() - start.getTime()) / 1000);
+        debug("generate time", duration);
+        amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
+        files = await library.files(id);
+      }
+      setVideoModes(files.videos);
+      setCaptionsModes(files.captions);
+
+      let currVideo;
+      if (params.videoMode) {
+        currVideo = params.videoMode;
+      } else {
+        currVideo = library.MODE_MEDIA_INSTRUMENTS;
+      }
+
+      handleStatusChanged("Searching lyrics");
+      const lyr = await library.getLyrics(id, title);
+
+      let currCaptions;
+      if (customCaptionsMode) {
+        currCaptions = customCaptionsMode;
+      } else if (params.captionsMode) {
+        currCaptions = params.captionsMode;
+      } else if (library.MODE_CAPTIONS_WORD in files.captions) {
+        currCaptions = library.MODE_CAPTIONS_WORD;
+      } else if (library.MODE_CAPTIONS_LINE in files.captions) {
+        currCaptions = library.MODE_CAPTIONS_LINE;
+      } else if (lyr) {
+        currCaptions = library.MODE_CAPTIONS_FULL;
+      } else {
+        currCaptions = library.MODE_CAPTIONS_OFF;
+      }
+
+      setVideoMode(currVideo);
+      setCaptionsMode(currCaptions);
+      setVideoURL(files.videos[currVideo]);
+      setCaptionsURL(files.captions[currCaptions]);
+      setLyrics(lyr);
+      setStatus(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      console.log(error);
+      setError(error.toString());
+      rollbar.error(error);
     } finally {
-      setSyncingWords(false);
+      setStatus(null);
     }
   }
 
   useEffect(() => {
-    (async function () {
-      try {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        setDownloading(false);
-        setPitch(0);
-        setError(null);
-        setProgress(true);
-        let files = await library.files(id);
-        if (!files) {
-          const start = new Date();
-          await karaoke.generate(id, title, handleStatusChanged);
-          const end = new Date();
-          const duration = Math.abs((end.getTime() - start.getTime()) / 1000);
-          debug("generate time", duration);
-          amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
-          files = await library.files(id);
-        }
-        setVideoModes(files.videos);
-        setCaptionsModes(files.captions);
-
-        const currVideo = defaultVideo;
-        handleStatusChanged("Searching lyrics");
-        const lyr = await library.getLyrics(id, title);
-
-        let currCaptions;
-        if (params.captionsMode) {
-          currCaptions = params.captionsMode;
-        } else if (library.MODE_CAPTIONS_WORD in files.captions) {
-          currCaptions = library.MODE_CAPTIONS_WORD;
-        } else if (library.MODE_CAPTIONS_LINE in files.captions) {
-          currCaptions = library.MODE_CAPTIONS_LINE;
-        } else if (lyr) {
-          currCaptions = library.MODE_CAPTIONS_FULL;
-        } else {
-          currCaptions = library.MODE_CAPTIONS_OFF;
-        }
-
-        setVideoMode(currVideo);
-        setCaptionsMode(currCaptions);
-        setVideoURL(files.videos[currVideo]);
-        setCaptionsURL(files.captions[currCaptions]);
-        setProgress(false);
-        setLyrics(lyr);
-        setStatus(null);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      } catch (error) {
-        console.log(error);
-        setError(error.toString());
-        setProgress(false);
-        rollbar.error(error);
-      }
-    })();
-  }, [id, title, defaultVideo, params.captionsMode]);
+    init();
+    // eslint-disable-next-line
+  }, [id]);
 
   if (!id) return null;
 
   return (
     <Shell youtubeID={id} defaultPlaylist={PLAYLIST_MIX}>
       <div className="flex flex-col items-center">
-        {error ? (
-          <Message negative onDismiss={handleCloseError}>
-            <Message.Header>Ooops, some error occurred :(</Message.Header>
-            <div className="py-1">{error}</div>
-            <div className="py-1 cursor-pointer" onClick={handleRetry}>
-              Click here to retry...
-            </div>
-          </Message>
-        ) : null}
-        {status ? (
-          <div className="mb-2 w-2/4">
+        <div className="w-2/4 mb-2">
+          {error ? (
+            <Message icon negative>
+              <Icon name="exclamation circle" />
+              <Message.Content>
+                <Message.Header>Karaoke processing is failed</Message.Header>
+                <div className="py-1">{error}</div>
+              </Message.Content>
+            </Message>
+          ) : null}
+          {status ? (
             <Message icon>
               <Icon name="circle notched" loading />
               <Message.Content>
@@ -317,9 +263,9 @@ export default function WatchPage() {
                 <div className="py-2">{status}</div>
               </Message.Content>
             </Message>
-          </div>
-        ) : null}
-        {videoURL && !error && !progress ? (
+          ) : null}
+        </div>
+        {videoURL ? (
           <div className="flex flex-col justify-center">
             <Player
               youtubeID={id}
@@ -378,21 +324,23 @@ export default function WatchPage() {
                   />
                 ) : null}
                 <Button content="Lyrics Editor" onClick={handleEditLyrics} />
-                <Dropdown
-                  button
-                  text="Sync Editor"
-                  options={[
-                    {
-                      text: "Simple",
-                      value: "sync-simple",
-                    },
-                    {
-                      text: "Advanced",
-                      value: "sync-advanced",
-                    },
-                  ]}
-                  onChange={handleOpenSyncEditor}
-                />
+                {captionsURL && captionsURL.startsWith("[Script Info]") ? (
+                  <Dropdown
+                    button
+                    text="Sync Editor"
+                    options={[
+                      {
+                        text: "Simple",
+                        value: "sync-simple",
+                      },
+                      {
+                        text: "Advanced",
+                        value: "sync-advanced",
+                      },
+                    ]}
+                    onChange={handleOpenSyncEditor}
+                  />
+                ) : null}
               </div>
             </div>
             {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
@@ -409,58 +357,7 @@ export default function WatchPage() {
             ) : null}
           </div>
         ) : null}
-        {editLyrics ? (
-          <div className="w-2/4 text-xl">
-            <Message>
-              NOTE: To maximize lyrics sync accuracy, keep an empty line between
-              verses
-            </Message>
-            {syncStatus ? (
-              <Message icon>
-                <Icon
-                  name="circle notched"
-                  loading={syncingLines || syncingWords}
-                />
-                <Message.Content>
-                  <Message.Header>Sync Status</Message.Header>
-                  <div className="py-2">{syncStatus}</div>
-                </Message.Content>
-              </Message>
-            ) : null}
-            <div className="flex flex-row pb-4 justify-center">
-              <Button
-                content="Sync Lines"
-                disabled={
-                  syncingWords || syncingLines || !lyrics || lyrics.length < 100
-                }
-                loading={syncingLines}
-                onClick={handleSyncLines}
-              />
-              <Button
-                content="Sync Words"
-                disabled={
-                  syncingWords || syncingLines || !lyrics || lyrics.length < 100
-                }
-                loading={syncingWords}
-                onClick={handleSyncWords}
-              />
-            </div>
-            <Form>
-              <TextArea
-                placeholder="Paste here the song lyrics"
-                className="text-xl"
-                ref={lyricsRef}
-                value={lyrics}
-                rows={
-                  lyrics && lyrics.split("\n").length > 10
-                    ? lyrics.split("\n").length
-                    : 10
-                }
-                onChange={handleLyricsChange}
-              />
-            </Form>
-          </div>
-        ) : null}
+        {editLyrics ? <LyricsEditor id={id} onSynced={handleSynced} /> : null}
       </div>
     </Shell>
   );

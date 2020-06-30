@@ -145,7 +145,7 @@ export async function files(youtubeID) {
         break;
       case FILE_VTT:
         const fcurl = fileurl(youtubeID, mode, ext);
-        if (fcurl) {
+        if (fcurl && !(mode in captions)) {
           captions[mode] = fcurl;
         }
         break;
@@ -342,6 +342,9 @@ export async function getWav(youtubeID, mediaMode) {
 }
 
 export async function getPitch(youtubeID, mediaMode, n) {
+  if (n === 0) {
+    return fileurl(youtubeID, mediaMode, FILE_MP4);
+  }
   await soundstretch.install();
 
   const cwd = join(ROOT, youtubeID);
