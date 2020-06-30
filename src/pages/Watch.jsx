@@ -107,6 +107,7 @@ export default function WatchPage() {
 
   function handleClickClose() {
     setVideoURL(null);
+    setEditLyrics(false);
   }
 
   async function handleChangeMedia(e, data) {
