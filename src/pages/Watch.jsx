@@ -114,7 +114,11 @@ export default function WatchPage() {
   }
 
   function handleChangeCaptions(e, data) {
-    changeCaptions(data.value);
+    const mode = data.value;
+    if (mode === library.MODE_CAPTIONS_OFF) {
+      amplitude.getInstance().logEvent("CAPTIONS_OFF");
+    }
+    changeCaptions(mode);
   }
 
   async function changeMedia(mode, modes) {

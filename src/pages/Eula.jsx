@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "semantic-ui-react";
 import { useHistory } from "react-router-dom";
 import store from "../lib/store";
@@ -7,21 +7,15 @@ const remote = require("electron").remote;
 
 export default function EulaPage() {
   let history = useHistory();
-  const [stats, setStats] = useState(true);
 
   function handleAccept() {
     store.set("eula", true);
-    store.set("stats", stats);
     history.push("/");
   }
 
   function handleDecline() {
     const window = remote.getCurrentWindow();
     window.close();
-  }
-
-  function handleChangeStats() {
-    setStats(!stats);
   }
 
   return (
@@ -178,19 +172,6 @@ export default function EulaPage() {
           accordance with the laws of <span className="country">us</span>.
         </p>
       </div>
-      <form className="m-4">
-        <label>
-          <input
-            className="mx-2"
-            type="checkbox"
-            name="stats"
-            checked={stats}
-            onChange={handleChangeStats}
-          />
-          Help make Youka better by sending anonymous usage statistics and crash
-          reports to the Youka project.
-        </label>
-      </form>
       <div className="flex flex-row m-4">
         <Button className="m-2" content="Decline" onClick={handleDecline} />
         <Button

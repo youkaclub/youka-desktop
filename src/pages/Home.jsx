@@ -11,7 +11,7 @@ export default function HomePage() {
   usePageView(location.pathname);
 
   useEffect(() => {
-    if (store.get("eula") !== true) {
+    if (!store.has("eula")) {
       history.push("/eula");
     }
     // eslint-disable-next-line
