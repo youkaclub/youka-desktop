@@ -5,6 +5,8 @@ const rollbar = require("../rollbar");
 const providers = require("./providers");
 
 async function search(query) {
+  if (!query || query.trim() === "") return null;
+
   let lang;
   try {
     lang = await gt.language(query);
