@@ -67,3 +67,12 @@ textarea {
 .synctime i.icon {
   margin: 0 !important;
 }
+
+.ui.input.primary > input {
+  color: #2185d0;
+}
+
+.ui.input.primary > input,
+.ui.input.secondary > input {
+  text-align: center;
+}

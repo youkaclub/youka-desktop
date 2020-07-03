@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Button, Dropdown } from "semantic-ui-react";
+import { Input, Button, Dropdown } from "semantic-ui-react";
 
 export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
   const [lines, setLines] = useState([]);
@@ -89,7 +89,11 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
 
   function handleUndo() {
     if (lineIndex === 0) {
-      audioRef.current.currentTime = 0;
+      if (audioRef.current.currentTime > 5) {
+        audioRef.current.currentTime = audioRef.current.currentTime - 5;
+      } else {
+        audioRef.current.currentTime = 0;
+      }
     } else if (isStart) {
       audioRef.current.currentTime = alignmentsRef.current[lineIndex - 1].start;
       setLineIndex(lineIndex - 1);
@@ -97,6 +101,12 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
       audioRef.current.currentTime = alignmentsRef.current[lineIndex - 1].end;
     }
     setIsStart(!isStart);
+  }
+
+  function handleLineChange(e, data) {
+    const tmp = [...lines];
+    tmp[lineIndex] = data.value;
+    setLines(tmp);
   }
 
   if (!lines) return null;
@@ -147,11 +157,19 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
           {lineIndex + 1} / {lines.length}
         </div>
       </div>
-      <div
-        className="m-4 text-4xl"
-        style={{ color: isStart ? "#000" : "#2185d0" }}
-      >
-        {lines.length && lineIndex < lines.length ? lines[lineIndex] : null}
+      <div>
+        {lines.length && lineIndex < lines.length ? (
+          <Input
+            size="massive"
+            style={{
+              width: `${lines[lineIndex].length}rem`,
+              minWidth: "20rem",
+            }}
+            className={isStart ? "secondary" : "primary"}
+            value={lines[lineIndex]}
+            onChange={handleLineChange}
+          />
+        ) : null}
       </div>
       <div className="m-4">
         <Button
