@@ -4,6 +4,7 @@ const join = require("path").join;
 const HOME_PATH = require("os").homedir();
 const BINARIES_PATH = join(HOME_PATH, ".youka", "binaries");
 const DOWNLOAD_PATH = join(HOME_PATH, ".youka", "downloads");
+const CACHE_PATH = join(HOME_PATH, ".youka", "cache");
 const ROOT = join(HOME_PATH, ".youka", "youtube");
 
 const ytdlNames = {
@@ -39,4 +40,5 @@ module.exports = {
   YOUTUBE_DL_PATH,
   DOWNLOAD_PATH,
   SOUND_STRETCH_PATH,
+  CACHE_PATH,
 };

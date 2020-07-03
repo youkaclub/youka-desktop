@@ -1,18 +1,18 @@
 import React, { useState, useRef, useEffect } from "react";
 import { search, trending, mix } from "../lib/youtube";
-import { memoize, debounce } from "lodash";
 import { Link } from "react-router-dom";
 import { Input, Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
 import Update from "./Update";
 import rollbar from "../lib/rollbar";
 import * as library from "../lib/library";
+import { CACHE_PATH } from "../lib/path";
 
+const memoizeFs = require("memoize-fs");
 const { shell } = require("electron");
-
-const trending_memoize = memoize(trending);
-const mix_memoize = memoize(mix);
-const search_memoize = memoize(search);
+const DAY = 1000 * 60 * 60 * 24;
+const WEEK = DAY * 7;
+const memoizer = memoizeFs({ cachePath: CACHE_PATH, maxAge: WEEK });
 
 export const PLAYLIST_SEARCH = "search";
 export const PLAYLIST_TRENDING = "trending";
@@ -72,6 +72,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
     try {
       setLoading(true);
       setPlaylist(PLAYLIST_TRENDING);
+      const trending_memoize = await memoizer.fn(trending);
       const results = await trending_memoize();
       setVideos(results);
       setPlaylist(PLAYLIST_TRENDING);
@@ -88,6 +89,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
     try {
       setLoading(true);
       setPlaylist(PLAYLIST_MIX);
+      const mix_memoize = await memoizer.fn(mix);
       const results = await mix_memoize(youtubeID);
       results.shift();
       setVideos(results);
@@ -120,7 +122,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
   function handleSearchChange(e) {
     const query = e.target.value;
     if (!query || query === "") return;
-    debouncedSearch(query);
+    return doSearch(query);
   }
 
   function handleSearchFocus() {
@@ -130,6 +132,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
   async function doSearch(query) {
     try {
       setLoading(true);
+      const search_memoize = await memoizer.fn(search);
       const results = await search_memoize(query);
       const filteredResults = results.filter(
         (r) => !("minutes" in r) || (!r.hours && r.minutes < 10)
@@ -143,8 +146,6 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
       setLoading(false);
     }
   }
-
-  const debouncedSearch = debounce(doSearch, 1000);
 
   return (
     <div>

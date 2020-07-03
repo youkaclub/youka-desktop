@@ -61,6 +61,7 @@
     "jsdom-global": "3.0.2",
     "libass-wasm": "^4.0.0",
     "lodash": "^4.17.15",
+    "memoize-fs": "^2.1.0",
     "mkdirp": "^1.0.3",
     "mocha": "^8.0.1",
     "needle": "^2.3.3",
