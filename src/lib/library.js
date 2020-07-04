@@ -4,7 +4,6 @@ const mkdirp = require("mkdirp");
 const execa = require("execa");
 const checkDiskSpace = require("check-disk-space");
 const filenamify = require("filenamify");
-const rp = require("request-promise");
 
 const lyricsFinder = require("./lyrics");
 const gt = require("./google-translate");
@@ -173,18 +172,8 @@ async function validateDiskSpace() {
   }
 }
 
-export async function initSSL() {
-  try {
-    await rp("https://static.youka.club/ping.json");
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "1";
-  } catch (e) {
-    rollbar.warn(e);
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-  }
-}
-
 export async function init(youtubeID) {
-  await initSSL();
+  process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
   await validateDiskSpace();
   await mkdirp(join(ROOT, youtubeID));
   await mkdirp(BINARIES_PATH);
