@@ -121,7 +121,6 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
 
   function handleSearchChange(e) {
     const query = e.target.value;
-    if (!query || query === "") return;
     return doSearch(query);
   }
 
@@ -145,6 +144,40 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  function renderEmpty() {
+    if (videos && videos.length) return null;
+    if (loading) return null;
+
+    let icon, text;
+    switch (playlist) {
+      case PLAYLIST_LIBRARY:
+        icon = "folder open";
+        text = "Your karaoke songs will be available here";
+        break;
+      case PLAYLIST_SEARCH:
+        icon = "search";
+        text = "Start typing to search";
+        break;
+      case PLAYLIST_MIX:
+      case PLAYLIST_TRENDING:
+        icon = "numbered list";
+        text = "Loading playlist failed";
+        break;
+      default:
+        break;
+    }
+    if (!icon || !text) return null;
+
+    return (
+      <div className="flex flex-col w-full items-center p-24">
+        <Icon size="massive" color="grey" name={icon} />
+        <div className="m-4 font-bold text-2xl" style={{ color: "#767676" }}>
+          {text}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -217,10 +250,11 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
         </div>
       </div>
       {loading ? (
-        <Loader active inline="centered" />
+        <Loader className="p-4" active inline="centered" />
       ) : (
         <VideoList videos={videos} />
       )}
+      {renderEmpty()}
       <Update />
     </div>
   );
