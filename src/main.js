@@ -1,6 +1,9 @@
 const os = require("os");
 const { app, BrowserWindow } = require("electron");
 const autoUpdate = require("update-electron-app");
+const debug = require("electron-debug");
+
+debug({ showDevTools: false });
 
 app.allowRendererProcessReuse = false;
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "1";
