@@ -1,6 +1,24 @@
-const { Ass, Events, Dialogue } = require("./ass");
+import { Ass, Events, Dialogue } from "./ass";
 
-function alignmentsToAss(alignments, options) {
+interface Options {
+  primaryColor: string
+  secondaryColor: string
+  waitLine: number
+  style: string
+  delta: number
+  fixDelta: number
+}
+
+interface Alignment {
+  start: number
+  end: number
+  paragraph: number
+  line: number
+  otext: string
+  text: string
+}
+
+export function alignmentsToAss(alignments: Alignment[], options: Options) {
   options = options || {};
   const primaryColor = options.primaryColor || "&HFFFFFF&";
   const secondaryColor = options.secondaryColor || "&HD08521&";
@@ -33,38 +51,9 @@ function alignmentsToAss(alignments, options) {
     alignments[i].end -= delta;
   }
 
-  let lineIndex = 1;
-  const lines = {};
-  for (let i = 0; i < alignments.length; i++) {
-    let line;
-    const alignment = alignments[i];
-    if (alignment.paragraph) {
-      if (i > 0) {
-        const prevAlignment = alignments[i - 1];
-        if (
-          alignment.line > prevAlignment.line ||
-          alignment.paragraph > prevAlignment.paragraph
-        ) {
-          lineIndex++;
-          line = lineIndex;
-        } else {
-          line = lineIndex;
-        }
-      } else {
-        line = lineIndex;
-      }
-    } else {
-      line = alignment.line;
-    }
+  const lines = alignmentsByLine(alignments);
 
-    if (!(line in lines)) {
-      lines[line] = [alignments[i]];
-    } else {
-      lines[line].push(alignments[i]);
-    }
-  }
-
-  const newAlignments = [];
+  const newAlignments: Alignment[] = [];
   for (const [, lineAlignments] of Object.entries(lines)) {
     const newAlignment = lineAlignments[0];
     const k = (newAlignment.end - newAlignment.start) * 100;
@@ -173,6 +162,35 @@ function alignmentsToAss(alignments, options) {
   });
 }
 
-module.exports = {
-  alignmentsToAss,
-};
+function alignmentsByLine(alignments: Alignment[]): Record<number, Alignment[]>  {
+  let lineIndex = 1;
+  const lines: Record<number, Alignment[]> = {};
+  alignments.forEach((alignment, i) => {
+    let line;
+    if (alignment.paragraph) {
+      if (i > 0) {
+        const prevAlignment = alignments[i - 1];
+        if (
+          alignment.line > prevAlignment.line ||
+          alignment.paragraph > prevAlignment.paragraph
+        ) {
+          lineIndex++;
+          line = lineIndex;
+        } else {
+          line = lineIndex;
+        }
+      } else {
+        line = lineIndex;
+      }
+    } else {
+      line = alignment.line;
+    }
+
+    if (!(line in lines)) {
+      lines[line] = [alignment];
+    } else {
+      lines[line].push(alignment);
+    }
+  });
+  return lines
+}
