@@ -17,15 +17,14 @@
 $ git clone https://github.com/youkaclub/youka-desktop.git
 $ cd youka-desktop
 $ npm install
-$ NODE_ENV=production npm start
+# windows
+$ npm start:windows
+# mac or linux
+$ npm start
 # wait for "Compiled successfully!" message then refresh (Cmd+R) the electron window.
 ```
 
 If you need to access the dev tools, you can open them by pressing F12.
-
-### Running on Windows
-
-Start with `npm run start:windows` instead of `NODE_ENV=production npm start`.
 
 ---
 
