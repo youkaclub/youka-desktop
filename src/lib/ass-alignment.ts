@@ -14,152 +14,77 @@ interface Alignment {
   end: number
   paragraph: number
   line: number
-  otext: string
   text: string
 }
 
-export function alignmentsToAss(alignments: Alignment[], options: Options) {
-  options = options || {};
-  const primaryColor = options.primaryColor || "&HFFFFFF&";
-  const secondaryColor = options.secondaryColor || "&HD08521&";
-  const waitLine = options.waitLine || 1;
-  const style = options.style || "Youka";
-  const delta = options.delta || 0.2;
-  const fixDelta = options.fixDelta || 0.1;
+interface CodedAlignment {
+  start: number
+  end: number
+  text: string
+  code: string
+  position?: "top" | "bottom"
+}
+
+const defaultOptions: Options = {
+  primaryColor: "&HFFFFFF&",
+  secondaryColor: "&HD08521&",
+  waitLine: 1,
+  style: "Youka",
+  delta: 0.2,
+  fixDelta: 0.1,
+}
+
+export function alignmentsToAss(alignments: Alignment[], customOptions: Partial<Options> = {}): Ass | null {
+  const options = { ...defaultOptions, customOptions };
 
   if (!alignments.length) return null;
 
-  // fix start === end or end < start
-  for (let i = 0; i < alignments.length; i++) {
-    if (alignments[i].start === alignments[i].end) {
-      alignments[i].end += fixDelta;
-    } else if (alignments[i].end < alignments[i].start) {
-      alignments[i].start = alignments[i].end;
-      alignments[i].end += fixDelta;
-    } else {
-      continue;
-    }
-    if (i + 1 < alignments.length - 1) {
-      alignments[i + 1].start += fixDelta;
-    }
-  }
+  const fixedAlignments = fixAlignments(alignments, options);
+  const codedLines = makeCodedLines(fixedAlignments);
+  const interleavedLines = interleaveLines(codedLines, options);
 
-  // add delta
-  for (let i = 0; i < alignments.length; i++) {
-    if (alignments[i].start < delta) continue;
-    alignments[i].start -= delta;
-    alignments[i].end -= delta;
-  }
-
-  const lines = alignmentsByLine(alignments);
-
-  const newAlignments: Alignment[] = [];
-  for (const [, lineAlignments] of Object.entries(lines)) {
-    const newAlignment = lineAlignments[0];
-    const k = (newAlignment.end - newAlignment.start) * 100;
-    newAlignment.otext = newAlignment.text;
-    newAlignment.text = `{\\K${k}}` + newAlignment.text;
-    newAlignment.end = lineAlignments[lineAlignments.length - 1].end;
-
-    for (let i = 1; i < lineAlignments.length; i++) {
-      newAlignment.otext += " " + lineAlignments[i].text;
-      if (i + 1 < lineAlignments.length) {
-        const k = (lineAlignments[i + 1].start - lineAlignments[i].end) * 100;
-        if (k > 0) {
-          newAlignment.text += `{\\K${k}}`;
-        }
-      }
-      const k = (lineAlignments[i].end - lineAlignments[i].start) * 100;
-      newAlignment.text += ` {\\K${k}}${lineAlignments[i].text}`;
-    }
-    newAlignments.push(newAlignment);
-  }
-
-  // add next line
-  for (let i = 0; i < newAlignments.length; i++) {
-    let nextAlignment;
-    if (i + 1 < newAlignments.length) {
-      nextAlignment = newAlignments[i + 1];
-    }
-
-    const mod = (i + 1) % 2;
-    if (nextAlignment) {
-      if (mod > 0) {
-        newAlignments[
-          i
-        ].text = `{\\c${secondaryColor}}${newAlignments[i].text}\\N{\\K\\c${primaryColor}}${nextAlignment.otext}`;
-      } else {
-        newAlignments[
-          i
-        ].text = `{\\c${primaryColor}}${nextAlignment.otext}\\N{\\c${secondaryColor}}${newAlignments[i].text}`;
-      }
-    } else if (i === newAlignments.length - 1) {
-      // last line
-      if (mod > 0) {
-        newAlignments[i].text = `{\\c${secondaryColor}}${
-          newAlignments[i].text
-        }\\N{\\K\\2c${secondaryColor}}${newAlignments[i - 1].otext}`;
-      } else {
-        newAlignments[i].text = `{\\2c${secondaryColor}}${
-          newAlignments[i - 1].otext
-        }\\N{\\c${secondaryColor}\\2c${primaryColor}}${newAlignments[i].text}`;
-      }
-    }
-  }
-
-  // lead in
-  for (let i = 0; i < newAlignments.length; i++) {
-    let prevAlignment;
-    if (i - 1 >= 0) {
-      prevAlignment = newAlignments[i - 1];
-    }
-    let nextAlignment;
-    if (i + 1 < newAlignments.length) {
-      nextAlignment = newAlignments[i + 1];
-    }
-
-    const alignment = newAlignments[i];
-    let start = alignment.start;
-    let end = alignment.end;
-    let text = alignment.text;
-
-    if (prevAlignment) {
-      // line after line
-      start = prevAlignment.end;
-    } else if (alignment.start - waitLine > 0) {
-      // add standard wait time
-      start = alignment.start - waitLine;
-    }
-    if (alignment.start > start) {
-      text = `{\\K${(alignment.start - start) * 100}}${text}`;
-    }
-
-    if (nextAlignment) {
-      if (alignment.end + waitLine <= nextAlignment.start) {
-        end = alignment.end + waitLine;
-      } else {
-        end = nextAlignment.start;
-      }
-    }
-
-    newAlignments[i].start = start;
-    newAlignments[i].end = end;
-    newAlignments[i].text = text;
-  }
-
-  const dialogues = newAlignments.map(
+  const dialogues = interleavedLines.map(
     (a) =>
       new Dialogue({
         start: a.start,
         end: a.end,
-        text: a.text,
-        style,
+        text: a.code,
+        style: options.style,
       })
   );
 
   return new Ass({
     events: new Events(dialogues),
   });
+}
+
+function fixAlignments(alignments: Alignment[], { delta, fixDelta }: { delta: number, fixDelta: number }) {
+  let offsetNextStart = 0;
+
+  return alignments.map(alignment => {
+    let { start, end } = alignment;
+
+    // fix start === end or end < start
+    start += offsetNextStart
+    if (start === end) {
+      end += fixDelta;
+      offsetNextStart = fixDelta;
+    } else if (end < start) {
+      start = end;
+      end += fixDelta;
+      offsetNextStart = fixDelta;
+    } else {
+      offsetNextStart = 0;
+    }
+
+    // add delta
+    if (start >= delta) {
+      start -= delta;
+      end -= delta;
+    }
+
+    return { ...alignment, start, end };
+  })
 }
 
 function alignmentsByLine(alignments: Alignment[]): Record<number, Alignment[]>  {
@@ -193,4 +118,82 @@ function alignmentsByLine(alignments: Alignment[]): Record<number, Alignment[]> 
     }
   });
   return lines
+}
+
+function makeCodedLines(alignments: Alignment[]): CodedAlignment[] {
+  const lines = alignmentsByLine(alignments);
+
+  return Object.values(lines).map(line => {
+    const words = line.map(word => ({
+      text: word.text,
+      code: `${makeKTag(word.end - word.start)}${word.text}`,
+      start: word.start,
+      end: word.end,
+    }));
+
+    return words.reduce((a, b) => {
+      const gap = b.start - a.end;
+      return {
+        start: a.start,
+        end: b.end,
+        text: [a.text, b.text].join(" "),
+        code: gap > 0 ? `${a.code}${makeKTag(gap)} ${b.code}` : `${a.code} ${b.code}`
+      }
+    });
+  })
+}
+
+function interleaveLines(lines: CodedAlignment[], { primaryColor, secondaryColor, waitLine }: { primaryColor: string, secondaryColor: string, waitLine: number }): CodedAlignment[] {
+  const newLines: CodedAlignment[] = [];
+
+  let previousLine: CodedAlignment | undefined = undefined
+
+  // add next line
+  lines.forEach((line, i) => {
+    const nextLine = lines[i + 1];
+    
+    const previousGap = previousLine ? line.start - previousLine.end : 0
+    const nextGap = nextLine ? nextLine.start - line.end : 0
+    const position = previousLine && previousLine.position === 'top' ? 'bottom' : 'top'
+
+    let { start, end, code } = line
+
+    const isEven = (i + 1) % 2 === 0;
+    if (nextLine !== undefined) {
+      if (position === 'top') {
+        code = `{\\c${primaryColor}}${nextLine.text}\\N{\\c${secondaryColor}}${line.code}`;
+      } else {
+        code = `{\\c${secondaryColor}}${line.code}\\N{\\K\\c${primaryColor}}${nextLine.text}`;
+      }
+    } else if (previousLine !== undefined) {
+      // last line
+      if (isEven) {
+        code = `{\\2c${secondaryColor}}${previousLine.text}\\N{\\c${secondaryColor}\\2c${primaryColor}}${line.code}`;
+      } else {
+        code = `{\\c${secondaryColor}}${line.code}\\N{\\K\\2c${secondaryColor}}${previousLine.text}`;
+      }
+    }
+
+    // add trailing gap, with max length of waitLine
+    if (nextGap > 0) {
+      const waitLength = Math.min(nextGap, waitLine);
+      end = end + waitLength;
+    }
+
+    // add leading gap
+    if (previousLine && previousGap > 0) {
+      start = previousLine.end;
+      code = `${makeKTag(previousGap)}${code}`;
+    }
+
+    const newLine: CodedAlignment = { ...line, start, end, code, position }
+    newLines.push(newLine);
+    previousLine = newLine;
+  });
+
+  return newLines;
+}
+
+function makeKTag(durationSeconds: number) {
+  return `{\\K${Math.round(durationSeconds * 10000) / 100}}`;
 }
