@@ -3,18 +3,19 @@ import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
 import { shell } from "electron";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
-import Player from "../comps/Player";
-import LyricsEditor from "../comps/LyricsEditor";
+import Player from "./Player";
+import LyricsEditor from "./LyricsEditor";
 import rollbar from "../lib/rollbar";
 import { platform } from "os";
 import { useHistory } from "react-router-dom";
+import { Video } from "../lib/video";
+import styles from "./VideoPlayer.module.css";
 const amplitude = require("amplitude-js");
 const debug = require("debug")("youka:desktop");
 const capitalize = require("capitalize");
 
 interface Props {
-  id: string
-  title: string
+  video: Video
   defaultVideoMode?: string
   defaultCaptionsMode?: string
 }
@@ -30,7 +31,8 @@ interface Files {
   captions: Record<string,string>
 }
 
-export default function Video({ id, title, defaultVideoMode, defaultCaptionsMode }: Props) {
+export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMode }: Props) {
+  const { id, title } = video
   const history = useHistory();
   const [videoModes, setVideoModes] = useState<Record<string, string>>({});
   const [captionsModes, setCaptionsModes] = useState<Record<string, string>>({});
@@ -245,8 +247,8 @@ export default function Video({ id, title, defaultVideoMode, defaultCaptionsMode
   if (!id) return null;
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="w-2/4 mb-2">
+    <div className={styles.wrapper}>
+      <div>
         {error ? (
           <Message icon negative>
             <Icon name="exclamation circle" />
@@ -266,101 +268,96 @@ export default function Video({ id, title, defaultVideoMode, defaultCaptionsMode
           </Message>
         ) : null}
       </div>
-      {videoURL ? (
-        <div className="flex flex-col justify-center">
-          <Player
-            youtubeID={id}
-            videoURL={videoURL}
-            captionsURL={captionsURL}
-            title={title}
+      {videoURL && <div className={styles.video}>
+        <Player
+          youtubeID={id}
+          videoURL={videoURL}
+          captionsURL={captionsURL}
+          title={title}
+        />
+      </div>}
+      {videoURL && <div className={styles.toolbar}>
+        <Button content="Close Video" onClick={handleClickClose} />
+        <Dropdown
+          button
+          disabled={downloading}
+          loading={downloading}
+          text="Download"
+          selectOnBlur={false}
+          onChange={(_, { value }) => handleDownload(String(value))}
+          options={[
+            {
+              text: "Audio",
+              value: library.FILE_MP3,
+            },
+            {
+              text: "Video",
+              value: library.FILE_MP4,
+            },
+          ]}
+        />
+        <Dropdown
+          button
+          text={" Audio: " + capitalize(videoMode)}
+          value={videoMode || undefined}
+          options={ddoptions}
+          disabled={changingMediaMode}
+          loading={changingMediaMode}
+          onChange={(_, { value }) => changeMedia(String(value))}
+        />
+        <Dropdown
+          button
+          text={" Lyrics Sync: " + capitalize(captionsMode)}
+          value={captionsMode}
+          options={ccoptions}
+          onChange={(_, { value }) => changeCaptions(String(value))}
+        />
+        {platform() === "win32" ||
+        process.env.NODE_ENV !== "production" ? (
+          <Dropdown
+            button
+            text={`Key: ${pitch}`}
+            value={pitch}
+            options={poptions}
+            disabled={pitching}
+            loading={pitching}
+            onChange={(_, { value }) => changePitch(Number(value), videoMode)}
           />
-          <div className="flex flex-row w-full p-2 justify-center">
-            <div className="flex flex-row p-2 mx-4">
-              <Button content="Close Video" onClick={handleClickClose} />
-              <Dropdown
-                button
-                disabled={downloading}
-                loading={downloading}
-                text="Download"
-                selectOnBlur={false}
-                onChange={(_, { value }) => handleDownload(String(value))}
-                options={[
-                  {
-                    text: "Audio",
-                    value: library.FILE_MP3,
-                  },
-                  {
-                    text: "Video",
-                    value: library.FILE_MP4,
-                  },
-                ]}
-              />
-              <Dropdown
-                button
-                text={" Audio: " + capitalize(videoMode)}
-                value={videoMode || undefined}
-                options={ddoptions}
-                disabled={changingMediaMode}
-                loading={changingMediaMode}
-                onChange={(_, { value }) => changeMedia(String(value))}
-              />
-              <Dropdown
-                button
-                text={" Lyrics Sync: " + capitalize(captionsMode)}
-                value={captionsMode}
-                options={ccoptions}
-                onChange={(_, { value }) => changeCaptions(String(value))}
-              />
-              {platform() === "win32" ||
-              process.env.NODE_ENV !== "production" ? (
-                <Dropdown
-                  button
-                  text={`Key: ${pitch}`}
-                  value={pitch}
-                  options={poptions}
-                  disabled={pitching}
-                  loading={pitching}
-                  onChange={(_, { value }) => changePitch(Number(value), videoMode)}
-                />
-              ) : null}
-              <Button content="Lyrics Editor" onClick={handleEditLyrics} />
-              {lyrics ? (
-                <Dropdown
-                  button
-                  text="Sync Editor"
-                  options={[
-                    {
-                      text: "Simple",
-                      value: "sync-simple",
-                    },
-                    {
-                      text: "Advanced",
-                      value: "sync-advanced",
-                      disabled:
-                        !captionsURL ||
-                        !captionsURL.startsWith("[Script Info]"),
-                    },
-                  ]}
-                  onChange={(_, { value }) => openSyncEditor(String(value))}
-                />
-              ) : null}
-            </div>
-          </div>
-          {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
-            <div className="flex justify-center mx-4 p-2">
-              <div className="text-2xl leading-normal">
-                {lyrics.split("\n").map((line, i) => (
-                  <div key={i}>
-                    {line}
-                    <br></br>
-                  </div>
-                ))}
+        ) : null}
+        <Button content="Lyrics Editor" onClick={handleEditLyrics} />
+        {lyrics && <Dropdown
+          button
+          text="Sync Editor"
+          options={[
+            {
+              text: "Simple",
+              value: "sync-simple",
+            },
+            {
+              text: "Advanced",
+              value: "sync-advanced",
+              disabled:
+                !captionsURL ||
+                !captionsURL.startsWith("[Script Info]"),
+            },
+          ]}
+          onChange={(_, { value }) => openSyncEditor(String(value))}
+        />}
+      </div>}
+      {captionsMode === library.MODE_CAPTIONS_FULL && lyrics &&
+        <div className={styles.subPane}>
+          <div className="text-2xl leading-normal">
+            {lyrics.split("\n").map((line, i) => (
+              <div key={i}>
+                {line}
+                <br></br>
               </div>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-      {editLyrics ? <LyricsEditor id={id} onSynced={handleSynced} /> : null}
+            ))}
+          </div>
+        </div>}
+      {editLyrics && <div className={styles.subPane}>
+        <LyricsEditor id={id} onSynced={handleSynced} />
+      </div>}
     </div>
   );
 }

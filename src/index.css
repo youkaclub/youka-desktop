@@ -2,10 +2,6 @@
   outline: 0 !important;
 }
 
-a:hover {
-  color: white !important;
-}
-
 .plyr__caption {
   font-size: 2rem;
 }
@@ -57,7 +53,7 @@ a:hover {
 }
 
 .bg-primary {
-  background-color: #e30b17;
+  background-color: var(--feature-color);
 }
 
 textarea {

@@ -1,0 +1,34 @@
+.item {
+  display: flex;
+  align-items: center;
+  margin: 15px;
+  cursor: pointer;
+  --image-size: 120px;
+}
+
+.item:hover {
+  text-decoration: underline;
+}
+
+.image {
+  flex: 0 0 var(--image-size);
+  width: var(--image-size);
+  height: calc(var(--image-size) / (16/9));
+  background-repeat: none;
+  background-position: 50% 50%;
+  background-size: cover;
+  margin-right: 15px;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-weight: bold;
+}
+
+.artist {
+  margin-top: 5px;
+}

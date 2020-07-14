@@ -7,7 +7,6 @@ import "./lib/rollbar";
 import "./index.css";
 
 const Home = React.lazy(() => import("./pages/Home"));
-const Watch = React.lazy(() => import("./pages/Watch"));
 const SyncSimple = React.lazy(() => import("./pages/SyncSimple"));
 const SyncAdvanced = React.lazy(() => import("./pages/SyncAdvanced"));
 const Eula = React.lazy(() => import("./pages/Eula"));
@@ -18,7 +17,6 @@ function App() {
       <Suspense fallback={<Fallback />}>
         <Switch>
           <Route path="/" exact component={Home} />
-          <Route path="/watch" component={Watch} />
           <Route path="/sync-simple" component={SyncSimple} />
           <Route path="/sync-advanced" component={SyncAdvanced} />
           <Route path="/eula" component={Eula} />

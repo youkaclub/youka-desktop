@@ -1,0 +1,38 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  overflow: hidden;
+}
+
+.toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: stretch;
+}
+
+.toolbar>* {
+  flex: 1;
+}
+
+.toolbar :global(.ui.button) {
+  border-radius: 0;
+  margin: 0;
+  text-align: center;
+  background: var(--button-bg);
+  color: var(--mild-text-color) !important;
+  font-weight: normal;
+}
+
+.toolbar :global(.ui.button):hover {
+  background: var(--button-hover-bg);
+}
+
+.subPane {
+  flex: 1;
+  overflow: hidden;
+  overflow-y: scroll;
+  overflow-x: auto;
+  padding: 10px;
+}

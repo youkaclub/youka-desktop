@@ -1,0 +1,37 @@
+.wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+
+  --bg-color: #fff;
+  --text-color: #333;
+  --text-hover-color: #555;
+  --feature-color: #e30b17;
+  --mild-text-color: #666;
+  --faint-text-color: #999;
+  --faintest-text-color: #ddd;
+  --button-bg: #ddd;
+  --button-hover-bg: #bbb;
+}
+
+@media (prefers-color-scheme: dark) { .wrapper {
+  --bg-color: #222;
+  --text-color: #eee;
+  --text-hover-color: #ccc;
+  --mild-text-color: #bbb;
+  --faint-text-color: #777;
+  --faintest-text-color: #444;
+  --button-bg: #444;
+  --button-hover-bg: #666;
+}}
+
+.wrapper :global(.ui.input) > input {
+  color: var(--text-color);
+  background: var(--bg-color);
+}
+
+.wrapper :global(.ui.input) > input:placeholder {
+  color: var(--faint-text-color);
+}

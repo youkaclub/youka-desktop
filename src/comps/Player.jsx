@@ -3,8 +3,7 @@ import Plyr from "plyr";
 import "plyr/dist/plyr.css";
 import SubtitlesOctopus from "libass-wasm";
 import { useWindowSize } from "@react-hook/window-size";
-import * as library from "../lib/library";
-import rollbar from "../lib/rollbar";
+import styles from "./Player.module.css";
 
 export default function Player({
   youtubeID,
@@ -128,23 +127,19 @@ export default function Player({
   if (!videoURL) return null;
 
   return (
-    <div className="self-center">
-      <div style={calcStyle()}>
-        <video
-          controls
-          playsInline
-          id="player"
-          crossOrigin="true"
-          type="video/mp4"
-          preload="auto"
-          ref={videoRef}
-        >
-          <track default kind="captions" srcLang="en" ref={captionsRef} />
-        </video>
-      </div>
-      <div className="flex flex-row justify-between p-1">
-        <div className="text-2xl leading-tight p-1">{title}</div>
-      </div>
+    <div className={styles.wrapper}>
+      <video
+        controls
+        playsInline
+        id="player"
+        crossOrigin="true"
+        type="video/mp4"
+        preload="auto"
+        ref={videoRef}
+      >
+        <track default kind="captions" srcLang="en" ref={captionsRef} />
+      </video>
+      <div className={styles.title}>{title}</div>
     </div>
   );
 }

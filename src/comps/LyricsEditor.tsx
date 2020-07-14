@@ -58,7 +58,7 @@ export default function LyricsEditor({
   }
 
   return (
-    <div className="w-2/4">
+    <div>
       <Message>
         NOTE: To maximize lyrics sync accuracy, keep an empty line between
         verses

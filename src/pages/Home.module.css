@@ -1,0 +1,35 @@
+.wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.browse {
+  flex: 1 1 450px;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.player {
+  flex: 3 1 1000px;
+  display: flex;
+  flex-direction: column;
+}
+
+.zeroState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+  color: var(--faintest-text-color);
+  font-weight: bold;
+  flex-grow: 1;
+}

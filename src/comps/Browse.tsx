@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, ReactNode } from "react";
 import { search, trending, mix } from "../lib/youtube";
-import { Link } from "react-router-dom";
 import { Input, Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
 import Update from "./Update";
@@ -9,9 +8,9 @@ import * as library from "../lib/library";
 import { CACHE_PATH } from "../lib/path";
 import useDebounce from "../hooks/useDebounce";
 import { SemanticICONS } from "semantic-ui-react/dist/commonjs/generic";
+import styles from "./Browse.module.css";
 
 const memoizeFs = require("memoize-fs");
-const { shell } = require("electron");
 
 const DAY = 1000 * 60 * 60 * 24;
 const WEEK = DAY * 7;
@@ -27,7 +26,7 @@ export enum Section {
 interface Props {
   defaultSection: Section
   youtubeID?: string
-  children?: ReactNode
+  onSelectVideo(video: Video): void
 }
 
 interface Video {
@@ -38,7 +37,7 @@ interface Video {
   minutes?: number
 }
 
-export default function Browse({ children, youtubeID, defaultSection }: Props) {
+export default function Browse({ youtubeID, defaultSection, onSelectVideo }: Props) {
   const [section, setSection] = useState(defaultSection)
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
@@ -105,14 +104,6 @@ export default function Browse({ children, youtubeID, defaultSection }: Props) {
     loadVideos()
   }, [section, youtubeID, query]);
 
-  function handleClickDonate() {
-    shell.openExternal("https://www.patreon.com/getyouka");
-  }
-
-  function handleClickDiscord() {
-    shell.openExternal("https://discord.gg/yMXv8qw");
-  }
-
   async function doSearch(query: string) {
     try {
       setLoading(true);
@@ -155,9 +146,11 @@ export default function Browse({ children, youtubeID, defaultSection }: Props) {
     }
 
     return (
-      <div className="flex flex-col w-full items-center p-24">
-        <Icon size="massive" color="grey" name={icon} />
-        <div className="m-4 font-bold text-2xl" style={{ color: "#767676" }}>
+      <div className={styles.empty}>
+        <div className={styles.emptyIcon}>
+          <Icon size="massive" color="grey" name={icon} />
+        </div>
+        <div>
           {text}
         </div>
       </div>
@@ -165,81 +158,54 @@ export default function Browse({ children, youtubeID, defaultSection }: Props) {
   }
 
   return (
-    <div>
-      <div className="flex flex-row w-full justify-between p-2 mb-2 bg-primary">
-        <Link
-          className="self-center text-white font-bold text-3xl flex-1 mx-2"
-          to="/"
-        >
-          Youka
-        </Link>
+    <div className={styles.wrapper}>
+      <div className={styles.title}>
         <Input
-          className="p-2 px-2 w-2/4 flex-2"
+          className={styles.search}
           type="text"
           onFocus={() => setSection(Section.Search)}
           onChange={(_, { value }) => setSearchText(value)}
           placeholder="Start typing to search"
           ref={searchRef}
         />
-        <div className="flex flex-row justify-end self-center text-white flex-1">
-          <div
-            className="m-4 text-xl cursor-pointer"
-            onClick={handleClickDiscord}
-          >
-            <Icon name="discord" />
-            Discord
-          </div>
-          <div
-            className="m-4 text-xl cursor-pointer"
-            onClick={handleClickDonate}
-          >
-            <Icon name="heart" />
-            Donate
-          </div>
-        </div>
       </div>
-      {children}
-      <div className="flex flex-row justify-center">
-        <div
-          style={{ color: section === Section.Search ? "#E30B17" : "black" }}
-          className="p-4 text-2xl cursor-pointer"
-          onClick={() => setSection(Section.Search)}
-        >
-          Search
-        </div>
-        <div
-          style={{
-            color: section === Section.Trending ? "#E30B17" : "black",
-          }}
-          className="p-4 text-2xl cursor-pointer"
-          onClick={() => setSection(Section.Trending)}
-        >
-          Trending
-        </div>
-        {youtubeID ? (
+      <div className={styles.body}>
+        <div className={styles.links}>
           <div
-            style={{ color: section === Section.Mix ? "#E30B17" : "black" }}
-            className="p-4 text-2xl cursor-pointer"
-          onClick={() => setSection(Section.Mix)}
+            className={section === Section.Search ? styles.activeLink : styles.link}
+            onClick={() => setSection(Section.Search)}
           >
-            Mix
+            Search
           </div>
-        ) : null}
-        <div
-          style={{ color: section === Section.Library ? "#E30B17" : "black" }}
-          className="p-4 text-2xl cursor-pointer"
-          onClick={() => setSection(Section.Library)}
-        >
-          Library
+          <div
+            className={section === Section.Trending ? styles.activeLink : styles.link}
+            onClick={() => setSection(Section.Trending)}
+          >
+            Trending
+          </div>
+          {youtubeID ? (
+            <div
+              className={section === Section.Mix ? styles.activeLink : styles.link}
+              onClick={() => setSection(Section.Mix)}
+            >
+              Mix
+            </div>
+          ) : null}
+          <div
+            className={section === Section.Library ? styles.activeLink : styles.link}
+            onClick={() => setSection(Section.Library)}
+          >
+            Library
+          </div>
         </div>
+        {loading ? (
+          <Loader className="p-4" active inline="centered" />
+        ) : (
+          <VideoList videos={videos} onSelect={onSelectVideo} />
+        )}
+        {renderEmpty()}
+        <Update />
       </div>
-      {loading ? (
-        <Loader className="p-4" active inline="centered" />
-      ) : (
-        <VideoList videos={videos} />
-      )}
-      {renderEmpty()}
-      <Update />
     </div>
   );
 }
