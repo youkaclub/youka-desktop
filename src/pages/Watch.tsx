@@ -4,7 +4,7 @@ import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
 import { shell } from "electron";
 import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
-import Shell, { PLAYLIST_MIX } from "../comps/Shell";
+import Browse, { Section } from "../comps/Browse";
 import Player from "../comps/Player";
 import LyricsEditor from "../comps/LyricsEditor";
 import { usePageView } from "../lib/hooks";
@@ -268,11 +268,7 @@ export default function WatchPage() {
   if (!id) return null;
 
   return (
-    <Shell
-      youtubeID={id}
-      defaultPlaylist={PLAYLIST_MIX}
-      onFocusSearch={handleFocusSearch}
-    >
+    <Browse youtubeID={id} defaultPlaylist={Section.Mix}>
       <div className="flex flex-col items-center">
         <div className="w-2/4 mb-2">
           {error ? (
@@ -381,6 +377,6 @@ export default function WatchPage() {
         ) : null}
         {editLyrics ? <LyricsEditor id={id} onSynced={handleSynced} /> : null}
       </div>
-    </Shell>
+    </Browse>
   );
 }
