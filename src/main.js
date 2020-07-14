@@ -2,6 +2,7 @@ const os = require("os");
 const { app, BrowserWindow } = require("electron");
 const autoUpdate = require("update-electron-app");
 const debug = require("electron-debug");
+const isDev = require('electron-is-dev');
 
 debug({ showDevTools: false });
 
@@ -13,7 +14,7 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-if (os.platform() === "win32") {
+if (os.platform() === "win32" && !isDev) {
   autoUpdate();
 }
 
