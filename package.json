@@ -92,7 +92,7 @@
     "uuid": "^7.0.2",
     "webpack-filter-warnings-plugin": "^1.2.1",
     "xml2js": "^0.4.23",
-    "ytdl-core": "^2.1.2"
+    "ytdl-core": "^2.1.7"
   },
   "keywords": [
     "karaoke"
