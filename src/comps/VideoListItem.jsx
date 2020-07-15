@@ -3,7 +3,9 @@ import { Link } from "react-router-dom";
 
 export default function VideoListItem({ video }) {
   return (
-    <Link to={`/watch?id=${video.id}&title=${video.title}&image=${video.image}`}>
+    <Link
+      to={`/watch?id=${video.id}&title=${video.title}&image=${video.image}`}
+    >
       <div className="cursor-pointer" style={{ width: "30vw" }}>
         <div className="relative" style={{ paddingBottom: "56.2%" }}>
           <img

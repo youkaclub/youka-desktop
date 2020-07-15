@@ -1,13 +1,15 @@
 export class Ass {
-  scriptInfo: ScriptInfo
-  styles: Styles
-  events: Events
+  scriptInfo: ScriptInfo;
+  styles: Styles;
+  events: Events;
 
-  constructor(options: {
-    scriptInfo?: ScriptInfo
-    styles?: Styles
-    events?: Events
-  } = {}) {
+  constructor(
+    options: {
+      scriptInfo?: ScriptInfo;
+      styles?: Styles;
+      events?: Events;
+    } = {}
+  ) {
     this.scriptInfo = options.scriptInfo || new ScriptInfo();
     this.styles = options.styles || new Styles();
     this.events = options.events || new Events();
@@ -19,16 +21,18 @@ export class Ass {
 }
 
 export class ScriptInfo {
-  header: string
-  wrapStyle: number
-  playResX: number
-  playResY: number
+  header: string;
+  wrapStyle: number;
+  playResX: number;
+  playResY: number;
 
-  constructor(options: {
-    wrapStyle?: number
-    playResX?: number
-    playResY?: number
-  } = {}) {
+  constructor(
+    options: {
+      wrapStyle?: number;
+      playResX?: number;
+      playResY?: number;
+    } = {}
+  ) {
     this.header = "[Script Info]";
     this.wrapStyle = options.wrapStyle || 0;
     this.playResX = options.playResX || 640;
@@ -49,8 +53,8 @@ export class ScriptInfo {
 }
 
 export class Styles {
-  header: string
-  styles: Style[]
+  header: string;
+  styles: Style[];
 
   constructor(styles?: Style[]) {
     this.header =
@@ -68,16 +72,17 @@ export class Styles {
 }
 
 export class Style {
-  styleName: string
-  fontName: string
-  fontSize: number
+  styleName: string;
+  fontName: string;
+  fontSize: number;
 
-  constructor(options: {
-    styleName?: string
-    fontName?: string
-    fontSize?: number
-
-  } = {}) {
+  constructor(
+    options: {
+      styleName?: string;
+      fontName?: string;
+      fontSize?: number;
+    } = {}
+  ) {
     this.styleName = options.styleName || "Youka";
     this.fontName = options.fontName || "Arial";
     this.fontSize = options.fontSize || 30;
@@ -89,8 +94,8 @@ export class Style {
 }
 
 export class Events {
-  header: string
-  events: Dialogue[]
+  header: string;
+  events: Dialogue[];
 
   constructor(events: Dialogue[] = []) {
     this.header =
@@ -108,16 +113,16 @@ export class Events {
 }
 
 export class Dialogue {
-  start: string
-  end: string
-  text: string
-  style: string
+  start: string;
+  end: string;
+  text: string;
+  style: string;
 
   constructor(options: {
-    start: string | number
-    end: string | number
-    text: string
-    style: string
+    start: string | number;
+    end: string | number;
+    text: string;
+    style: string;
   }) {
     this.start = this.parseTime(options.start);
     this.end = this.parseTime(options.end);

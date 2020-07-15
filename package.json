@@ -15,7 +15,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "",
+    "lint": "prettier --write src",
     "test": "mocha --recursive --timeout 10000 -r jsdom-global/register"
   },
   "devDependencies": {
@@ -58,11 +58,13 @@
     "filenamify": "^4.1.0",
     "franc": "^5.0.0",
     "he": "^1.2.0",
+    "husky": "^4.2.5",
     "iconv-lite": "git+https://github.com/youkaclub/iconv-lite.git",
     "jest": "^24.9.0",
     "jsdom": "16.2.2",
     "jsdom-global": "3.0.2",
     "libass-wasm": "^4.0.0",
+    "lint-staged": "^10.2.11",
     "lodash": "^4.17.15",
     "memoize-fs": "^2.1.0",
     "mkdirp": "^1.0.3",
@@ -70,6 +72,7 @@
     "needle": "^2.3.3",
     "node-loader": "^0.6.0",
     "plyr": "^3.5.10",
+    "prettier": "2.0.5",
     "promise-retry": "^1.1.1",
     "promise.retry": "^0.3.1",
     "react": "^16.13.1",
@@ -106,5 +109,13 @@
   "browserslist": [
     "Electron 8.0.0"
   ],
-  "license": "GPL-3.0+"
+  "license": "GPL-3.0+",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,css,md}": "prettier --write"
+  }
 }

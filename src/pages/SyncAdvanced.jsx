@@ -42,12 +42,10 @@ export default function SyncAdvancedPage() {
       setError(null);
       setSyncing(true);
       setSynced(false);
-      amplitude
-        .getInstance()
-        .logEvent("RESYNC", {
-          mode: library.MODE_CAPTIONS_WORD,
-          comp: "sync-editor-advanced",
-        });
+      amplitude.getInstance().logEvent("RESYNC", {
+        mode: library.MODE_CAPTIONS_WORD,
+        comp: "sync-editor-advanced",
+      });
       await library.setAlignments(id, captionsMode, alignments);
       await karaoke.alignline(id, (s) => setStatus(s));
       setSynced(true);
