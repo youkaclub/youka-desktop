@@ -339,6 +339,8 @@ export default function WatchPage() {
                   <Dropdown
                     button
                     text="Sync Editor"
+                    value={null}
+                    selectOnBlur={false}
                     options={[
                       {
                         text: "Simple",
