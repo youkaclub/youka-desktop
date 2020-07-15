@@ -3,8 +3,16 @@ import Plyr from "plyr";
 import "plyr/dist/plyr.css";
 import SubtitlesOctopus from "libass-wasm";
 import { useWindowSize } from "@react-hook/window-size";
+import * as library from "../lib/library";
+import rollbar from "../lib/rollbar";
 
-export default function Player({ youtubeID, videoURL, captionsURL, title }) {
+export default function Player({
+  youtubeID,
+  videoURL,
+  captionsURL,
+  title,
+  lang,
+}) {
   const playerRef = useRef();
   const videoRef = useRef();
   const captionsRef = useRef();
@@ -57,18 +65,25 @@ export default function Player({ youtubeID, videoURL, captionsURL, title }) {
     async function setTrack(captionsURL) {
       if (!assRef.current && captionsURL) {
         if (!captionsURL.startsWith("[Script Info]")) return;
+
+        const fonts = [];
+        if (lang) {
+          try {
+            const font = await library.font(lang);
+            if (font) {
+              fonts.push(font);
+            }
+          } catch (e) {
+            console.log(e);
+            rollbar.error(e);
+          }
+        }
+
         var options = {
           video: videoRef.current,
           workerUrl: `${process.env.PUBLIC_URL}/js/subtitles-octopus-worker.js`,
           subContent: captionsURL,
-          fonts: [
-            "https://static.youka.club/fonts/ko.otf",
-            "https://static.youka.club/fonts/ja.otf",
-            "https://static.youka.club/fonts/zh.otf",
-            "https://static.youka.club/fonts/ar.ttf",
-            "https://static.youka.club/fonts/th.ttf",
-            "https://static.youka.club/fonts/hi.ttf",
-          ],
+          fonts,
         };
         assRef.current = new SubtitlesOctopus(options);
         setTimeout(() => {
@@ -86,7 +101,7 @@ export default function Player({ youtubeID, videoURL, captionsURL, title }) {
     }
 
     setTrack(captionsURL);
-  }, [captionsURL]);
+  }, [captionsURL, lang]);
 
   function calcStyle() {
     const videoRatio = videoWidth / videoHeight;

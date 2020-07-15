@@ -2,6 +2,7 @@ const fs = require("fs");
 const join = require("path").join;
 const mkdirp = require("mkdirp");
 const execa = require("execa");
+const rp = require("request-promise");
 const checkDiskSpace = require("check-disk-space");
 const filenamify = require("filenamify");
 
@@ -22,6 +23,7 @@ const {
   BINARIES_PATH,
   DOWNLOAD_PATH,
   SOUND_STRETCH_PATH,
+  FONTS_PATH,
 } = require("./path");
 
 export const FILE_MP4 = ".mp4";
@@ -33,11 +35,13 @@ export const FILE_ASS = ".ass";
 export const FILE_VTT = ".vtt";
 export const FILE_TEXT = ".txt";
 export const FILE_JSON = ".json";
+export const FILE_JPEG = ".jpeg";
 
 export const MODE_MEDIA_ORIGINAL = "original";
 export const MODE_MEDIA_INSTRUMENTS = "instruments";
 export const MODE_MEDIA_VOCALS = "vocals";
 export const MODE_MEDIA_PITCH = "pitch";
+export const MODE_MEDIA_IMAGE = "image";
 
 export const MODE_CAPTIONS_LINE = "line";
 export const MODE_CAPTIONS_WORD = "word";
@@ -55,6 +59,32 @@ export const MEDIA_MODES = [
   MODE_MEDIA_INSTRUMENTS,
   MODE_MEDIA_VOCALS,
 ];
+
+const LANG_TO_FONT = {
+  ko: "ko.otf",
+  ja: "ja.otf",
+  zh: "zh.otf",
+  ar: "ar.ttf",
+  th: "th.ttf",
+  hi: "hi.ttf",
+};
+
+export async function font(lang) {
+  const fontFile = LANG_TO_FONT[lang];
+  if (!fontFile) return;
+
+  const fpath = join(FONTS_PATH, fontFile);
+  if (!(await exists(fpath))) {
+    await mkdirp(FONTS_PATH);
+    const font = await rp({
+      url: `https://static.youka.club/fonts/${fontFile}`,
+      encoding: null,
+    });
+    await fs.promises.writeFile(fpath, font);
+  }
+
+  return `file://${fpath}`;
+}
 
 export async function videos() {
   if (!(await exists(ROOT))) {
@@ -74,9 +104,18 @@ export async function videos() {
     }
     const inf = await getInfo(id);
     if (inf) {
+      const imgpath = filepath(id, MODE_MEDIA_IMAGE, FILE_JPEG);
+      const imgurl = fileurl(id, MODE_MEDIA_IMAGE, FILE_JPEG);
+      if (!(await exists(imgpath))) {
+        const image = await rp({
+          uri: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+          encoding: null,
+        });
+        await fs.promises.writeFile(imgpath, image);
+      }
       items.push({
         id: id,
-        image: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+        image: imgurl,
         title: youtube.utils.cleanTitle(inf.title),
       });
     }
@@ -173,7 +212,6 @@ async function validateDiskSpace() {
 }
 
 export async function init(youtubeID) {
-  process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
   await validateDiskSpace();
   await mkdirp(join(ROOT, youtubeID));
   await mkdirp(BINARIES_PATH);

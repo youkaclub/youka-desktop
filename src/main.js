@@ -2,7 +2,7 @@ const os = require("os");
 const { app, BrowserWindow } = require("electron");
 const autoUpdate = require("update-electron-app");
 const debug = require("electron-debug");
-const isDev = require('electron-is-dev');
+const isDev = require("electron-is-dev");
 
 debug({ showDevTools: false });
 
@@ -26,8 +26,8 @@ const createWindow = () => {
     show: false,
     webPreferences: {
       webSecurity: false,
-      nodeIntegration: true
-    }
+      nodeIntegration: true,
+    },
   });
   mainWindow.removeMenu();
   mainWindow.maximize();

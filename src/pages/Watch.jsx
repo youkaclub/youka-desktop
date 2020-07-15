@@ -31,6 +31,7 @@ export default function WatchPage() {
   const [error, setError] = useState();
   const [downloading, setDownloading] = useState();
   const [status, setStatus] = useState();
+  const [lang, setLang] = useState();
   const [lyrics, setLyrics] = useState();
   const [editLyrics, setEditLyrics] = useState();
   const [pitch, setPitch] = useState(0);
@@ -182,6 +183,8 @@ export default function WatchPage() {
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
       setVideoURL(null);
+      setLang(null);
+      setCaptionsURL(null);
       setDownloading(false);
       setPitch(0);
       setError(null);
@@ -208,6 +211,8 @@ export default function WatchPage() {
 
       handleStatusChanged("Searching lyrics");
       const lyr = await library.getLyrics(id, title);
+      const lng = await library.getLanguage(id, lyr);
+      setLang(lng);
 
       let currCaptions;
       if (customCaptionsMode) {
@@ -277,6 +282,7 @@ export default function WatchPage() {
               videoURL={videoURL}
               captionsURL={captionsURL}
               title={title}
+              lang={lang}
             />
             <div className="flex flex-row w-full p-2 justify-center">
               <div className="flex flex-row p-2 mx-4">

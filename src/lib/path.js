@@ -2,10 +2,12 @@ const os = require("os");
 const platform = os.platform();
 const join = require("path").join;
 const HOME_PATH = require("os").homedir();
-const BINARIES_PATH = join(HOME_PATH, ".youka", "binaries");
-const DOWNLOAD_PATH = join(HOME_PATH, ".youka", "downloads");
-const CACHE_PATH = join(HOME_PATH, ".youka", "cache");
-const ROOT = join(HOME_PATH, ".youka", "youtube");
+const ROOT_PATH = join(HOME_PATH, ".youka");
+const BINARIES_PATH = join(ROOT_PATH, "binaries");
+const FONTS_PATH = join(ROOT_PATH, "fonts");
+const DOWNLOAD_PATH = join(ROOT_PATH, "downloads");
+const CACHE_PATH = join(ROOT_PATH, "cache");
+const ROOT = join(ROOT_PATH, "youtube");
 
 const ytdlNames = {
   win32: "youtube-dl.exe",
@@ -37,6 +39,7 @@ module.exports = {
   ROOT,
   BINARIES_PATH,
   FFMPEG_PATH,
+  FONTS_PATH,
   YOUTUBE_DL_PATH,
   DOWNLOAD_PATH,
   SOUND_STRETCH_PATH,
