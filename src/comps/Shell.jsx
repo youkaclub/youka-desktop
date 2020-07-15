@@ -130,7 +130,7 @@ export default function Shell({
   }
 
   function handleSearchFocus() {
-    onFocusSearch();
+    if (onFocusSearch) onFocusSearch();
     handleSearch();
   }
 
