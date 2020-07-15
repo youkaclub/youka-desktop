@@ -19,7 +19,12 @@ export const PLAYLIST_TRENDING = "trending";
 export const PLAYLIST_LIBRARY = "library";
 export const PLAYLIST_MIX = "mix";
 
-export default function Shell({ children, youtubeID, defaultPlaylist }) {
+export default function Shell({
+  children,
+  youtubeID,
+  defaultPlaylist,
+  onFocusSearch,
+}) {
   const [videos, setVideos] = useState([]);
   const [playlist, setPlaylist] = useState(PLAYLIST_TRENDING);
   const [loading, setLoading] = useState(false);
@@ -125,6 +130,7 @@ export default function Shell({ children, youtubeID, defaultPlaylist }) {
   }
 
   function handleSearchFocus() {
+    onFocusSearch();
     handleSearch();
   }
 

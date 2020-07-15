@@ -115,6 +115,10 @@ export default function WatchPage() {
     return changeMedia(data.value);
   }
 
+  function handleFocusSearch() {
+    setVideoURL(null);
+  }
+
   function handleChangeCaptions(e, data) {
     const mode = data.value;
     if (mode === library.MODE_CAPTIONS_OFF) {
@@ -253,7 +257,11 @@ export default function WatchPage() {
   if (!id) return null;
 
   return (
-    <Shell youtubeID={id} defaultPlaylist={PLAYLIST_MIX}>
+    <Shell
+      youtubeID={id}
+      defaultPlaylist={PLAYLIST_MIX}
+      onFocusSearch={handleFocusSearch}
+    >
       <div className="flex flex-col items-center">
         <div className="w-2/4 mb-2">
           {error ? (
