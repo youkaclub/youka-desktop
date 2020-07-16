@@ -106,11 +106,6 @@ export default function WatchPage() {
     setStatus(s);
   }
 
-  function handleClickClose() {
-    setVideoURL(null);
-    setEditLyrics(false);
-  }
-
   async function handleChangeMedia(e, data) {
     return changeMedia(data.value);
   }
@@ -294,7 +289,6 @@ export default function WatchPage() {
             />
             <div className="flex flex-row w-full p-2 justify-center">
               <div className="flex flex-row p-2 mx-4">
-                <Button content="Close Video" onClick={handleClickClose} />
                 <Dropdown
                   button
                   disabled={downloading}
