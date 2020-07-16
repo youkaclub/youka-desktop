@@ -194,8 +194,8 @@ function interleaveLines(
       newLines.push({
         start: start - 3,
         end: start,
-        code: `{\\c${secondaryColor}}{\\K100}3... {\\K100}2... {\\K100}1...\\N{\\c${primaryColor}}${line.text}`,
-        text: "3.. 2... 1..",
+        code: `{\\c${secondaryColor}}{\\K100}3... {\\K100}2... {\\K100}1... \\N{\\K\\c${primaryColor}}${line.text}`,
+        text: "3... 2... 1...",
       });
     }
 
