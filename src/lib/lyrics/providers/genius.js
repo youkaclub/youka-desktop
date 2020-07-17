@@ -23,7 +23,6 @@ async function searchMulti(query, perPage) {
 }
 
 function songFromSearch(result, query) {
-  console.log(JSON.stringify(result, null, 2));
   const section = result.response.sections.find((s) => s.type === "top_hit");
   const hit = section.hits.find(
     (h) => h.type === "song" && h.result && match(query, h.result["full_title"])
