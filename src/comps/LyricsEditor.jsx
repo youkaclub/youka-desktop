@@ -10,7 +10,6 @@ export default function LyricsEditor({ id, onSynced }) {
   const [error, setError] = useState();
   const [syncing, setSyncing] = useState();
   const [synced, setSynced] = useState();
-  const [mode, setMode] = useState();
   const [lyrics, setLyrics] = useState();
 
   useEffect(() => {
@@ -30,7 +29,6 @@ export default function LyricsEditor({ id, onSynced }) {
 
   async function handleSync(selectedMode) {
     try {
-      setMode(selectedMode);
       setStatus("Start syncing");
       setError(null);
       setSyncing(true);
@@ -48,7 +46,6 @@ export default function LyricsEditor({ id, onSynced }) {
     } finally {
       setSyncing(false);
       setStatus(null);
-      setMode(null);
     }
   }
 
@@ -84,17 +81,7 @@ export default function LyricsEditor({ id, onSynced }) {
       ) : null}
       <div className="flex flex-row pb-4 justify-center">
         <Button
-          content="Sync Lines"
-          disabled={
-            syncing ||
-            mode === library.MODE_CAPTIONS_WORD ||
-            !lyrics ||
-            lyrics.length < 100
-          }
-          onClick={() => handleSync(library.MODE_CAPTIONS_LINE)}
-        />
-        <Button
-          content="Sync Words"
+          content="Sync Lyrics"
           disabled={syncing || !lyrics || lyrics.length < 100}
           onClick={() => handleSync(library.MODE_CAPTIONS_WORD)}
         />

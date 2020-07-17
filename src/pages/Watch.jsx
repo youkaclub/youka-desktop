@@ -55,14 +55,20 @@ export default function WatchPage() {
     setddoptions(tmpddoptions);
 
     const tmpccoptions = Object.keys(captionsModes).map((mode, i) => {
-      return { key: i, text: capitalize(mode), value: mode };
+      let text;
+      switch (mode) {
+        case library.MODE_CAPTIONS_WORD:
+          text = "On - Word Level";
+          break;
+        case library.MODE_CAPTIONS_LINE:
+          text = "On - Line Level";
+          break;
+        default:
+          text = capitalize(mode);
+          break;
+      }
+      return { key: i, text, value: mode };
     });
-    if (lyrics) {
-      tmpccoptions.push({
-        text: capitalize(library.MODE_CAPTIONS_FULL),
-        value: library.MODE_CAPTIONS_FULL,
-      });
-    }
     tmpccoptions.push({
       text: capitalize(library.MODE_CAPTIONS_OFF),
       value: library.MODE_CAPTIONS_OFF,

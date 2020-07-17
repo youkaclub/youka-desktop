@@ -26,7 +26,6 @@ async function generate(youtubeID, title, onStatus) {
   let shouldAlign = false;
   let lang;
   let alignWordJobId;
-  let alignLineJobId;
   let alignWordQueue;
   let transcriptUrl;
 
@@ -62,12 +61,6 @@ async function generate(youtubeID, title, onStatus) {
   }
 
   if (shouldAlign) {
-    alignLineJobId = await client.enqueue(client.QUEUE_ALIGN, {
-      audioUrl: splitJob.result.vocalsUrl,
-      transcriptUrl,
-      options: { mode: library.MODE_CAPTIONS_LINE, lang },
-    });
-
     if (lang !== "en") {
       alignWordJobId = await client.enqueue(client.QUEUE_ALIGN, {
         audioUrl: splitJob.result.vocalsUrl,
@@ -84,33 +77,6 @@ async function generate(youtubeID, title, onStatus) {
   ]);
 
   if (shouldAlign) {
-    try {
-      const alignLineJob = await client.wait(
-        client.QUEUE_ALIGN,
-        alignLineJobId,
-        onStatus
-      );
-      if (
-        alignLineJob &&
-        alignLineJob.result &&
-        alignLineJob.result.alignmentsUrl
-      ) {
-        const lineAlignments = await rp({
-          uri: alignLineJob.result.alignmentsUrl,
-          encoding: "utf-8",
-        });
-        await library.saveFile(
-          youtubeID,
-          library.MODE_CAPTIONS_LINE,
-          library.FILE_JSON,
-          lineAlignments
-        );
-      }
-    } catch (e) {
-      console.log(e);
-      rollbar.error(e);
-    }
-
     try {
       const alignWordJob = await client.wait(
         alignWordQueue,
