@@ -173,9 +173,6 @@ export default function WatchPage() {
   }
 
   function handleEditLyrics() {
-    if (!editLyrics && captionsMode === library.MODE_CAPTIONS_FULL) {
-      setCaptionsMode(library.MODE_CAPTIONS_OFF);
-    }
     setEditLyrics(!editLyrics);
   }
 
@@ -231,8 +228,6 @@ export default function WatchPage() {
         currCaptions = library.MODE_CAPTIONS_WORD;
       } else if (library.MODE_CAPTIONS_LINE in files.captions) {
         currCaptions = library.MODE_CAPTIONS_LINE;
-      } else if (lyr) {
-        currCaptions = library.MODE_CAPTIONS_FULL;
       } else {
         currCaptions = library.MODE_CAPTIONS_OFF;
       }
@@ -370,18 +365,6 @@ export default function WatchPage() {
                 ) : null}
               </div>
             </div>
-            {captionsMode === library.MODE_CAPTIONS_FULL && lyrics ? (
-              <div className="flex justify-center mx-4 p-2">
-                <div className="text-2xl leading-normal">
-                  {lyrics.split("\n").map((line, i) => (
-                    <div key={i}>
-                      {line}
-                      <br></br>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
         ) : null}
         {editLyrics ? <LyricsEditor id={id} onSynced={handleSynced} /> : null}
