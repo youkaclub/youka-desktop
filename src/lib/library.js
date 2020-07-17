@@ -37,6 +37,7 @@ export const FILE_TEXT = ".txt";
 export const FILE_JSON = ".json";
 export const FILE_JPEG = ".jpeg";
 
+export const MODE_MEDIA_VIDEO = "video";
 export const MODE_MEDIA_ORIGINAL = "original";
 export const MODE_MEDIA_INSTRUMENTS = "instruments";
 export const MODE_MEDIA_VOCALS = "vocals";
@@ -242,7 +243,7 @@ export async function getAudio(youtubeID, mode) {
 
 export async function getVideo(youtubeID, mode) {
   const cwd = join(ROOT, youtubeID);
-  const inputMP4 = `${MODE_MEDIA_ORIGINAL}${FILE_MP4}`;
+  const inputMP4 = `${MODE_MEDIA_VIDEO}${FILE_MP4}`;
   const inputM4A = `${mode}${FILE_M4A}`;
   const output = `${mode}${FILE_MP4}`;
   const outputFull = join(cwd, output);
@@ -251,7 +252,7 @@ export async function getVideo(youtubeID, mode) {
     return fs.promises.readFile(outputFull);
   }
 
-  if (mode === MODE_MEDIA_ORIGINAL) {
+  if (mode === MODE_MEDIA_VIDEO) {
     const video = await youtube.downloadVideo(youtubeID);
     await fs.promises.writeFile(outputFull, video);
     return video;

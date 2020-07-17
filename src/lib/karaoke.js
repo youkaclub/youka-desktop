@@ -47,6 +47,7 @@ async function generate(youtubeID, title, onStatus) {
   }
 
   onStatus("Downloading video");
+  await library.getVideo(youtubeID, library.MODE_MEDIA_VIDEO);
   await library.getVideo(youtubeID, library.MODE_MEDIA_ORIGINAL);
   await library.getInfo(youtubeID);
 
