@@ -167,6 +167,9 @@ export default function WatchPage() {
   }
 
   function handleEditLyrics() {
+    if (!editLyrics && captionsMode === library.MODE_CAPTIONS_FULL) {
+      setCaptionsMode(library.MODE_CAPTIONS_OFF);
+    }
     setEditLyrics(!editLyrics);
   }
 
