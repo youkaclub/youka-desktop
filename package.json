@@ -65,7 +65,7 @@
     "jsdom-global": "3.0.2",
     "libass-wasm": "^4.0.0",
     "lint-staged": "^10.2.11",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "memoize-fs": "^2.1.0",
     "mkdirp": "^1.0.3",
     "mocha": "^8.0.1",
