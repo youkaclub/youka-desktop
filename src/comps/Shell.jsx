@@ -64,13 +64,7 @@ export default function Shell({
 
   async function handleSearch() {
     setPlaylist(PLAYLIST_SEARCH);
-    const query = searchRef.current.inputRef.current.value;
-    if (!query || query === "") {
-      setVideos([]);
-      searchRef.current.focus();
-      return;
-    }
-    doSearch(query);
+    doSearch();
   }
 
   async function handleTrending() {
@@ -124,9 +118,8 @@ export default function Shell({
     }
   }
 
-  function handleSearchChange(e) {
-    const query = e.target.value;
-    return doSearch(query);
+  function handleSearchChange() {
+    return doSearch();
   }
 
   function handleSearchFocus() {
@@ -134,15 +127,24 @@ export default function Shell({
     handleSearch();
   }
 
-  async function doSearch(query) {
+  async function doSearch() {
     try {
+      const query = searchRef.current.inputRef.current.value;
+      if (!query || query.trim() === "") {
+        setVideos([]);
+        searchRef.current.focus();
+        return;
+      }
       setLoading(true);
       const search_memoize = await memoizer.fn(search);
       const results = await search_memoize(query);
       const filteredResults = results.filter(
         (r) => !("minutes" in r) || (!r.hours && r.minutes < 10)
       );
-      setVideos(filteredResults);
+      const query2 = searchRef.current.inputRef.current.value;
+      if (query === query2) {
+        setVideos(filteredResults);
+      }
     } catch (error) {
       console.error(error);
       setVideos([]);
