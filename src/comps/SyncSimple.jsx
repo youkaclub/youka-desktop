@@ -45,7 +45,7 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
     if (start < 0) {
       start = 0;
     } else if (alignmentsRef.current.length > 0) {
-      const prevEnd = alignmentsRef.current[lineIndex - 1];
+      const prevEnd = alignmentsRef.current[lineIndex - 1].end;
       if (start < prevEnd) {
         start = prevEnd;
       }
