@@ -194,6 +194,7 @@ export default function WatchPage() {
       setPitch(0);
       setError(null);
       setStatus(null);
+      setEditLyrics(null);
       let files = await library.files(id);
       if (!files) {
         const start = new Date();
