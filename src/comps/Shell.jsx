@@ -141,9 +141,11 @@ export default function Shell({
       const filteredResults = results.filter(
         (r) => !("minutes" in r) || (!r.hours && r.minutes < 10)
       );
-      const query2 = searchRef.current.inputRef.current.value;
-      if (query === query2) {
-        setVideos(filteredResults);
+      if (searchRef.current) {
+        const query2 = searchRef.current.inputRef.current.value;
+        if (query === query2) {
+          setVideos(filteredResults);
+        }
       }
     } catch (error) {
       console.error(error);
