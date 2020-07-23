@@ -106,13 +106,19 @@ export async function videos() {
     const inf = await getInfo(id);
     if (inf) {
       const imgpath = filepath(id, MODE_MEDIA_IMAGE, FILE_JPEG);
-      const imgurl = fileurl(id, MODE_MEDIA_IMAGE, FILE_JPEG);
+      let imgurl = fileurl(id, MODE_MEDIA_IMAGE, FILE_JPEG);
       if (!(await exists(imgpath))) {
-        const image = await rp({
-          uri: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
-          encoding: null,
-        });
-        await fs.promises.writeFile(imgpath, image);
+        const uri = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+        try {
+          const image = await rp({
+            uri,
+            encoding: null,
+          });
+          await fs.promises.writeFile(imgpath, image);
+        } catch (e) {
+          rollbar.error(e);
+          imgurl = uri;
+        }
       }
       items.push({
         id: id,
