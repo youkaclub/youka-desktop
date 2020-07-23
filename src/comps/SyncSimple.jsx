@@ -41,9 +41,18 @@ export default function SyncSimple({ lyrics, audioUrl, onAlignments }) {
 
   function handleSetStart() {
     setIsStart(false);
+    let start = audioRef.current.currentTime - 0.1;
+    if (start < 0) {
+      start = 0;
+    } else if (alignmentsRef.current.length > 0) {
+      const prevEnd = alignmentsRef.current[lineIndex - 1];
+      if (start < prevEnd) {
+        start = prevEnd;
+      }
+    }
     alignmentsRef.current[lineIndex] = {
       line: lineIndex + 1,
-      start: audioRef.current.currentTime,
+      start,
       text: lines[lineIndex],
     };
   }
