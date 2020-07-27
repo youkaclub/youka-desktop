@@ -29,7 +29,7 @@
   align-items: center;
   justify-content: center;
   font-size: 60px;
-  color: var(--faintest-text-color);
+  color: var(--grey-color-4);
   font-weight: bold;
   flex-grow: 1;
 }

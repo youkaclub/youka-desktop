@@ -4,6 +4,8 @@ import "plyr/dist/plyr.css";
 import SubtitlesOctopus from "libass-wasm";
 import { useWindowSize } from "@react-hook/window-size";
 import styles from "./Player.module.css";
+import * as library from "../lib/library";
+import rollbar from "../lib/rollbar";
 
 export default function Player({
   youtubeID,

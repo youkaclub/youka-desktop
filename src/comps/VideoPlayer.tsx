@@ -15,41 +15,46 @@ const debug = require("debug")("youka:desktop");
 const capitalize = require("capitalize");
 
 interface Props {
-  video: Video
-  defaultVideoMode?: string
-  defaultCaptionsMode?: string
+  video: Video;
+  defaultVideoMode?: library.MediaMode;
+  defaultCaptionsMode?: library.CaptionsMode;
 }
 
 interface Option {
-  key: number
-  text: string
-  value: string
+  key: number;
+  text: string;
+  value: string;
 }
 
 interface Files {
-  videos: Record<string, string>
-  captions: Record<string,string>
+  videos: Record<string, string>;
+  captions: Record<string, string>;
 }
 
-export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMode }: Props) {
-  const { id, title } = video
+export default function VideoPlayer({
+  video,
+  defaultVideoMode,
+  defaultCaptionsMode,
+}: Props) {
+  const { id, title } = video;
   const history = useHistory();
-  const [videoModes, setVideoModes] = useState<Record<string, string>>({});
-  const [captionsModes, setCaptionsModes] = useState<Record<string, string>>({});
-  const [videoMode, setVideoMode] = useState<string | undefined>(defaultVideoMode);
-  const [captionsMode, setCaptionsMode] = useState<string | undefined>(defaultCaptionsMode);
-  const [videoURL, setVideoURL] = useState<string | undefined>(undefined);
-  const [captionsURL, setCaptionsURL] = useState<string | undefined>(undefined);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [downloading, setDownloading] = useState(false);
-  const [status, setStatus] = useState<string | undefined>(undefined);
-  const [lyrics, setLyrics] = useState<string | undefined>(undefined);
-  const [editLyrics, setEditLyrics] = useState(false);
-  const [pitch, setPitch] = useState(0);
-  const [pitching, setPitching] = useState(false);
-  const [changingMediaMode, setChangingMediaMode] = useState(false);
-  const [ddoptions, setddoptions] = useState<Option[]>([]);
-  const [ccoptions, setccoptions] = useState<Option[]>([]);
+  const [videoModes, setVideoModes] = useState<library.MediaUrls>({});
+  const [captionsModes, setCaptionsModes] = useState<library.CaptionUrls>({});
+  const [videoMode, setVideoMode] = useState<library.MediaMode>();
+  const [captionsMode, setCaptionsMode] = useState<library.CaptionsMode>();
+  const [videoURL, setVideoURL] = useState<string>();
+  const [captionsURL, setCaptionsURL] = useState<string>();
+  const [error, setError] = useState<string>();
+  const [downloading, setDownloading] = useState<boolean>();
+  const [status, setStatus] = useState<string>();
+  const [lang, setLang] = useState<string>();
+  const [lyrics, setLyrics] = useState<string>();
+  const [editLyrics, setEditLyrics] = useState<boolean>();
+  const [pitch, setPitch] = useState<number>(0);
+  const [pitching, setPitching] = useState<boolean>();
+  const [changingMediaMode, setChangingMediaMode] = useState<boolean>();
+  const [ddoptions, setddoptions] = useState<any[]>([]);
+  const [ccoptions, setccoptions] = useState<any[]>([]);
 
   const poptions = [];
   for (var i = 10; i >= -10; i--) {
@@ -65,20 +70,25 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
     });
     setddoptions(tmpddoptions);
 
-    const tmpccoptions: Option[] = Object.keys(captionsModes).map((mode, i) => {
-      return { key: i, text: capitalize(mode), value: mode };
+    const tmpccoptions = Object.keys(captionsModes).map((mode, i) => {
+      let text;
+      switch (mode) {
+        case library.CaptionsMode.Word:
+          text = "On - Word Level";
+          break;
+        case library.CaptionsMode.Line:
+          text = "On - Line Level";
+          break;
+        default:
+          text = capitalize(mode);
+          break;
+      }
+      return { key: i, text, value: mode };
     });
-    if (lyrics) {
-      tmpccoptions.push({
-        key: tmpccoptions.length,
-        text: capitalize(library.MODE_CAPTIONS_FULL),
-        value: library.MODE_CAPTIONS_FULL,
-      });
-    }
     tmpccoptions.push({
-      key: tmpccoptions.length,
-      text: capitalize(library.MODE_CAPTIONS_OFF),
-      value: library.MODE_CAPTIONS_OFF,
+      key: -1,
+      text: capitalize(library.CaptionsMode.Off),
+      value: library.CaptionsMode.Off,
     });
     setccoptions(tmpccoptions);
   }, [videoModes, captionsModes, lyrics]);
@@ -94,14 +104,12 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
       amplitude.getInstance().logEvent("DOWNLOAD", obj);
       const fpath = await library.download(
         id,
-        videoMode,
-        captionsMode,
-        file,
+        videoMode!,
+        captionsMode!,
+        file as library.FileType,
         pitch
       );
-      if (fpath) {
-        shell.showItemInFolder(fpath);
-      }
+      shell.showItemInFolder(fpath!);
     } catch (e) {
       setError(e.toString());
       rollbar.error(e, obj);
@@ -112,7 +120,7 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
 
   function openSyncEditor(value: string): void {
     history.push(
-      `/${value}?id=${id}&title=${title}&videoMode=${library.MODE_MEDIA_ORIGINAL}&captionsMode=${captionsMode}`
+      `/${value}?id=${id}&title=${title}&videoMode=${library.MediaMode.Original}&captionsMode=${captionsMode}`
     );
   }
 
@@ -121,7 +129,10 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
     setEditLyrics(false);
   }
 
-  async function changeMedia(mode: string, modes?: Record<string, string>) {
+  async function changeMedia(
+    mode: library.MediaMode,
+    modes?: library.MediaUrls
+  ) {
     try {
       setChangingMediaMode(true);
       if (pitch === 0) {
@@ -143,17 +154,17 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
     }
   }
 
-  function changeCaptions(mode: string, modes?: Record<string, string>) {
-    if (mode === library.MODE_CAPTIONS_OFF) {
-      amplitude.getInstance().logEvent("CAPTIONS_OFF");
-    }
+  function changeCaptions(
+    mode: library.CaptionsMode,
+    modes?: library.CaptionUrls
+  ) {
     const m = modes || captionsModes;
     let url = m[mode];
     setCaptionsMode(mode);
     setCaptionsURL(url);
   }
 
-  async function changePitch(n: number, mode?: string) {
+  async function changePitch(n: number, mode: library.MediaMode) {
     try {
       setPitch(n);
       setPitching(true);
@@ -172,20 +183,22 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
     setEditLyrics(!editLyrics);
   }
 
-  function handleSynced(mode: string): void {
+  function handleSynced(mode: library.CaptionsMode): void {
     init(mode);
   }
 
-  async function init(customCaptionsMode?: string) {
+  async function init(customCaptionsMode?: library.CaptionsMode) {
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
       setVideoURL(undefined);
+      setLang(undefined);
+      setCaptionsURL(undefined);
       setDownloading(false);
       setPitch(0);
       setError(undefined);
       setStatus(undefined);
-      
-      let files = await library.files(id) as Files | null;
+      setEditLyrics(undefined);
+      let files = await library.files(id);
       if (!files) {
         const start = new Date();
         await karaoke.generate(id, title, setStatus);
@@ -193,40 +206,44 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
         const duration = Math.abs((end.getTime() - start.getTime()) / 1000);
         debug("generate time", duration);
         amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
-        files = await library.files(id) as Files;
+        files = await library.files(id);
       }
-      setVideoModes(files.videos);
-      setCaptionsModes(files.captions);
+      if (files) {
+        setVideoModes(files.videos);
+        setCaptionsModes(files.captions);
+      }
 
-      let currVideo;
+      let currVideo: library.MediaMode;
       if (defaultVideoMode) {
         currVideo = defaultVideoMode;
       } else {
-        currVideo = library.MODE_MEDIA_INSTRUMENTS;
+        currVideo = library.MediaMode.Instruments;
       }
 
       setStatus("Searching lyrics");
       const lyr = await library.getLyrics(id, title);
+      if (lyr) {
+        const lng = await library.getLanguage(id, lyr);
+        setLang(lng);
+      }
 
-      let currCaptions;
+      let currCaptions: library.CaptionsMode;
       if (customCaptionsMode) {
         currCaptions = customCaptionsMode;
       } else if (defaultCaptionsMode) {
         currCaptions = defaultCaptionsMode;
-      } else if (library.MODE_CAPTIONS_WORD in files.captions) {
-        currCaptions = library.MODE_CAPTIONS_WORD;
-      } else if (library.MODE_CAPTIONS_LINE in files.captions) {
-        currCaptions = library.MODE_CAPTIONS_LINE;
-      } else if (lyr) {
-        currCaptions = library.MODE_CAPTIONS_FULL;
+      } else if (files && library.CaptionsMode.Word in files.captions) {
+        currCaptions = library.CaptionsMode.Word;
+      } else if (files && library.CaptionsMode.Line in files.captions) {
+        currCaptions = library.CaptionsMode.Line;
       } else {
-        currCaptions = library.MODE_CAPTIONS_OFF;
+        currCaptions = library.CaptionsMode.Off;
       }
 
       setVideoMode(currVideo);
       setCaptionsMode(currCaptions);
-      setVideoURL(files.videos[currVideo]);
-      setCaptionsURL(files.captions[currCaptions]);
+      setVideoURL(files && files.videos[currVideo]);
+      setCaptionsURL(files && files.captions[currCaptions]);
       setLyrics(lyr);
       setStatus(undefined);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -268,96 +285,100 @@ export default function VideoPlayer({ video, defaultVideoMode, defaultCaptionsMo
           </Message>
         ) : null}
       </div>
-      {videoURL && <div className={styles.video}>
-        <Player
-          youtubeID={id}
-          videoURL={videoURL}
-          captionsURL={captionsURL}
-          title={title}
-        />
-      </div>}
-      {videoURL && <div className={styles.toolbar}>
-        <Button content="Close Video" onClick={handleClickClose} />
-        <Dropdown
-          button
-          disabled={downloading}
-          loading={downloading}
-          text="Download"
-          selectOnBlur={false}
-          onChange={(_, { value }) => handleDownload(String(value))}
-          options={[
-            {
-              text: "Audio",
-              value: library.FILE_MP3,
-            },
-            {
-              text: "Video",
-              value: library.FILE_MP4,
-            },
-          ]}
-        />
-        <Dropdown
-          button
-          text={" Audio: " + capitalize(videoMode)}
-          value={videoMode || undefined}
-          options={ddoptions}
-          disabled={changingMediaMode}
-          loading={changingMediaMode}
-          onChange={(_, { value }) => changeMedia(String(value))}
-        />
-        <Dropdown
-          button
-          text={" Lyrics Sync: " + capitalize(captionsMode)}
-          value={captionsMode}
-          options={ccoptions}
-          onChange={(_, { value }) => changeCaptions(String(value))}
-        />
-        {platform() === "win32" ||
-        process.env.NODE_ENV !== "production" ? (
+      {videoURL && (
+        <div className={styles.video}>
+          <Player
+            youtubeID={id}
+            videoURL={videoURL}
+            captionsURL={captionsURL}
+            title={title}
+            lang={lang}
+          />
+        </div>
+      )}
+      {videoURL && (
+        <div className={styles.toolbar}>
+          <Button content="Close Video" onClick={handleClickClose} />
           <Dropdown
             button
-            text={`Key: ${pitch}`}
-            value={pitch}
-            options={poptions}
-            disabled={pitching}
-            loading={pitching}
-            onChange={(_, { value }) => changePitch(Number(value), videoMode)}
+            disabled={downloading}
+            loading={downloading}
+            text="Download"
+            selectOnBlur={false}
+            onChange={(_, { value }) => handleDownload(String(value))}
+            options={[
+              {
+                text: "Audio",
+                value: library.FileType.MP3,
+              },
+              {
+                text: "Video",
+                value: library.FileType.MP4,
+              },
+            ]}
           />
-        ) : null}
-        <Button content="Lyrics Editor" onClick={handleEditLyrics} />
-        {lyrics && <Dropdown
-          button
-          text="Sync Editor"
-          options={[
-            {
-              text: "Simple",
-              value: "sync-simple",
-            },
-            {
-              text: "Advanced",
-              value: "sync-advanced",
-              disabled:
-                !captionsURL ||
-                !captionsURL.startsWith("[Script Info]"),
-            },
-          ]}
-          onChange={(_, { value }) => openSyncEditor(String(value))}
-        />}
-      </div>}
-      {captionsMode === library.MODE_CAPTIONS_FULL && lyrics &&
+          <Dropdown
+            button
+            text={" Audio: " + capitalize(videoMode)}
+            value={videoMode || undefined}
+            options={ddoptions}
+            disabled={changingMediaMode}
+            loading={changingMediaMode}
+            onChange={(_, { value }) =>
+              changeMedia(String(value) as library.MediaMode)
+            }
+          />
+          <Dropdown
+            button
+            text={" Lyrics Sync: " + capitalize(captionsMode)}
+            value={captionsMode}
+            options={ccoptions}
+            onChange={(_, { value }) =>
+              changeCaptions(String(value) as library.CaptionsMode)
+            }
+          />
+          {platform() === "win32" || process.env.NODE_ENV !== "production" ? (
+            <Dropdown
+              button
+              text={`Key: ${pitch}`}
+              value={pitch}
+              options={poptions}
+              disabled={pitching}
+              loading={pitching}
+              onChange={(_, { value }) => {
+                if (videoMode) {
+                  changePitch(Number(value), videoMode);
+                }
+              }}
+            />
+          ) : null}
+          <Button content="Lyrics Editor" onClick={handleEditLyrics} />
+          {lyrics && (
+            <Dropdown
+              button
+              text="Sync Editor"
+              options={[
+                {
+                  text: "Simple",
+                  value: "sync-simple",
+                },
+                {
+                  text: "Advanced",
+                  value: "sync-advanced",
+                  disabled:
+                    !captionsURL || !captionsURL.startsWith("[Script Info]"),
+                },
+              ]}
+              onChange={(_, { value }) => openSyncEditor(String(value))}
+            />
+          )}
+        </div>
+      )}
+      {editLyrics && (
         <div className={styles.subPane}>
-          <div className="text-2xl leading-normal">
-            {lyrics.split("\n").map((line, i) => (
-              <div key={i}>
-                {line}
-                <br></br>
-              </div>
-            ))}
-          </div>
-        </div>}
-      {editLyrics && <div className={styles.subPane}>
-        <LyricsEditor id={id} onSynced={handleSynced} />
-      </div>}
+          <LyricsEditor id={id} onSynced={handleSynced} />
+        </div>
+      )}
     </div>
   );
 }

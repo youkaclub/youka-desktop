@@ -12,21 +12,23 @@
   justify-content: stretch;
 }
 
-.toolbar>* {
+.toolbar > * {
   flex: 1;
 }
 
 .toolbar :global(.ui.button) {
   border-radius: 0;
   margin: 0;
+  padding: 10px;
+  white-space: nowrap;
   text-align: center;
-  background: var(--button-bg);
-  color: var(--mild-text-color) !important;
+  background: var(--grey-color-4);
+  color: var(--grey-color-1) !important;
   font-weight: normal;
 }
 
 .toolbar :global(.ui.button):hover {
-  background: var(--button-hover-bg);
+  background: var(--grey-color-3);
 }
 
 .subPane {

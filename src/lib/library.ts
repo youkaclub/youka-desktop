@@ -145,7 +145,10 @@ export function filepath(youtubeID: string, mode: Mode, file: FileType) {
 }
 
 export function fileurl(youtubeID: string, mode: Mode, file: FileType) {
-  const fpath = filepath(youtubeID, mode, file);
+  // replace backslash with forward slash to correctly render Windows paths as file URLs
+  const fpath = [ROOT.replace(/\\/g, "/"), youtubeID, `${mode}${file}`].join(
+    "/"
+  );
   return `file://${fpath}`;
 }
 

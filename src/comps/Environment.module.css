@@ -7,25 +7,25 @@
 
   --bg-color: #fff;
   --text-color: #333;
-  --text-hover-color: #555;
   --feature-color: #e30b17;
-  --mild-text-color: #666;
-  --faint-text-color: #999;
-  --faintest-text-color: #ddd;
-  --button-bg: #ddd;
-  --button-hover-bg: #bbb;
+
+  --grey-color-1: #666;
+  --grey-color-2: #999;
+  --grey-color-3: #bbb;
+  --grey-color-4: #ddd;
 }
 
-@media (prefers-color-scheme: dark) { .wrapper {
-  --bg-color: #222;
-  --text-color: #eee;
-  --text-hover-color: #ccc;
-  --mild-text-color: #bbb;
-  --faint-text-color: #777;
-  --faintest-text-color: #444;
-  --button-bg: #444;
-  --button-hover-bg: #666;
-}}
+@media (prefers-color-scheme: dark) {
+  .wrapper {
+    --bg-color: #222;
+    --text-color: #eee;
+
+    --grey-color-1: #bbb;
+    --grey-color-2: #777;
+    --grey-color-3: #666;
+    --grey-color-4: #444;
+  }
+}
 
 .wrapper :global(.ui.input) > input {
   color: var(--text-color);
@@ -33,5 +33,5 @@
 }
 
 .wrapper :global(.ui.input) > input:placeholder {
-  color: var(--faint-text-color);
+  color: var(--grey-color-2);
 }

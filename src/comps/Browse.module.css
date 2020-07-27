@@ -54,7 +54,7 @@
   align-items: center;
   font-size: 24px;
   font-weight: bold;
-  color: var(--faintest-text-color);
+  color: var(--grey-color-4);
 }
 
 .emptyIcon {
@@ -63,5 +63,5 @@
 }
 
 .emptyIcon :global(i.grey.icon) {
-  color: var(--faintest-text-color) !important;
+  color: var(--grey-color-4) !important;
 }

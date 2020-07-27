@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, ReactNode } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { search, trending, mix } from "../lib/youtube";
 import { Input, Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
@@ -20,25 +20,29 @@ export enum Section {
   Search = "search",
   Trending = "trending",
   Library = "library",
-  Mix = "mix"
+  Mix = "mix",
 }
 
 interface Props {
-  defaultSection: Section
-  youtubeID?: string
-  onSelectVideo(video: Video): void
+  defaultSection: Section;
+  youtubeID?: string;
+  onSelectVideo(video: Video): void;
 }
 
 interface Video {
-  id: string
-  image: string
-  title: string
-  hours?: number
-  minutes?: number
+  id: string;
+  image: string;
+  title: string;
+  hours?: number;
+  minutes?: number;
 }
 
-export default function Browse({ youtubeID, defaultSection, onSelectVideo }: Props) {
-  const [section, setSection] = useState(defaultSection)
+export default function Browse({
+  youtubeID,
+  defaultSection,
+  onSelectVideo,
+}: Props) {
+  const [section, setSection] = useState(defaultSection);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -46,8 +50,7 @@ export default function Browse({ youtubeID, defaultSection, onSelectVideo }: Pro
   const searchRef = useRef<Input>(null);
 
   useEffect(() => {
-    
-  async function loadVideos() {
+    async function loadVideos() {
       switch (section) {
         case Section.Search:
           if (query) {
@@ -91,6 +94,7 @@ export default function Browse({ youtubeID, defaultSection, onSelectVideo }: Pro
             setLoading(true);
             const libraryVideos = await library.videos();
             setVideos(libraryVideos);
+            console.log({ libraryVideos });
           } catch (error) {
             console.error(error);
             setVideos([]);
@@ -101,7 +105,7 @@ export default function Browse({ youtubeID, defaultSection, onSelectVideo }: Pro
       }
     }
 
-    loadVideos()
+    loadVideos();
   }, [section, youtubeID, query]);
 
   async function doSearch(query: string) {
@@ -150,9 +154,7 @@ export default function Browse({ youtubeID, defaultSection, onSelectVideo }: Pro
         <div className={styles.emptyIcon}>
           <Icon size="massive" color="grey" name={icon} />
         </div>
-        <div>
-          {text}
-        </div>
+        <div>{text}</div>
       </div>
     );
   }
@@ -172,27 +174,35 @@ export default function Browse({ youtubeID, defaultSection, onSelectVideo }: Pro
       <div className={styles.body}>
         <div className={styles.links}>
           <div
-            className={section === Section.Search ? styles.activeLink : styles.link}
+            className={
+              section === Section.Search ? styles.activeLink : styles.link
+            }
             onClick={() => setSection(Section.Search)}
           >
             Search
           </div>
           <div
-            className={section === Section.Trending ? styles.activeLink : styles.link}
+            className={
+              section === Section.Trending ? styles.activeLink : styles.link
+            }
             onClick={() => setSection(Section.Trending)}
           >
             Trending
           </div>
           {youtubeID ? (
             <div
-              className={section === Section.Mix ? styles.activeLink : styles.link}
+              className={
+                section === Section.Mix ? styles.activeLink : styles.link
+              }
               onClick={() => setSection(Section.Mix)}
             >
               Mix
             </div>
           ) : null}
           <div
-            className={section === Section.Library ? styles.activeLink : styles.link}
+            className={
+              section === Section.Library ? styles.activeLink : styles.link
+            }
             onClick={() => setSection(Section.Library)}
           >
             Library

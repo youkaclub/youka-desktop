@@ -8,7 +8,9 @@
   height: 50px;
 }
 
-.left, .links, .logo {
+.left,
+.links,
+.logo {
   width: 33%;
   display: flex;
 }
@@ -21,7 +23,7 @@
 }
 
 .logo:hover {
-  color: var(--faintest-text-color);
+  color: var(--grey-color-4);
 }
 
 .links {
@@ -36,5 +38,5 @@
 }
 
 .link:hover {
-  color: var(--faintest-text-color);
+  color: var(--grey-color-4);
 }
