@@ -3,8 +3,9 @@ import { useHistory, useLocation } from "react-router-dom";
 import { Icon, Message, Button } from "semantic-ui-react";
 import Sync from "../comps/SyncAdvanced";
 import * as library from "../lib/library";
-import karaoke from "../lib/karaoke";
+import * as karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
+import { Alignment } from "../lib/alignment";
 
 const querystring = require("querystring");
 const amplitude = require("amplitude-js");
@@ -15,16 +16,16 @@ export default function SyncAdvancedPage() {
   const { id, title, videoMode, captionsMode } = querystring.parse(
     location.search.slice(1)
   );
-  const [audioUrl, setAudioUrl] = useState();
-  const [syncing, setSyncing] = useState();
-  const [alignments, setAlignments] = useState();
-  const [status, setStatus] = useState();
-  const [synced, setSynced] = useState();
-  const [error, setError] = useState();
+  const [audioUrl, setAudioUrl] = useState<string>();
+  const [syncing, setSyncing] = useState<boolean>();
+  const [alignments, setAlignments] = useState<Alignment[]>();
+  const [status, setStatus] = useState<string>();
+  const [synced, setSynced] = useState<boolean>();
+  const [error, setError] = useState<string>();
 
   useEffect(() => {
     async function init() {
-      const tmpAudioUrl = library.fileurl(id, videoMode, library.FILE_M4A);
+      const tmpAudioUrl = library.fileurl(id, videoMode, library.FileType.M4A);
       setAudioUrl(tmpAudioUrl);
       const tmpAlignments = await library.getAlignments(id, captionsMode);
       setAlignments(tmpAlignments);
@@ -33,40 +34,44 @@ export default function SyncAdvancedPage() {
   }, [id, videoMode, captionsMode]);
 
   async function handleClose() {
-    await library.setAlignments(id, captionsMode, alignments);
+    if (alignments) {
+      await library.setAlignments(id, captionsMode, alignments);
+    }
     history.push(`/watch?id=${id}&title=${title}&captionsMode=${captionsMode}`);
   }
 
   async function handleSync() {
     try {
-      setError(null);
+      setError(undefined);
       setSyncing(true);
       setSynced(false);
       amplitude.getInstance().logEvent("RESYNC", {
-        mode: library.MODE_CAPTIONS_WORD,
+        mode: library.CaptionsMode.Word,
         comp: "sync-editor-advanced",
       });
-      await library.setAlignments(id, captionsMode, alignments);
-      await karaoke.alignline(id, (s) => setStatus(s));
+      if (alignments) {
+        await library.setAlignments(id, captionsMode, alignments);
+      }
+      await karaoke.alignline(id, (s: string) => setStatus(s));
       setSynced(true);
     } catch (e) {
       setError(e.toString());
       console.log(e);
       rollbar.error(e);
     } finally {
-      setStatus(null);
+      setStatus(undefined);
       setSyncing(false);
     }
   }
 
-  function handleChange(als) {
+  function handleChange(als: Alignment[]) {
     setAlignments(als);
   }
 
   return (
     <div className="flex flex-col p-4">
       <div className="flex flex-row justify-center pb-4">
-        {captionsMode === library.MODE_CAPTIONS_LINE ? (
+        {captionsMode === library.CaptionsMode.Line ? (
           <Button
             content="Sync Words"
             onClick={handleSync}
@@ -79,7 +84,7 @@ export default function SyncAdvancedPage() {
         <div className="w-2/4">
           {synced ? (
             <Message color="green" icon>
-              <Icon name="circle check" />
+              <Icon name="check circle" />
               <Message.Header>Sync is completed successfully</Message.Header>
             </Message>
           ) : null}

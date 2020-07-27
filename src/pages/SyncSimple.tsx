@@ -3,8 +3,9 @@ import { useHistory, useLocation } from "react-router-dom";
 import { Button, Message, Icon } from "semantic-ui-react";
 import SyncSimple from "../comps/SyncSimple";
 import * as library from "../lib/library";
-import karaoke from "../lib/karaoke";
+import * as karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
+import { Alignment } from "../lib/alignment";
 
 const querystring = require("querystring");
 const amplitude = require("amplitude-js");
@@ -14,28 +15,32 @@ export default function SyncSimplePage() {
   const location = useLocation();
   const { id, title } = querystring.parse(location.search.slice(1));
 
-  const [audioUrl, setAudioUrl] = useState();
-  const [lyrics, setLyrics] = useState();
-  const [lang, setLang] = useState();
-  const [syncing, setSyncing] = useState();
-  const [synced, setSynced] = useState();
-  const [finished, setFinished] = useState();
-  const [status, setStatus] = useState();
-  const [error, setError] = useState();
-  const [captionsMode, setCaptionsMode] = useState(library.MODE_CAPTIONS_LINE);
+  const [audioUrl, setAudioUrl] = useState<string>();
+  const [lyrics, setLyrics] = useState<string>();
+  const [lang, setLang] = useState<string>();
+  const [syncing, setSyncing] = useState<boolean>();
+  const [synced, setSynced] = useState<boolean>();
+  const [finished, setFinished] = useState<boolean>();
+  const [status, setStatus] = useState<string>();
+  const [error, setError] = useState<string>();
+  const [captionsMode, setCaptionsMode] = useState<library.CaptionsMode>(
+    library.CaptionsMode.Line
+  );
 
   useEffect(() => {
     async function init() {
       const tmpAudioUrl = library.fileurl(
         id,
-        library.MODE_MEDIA_ORIGINAL,
-        library.FILE_M4A
+        library.MediaMode.Original,
+        library.FileType.M4A
       );
       setAudioUrl(tmpAudioUrl);
       const tmpLyrics = await library.getLyrics(id);
       setLyrics(tmpLyrics);
-      const tmpLang = await library.getLanguage(id, tmpLyrics);
-      setLang(tmpLang);
+      if (tmpLyrics) {
+        const tmpLang = await library.getLanguage(id, tmpLyrics);
+        setLang(tmpLang);
+      }
     }
     init();
   }, [id]);
@@ -44,34 +49,34 @@ export default function SyncSimplePage() {
     history.push(`/watch?id=${id}&title=${title}&captionsMode=${captionsMode}`);
   }
 
-  async function handleAlignments(alignments) {
+  async function handleAlignments(alignments: Alignment[]) {
     amplitude.getInstance().logEvent("SIMPLE_SYNC_FINISHED");
-    await library.setAlignments(id, library.MODE_CAPTIONS_LINE, alignments);
+    await library.setAlignments(id, library.CaptionsMode.Line, alignments);
     setFinished(true);
   }
 
   async function handleSync() {
     try {
-      setStatus(null);
-      setError(null);
+      setStatus(undefined);
+      setError(undefined);
       setSyncing(true);
       setSynced(false);
       amplitude.getInstance().logEvent("RESYNC", {
-        mode: library.MODE_CAPTIONS_WORD,
+        mode: library.CaptionsMode.Word,
         comp: "sync-editor-simple",
       });
-      await karaoke.alignline(id, (s) => setStatus(s));
-      setCaptionsMode(library.MODE_CAPTIONS_WORD);
+      await karaoke.alignline(id, (s: string) => setStatus(s));
+      setCaptionsMode(library.CaptionsMode.Word);
       setStatus("Sync is completed successfully");
       setSynced(true);
     } catch (e) {
-      setStatus(null);
+      setStatus(undefined);
       setError(e.toString());
       console.log(e);
       rollbar.error(e);
     } finally {
       setSyncing(false);
-      setStatus(null);
+      setStatus(undefined);
     }
   }
 
@@ -121,7 +126,7 @@ export default function SyncSimplePage() {
         </div>
         {synced ? (
           <Message color="green" icon>
-            <Icon name="circle check" />
+            <Icon name="check circle" />
             <Message.Header>Sync is completed successfully</Message.Header>
           </Message>
         ) : null}
@@ -163,7 +168,6 @@ export default function SyncSimplePage() {
       ) : null}
       {!finished ? (
         <SyncSimple
-          id={id}
           audioUrl={audioUrl}
           lyrics={lyrics}
           onAlignments={handleAlignments}

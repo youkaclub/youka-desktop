@@ -1,22 +1,22 @@
-const fs = require("fs");
-const join = require("path").join;
-const mkdirp = require("mkdirp");
-const execa = require("execa");
-const rp = require("request-promise");
-const checkDiskSpace = require("check-disk-space");
-const filenamify = require("filenamify");
+import fs from "fs";
+import { join } from "path";
+import mkdirp from "mkdirp";
+import execa from "execa";
+import rp from "request-promise";
+import checkDiskSpace from "check-disk-space";
+import filenamify from "filenamify";
 
-const lyricsFinder = require("./lyrics");
-const gt = require("./google-translate");
-const { Alignments } = require("./alignment");
-const { alignmentsToAss } = require("./ass-alignment");
-const rollbar = require("./rollbar");
-const youtube = require("./youtube");
-const youtubeDL = require("./youtube-dl");
-const ffmpegi = require("./ffmpeg");
-const soundstretch = require("./soundstretch");
-const { exists } = require("./utils");
-const {
+import lyricsFinder from "./lyrics";
+import gt from "./google-translate";
+import { alignmentsFromJSON, Alignment } from "./alignment";
+import { alignmentsToAss } from "./ass-alignment";
+import rollbar from "./rollbar";
+import youtube from "./youtube";
+import youtubeDL from "./youtube-dl";
+import ffmpegi from "./ffmpeg";
+import soundstretch from "./soundstretch";
+import { exists } from "./utils";
+import {
   HOME_PATH,
   ROOT,
   FFMPEG_PATH,
@@ -24,44 +24,53 @@ const {
   DOWNLOAD_PATH,
   SOUND_STRETCH_PATH,
   FONTS_PATH,
-} = require("./path");
+} from "./path";
 
-export const FILE_MP4 = ".mp4";
-export const FILE_MP3 = ".mp3";
-export const FILE_M4A = ".m4a";
-export const FILE_WAV = ".wav";
-export const FILE_MKV = ".mkv";
-export const FILE_ASS = ".ass";
-export const FILE_VTT = ".vtt";
-export const FILE_TEXT = ".txt";
-export const FILE_JSON = ".json";
-export const FILE_JPEG = ".jpeg";
+export enum FileType {
+  MP4 = ".mp4",
+  MP3 = ".mp3",
+  M4A = ".m4a",
+  WAV = ".wav",
+  MKV = ".mkv",
+  ASS = ".ass",
+  VTT = ".vtt",
+  TEXT = ".txt",
+  JSON = ".json",
+  JPEG = ".jpeg",
+}
 
-export const MODE_MEDIA_VIDEO = "video";
-export const MODE_MEDIA_ORIGINAL = "original";
-export const MODE_MEDIA_INSTRUMENTS = "instruments";
-export const MODE_MEDIA_VOCALS = "vocals";
-export const MODE_MEDIA_PITCH = "pitch";
-export const MODE_MEDIA_IMAGE = "image";
+export enum MediaMode {
+  Video = "video",
+  Original = "original",
+  Instruments = "instruments",
+  Vocals = "vocals",
+  Pitch = "pitch",
+  Image = "image",
+}
 
-export const MODE_CAPTIONS_LINE = "line";
-export const MODE_CAPTIONS_WORD = "word";
-export const MODE_CAPTIONS_FULL = "full";
-export const MODE_CAPTIONS_OFF = "off";
+export enum CaptionsMode {
+  Line = "line",
+  Word = "word",
+  Full = "full",
+  Off = "off",
+}
 
-export const MODE_LYRICS = "lyrics";
-export const MODE_INFO = "info";
-export const MODE_LANG = "lang";
+export enum MetadataMode {
+  Lyrics = "lyrics",
+  Info = "info",
+  Lang = "lang",
+}
 
-export const CAPTIONS_MODES = [MODE_CAPTIONS_LINE, MODE_CAPTIONS_WORD];
+export type Mode = MediaMode | CaptionsMode | MetadataMode;
 
-export const MEDIA_MODES = [
-  MODE_MEDIA_ORIGINAL,
-  MODE_MEDIA_INSTRUMENTS,
-  MODE_MEDIA_VOCALS,
-];
+export type MediaUrls = Partial<Record<MediaMode, string>>;
+export type CaptionUrls = Partial<Record<CaptionsMode, string>>;
 
-const LANG_TO_FONT = {
+export interface Info {
+  title: string;
+}
+
+const LANG_TO_FONT: Record<string, string> = {
   ko: "ko.otf",
   ja: "ja.otf",
   zh: "zh.otf",
@@ -70,7 +79,7 @@ const LANG_TO_FONT = {
   hi: "hi.ttf",
 };
 
-export async function font(lang) {
+export async function font(lang: string) {
   const fontFile = LANG_TO_FONT[lang];
   if (!fontFile) return;
 
@@ -99,14 +108,14 @@ export async function videos() {
   const items = [];
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i];
-    const fpath = filepath(id, MODE_MEDIA_INSTRUMENTS, FILE_MP4);
+    const fpath = filepath(id, MediaMode.Instruments, FileType.MP4);
     if (!(await exists(fpath))) {
       continue;
     }
     const inf = await getInfo(id);
     if (inf) {
-      const imgpath = filepath(id, MODE_MEDIA_IMAGE, FILE_JPEG);
-      let imgurl = fileurl(id, MODE_MEDIA_IMAGE, FILE_JPEG);
+      const imgpath = filepath(id, MediaMode.Image, FileType.JPEG);
+      let imgurl = fileurl(id, MediaMode.Image, FileType.JPEG);
       if (!(await exists(imgpath))) {
         const uri = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
         try {
@@ -131,23 +140,25 @@ export async function videos() {
   return items;
 }
 
-export function filepath(youtubeID, mode, file) {
+export function filepath(youtubeID: string, mode: Mode, file: FileType) {
   return join(ROOT, youtubeID, `${mode}${file}`);
 }
 
-export function fileurl(youtubeID, mode, file) {
+export function fileurl(youtubeID: string, mode: Mode, file: FileType) {
   const fpath = filepath(youtubeID, mode, file);
   return `file://${fpath}`;
 }
 
-export async function files(youtubeID) {
-  const fpath = filepath(youtubeID, MODE_MEDIA_INSTRUMENTS, FILE_MP4);
+export async function files(
+  youtubeID: string
+): Promise<{ videos: MediaUrls; captions: CaptionUrls } | undefined> {
+  const fpath = filepath(youtubeID, MediaMode.Instruments, FileType.MP4);
   if (!(await exists(fpath))) {
-    return null;
+    return undefined;
   }
 
-  let videos = {};
-  let captions = {};
+  const videos: Partial<Record<MediaMode, string>> = {};
+  const captions: Partial<Record<CaptionsMode, string>> = {};
   const files = await fs.promises.readdir(join(ROOT, youtubeID));
   for (const file of files) {
     const parts = file.split(".");
@@ -155,22 +166,20 @@ export async function files(youtubeID) {
     const ext = "." + parts[1];
 
     switch (ext) {
-      case FILE_MP4:
+      case FileType.MP4:
         if (
-          [
-            MODE_MEDIA_INSTRUMENTS,
-            MODE_MEDIA_ORIGINAL,
-            MODE_MEDIA_VOCALS,
-          ].includes(mode)
+          mode === MediaMode.Instruments ||
+          mode === MediaMode.Original ||
+          mode === MediaMode.Vocals
         ) {
-          const fvurl = fileurl(youtubeID, mode, FILE_MP4);
+          const fvurl = fileurl(youtubeID, mode, FileType.MP4);
           if (fvurl) {
             videos[mode] = fvurl;
           }
         }
         break;
-      case FILE_JSON:
-        if ([MODE_CAPTIONS_LINE, MODE_CAPTIONS_WORD].includes(mode)) {
+      case FileType.JSON:
+        if (mode === CaptionsMode.Line || mode === CaptionsMode.Word) {
           try {
             const json = await fs.promises.readFile(
               join(ROOT, youtubeID, file),
@@ -188,10 +197,10 @@ export async function files(youtubeID) {
           }
         }
         break;
-      case FILE_VTT:
-        const fcurl = fileurl(youtubeID, mode, ext);
+      case FileType.VTT:
+        const fcurl = fileurl(youtubeID, mode as CaptionsMode, ext);
         if (fcurl && !(mode in captions)) {
-          captions[mode] = fcurl;
+          captions[mode as CaptionsMode] = fcurl;
         }
         break;
       default:
@@ -202,7 +211,7 @@ export async function files(youtubeID) {
   return { videos, captions };
 }
 
-async function validateDiskSpace() {
+async function validateDiskSpace(): Promise<void> {
   let freeMB = 200;
   try {
     const { free } = await checkDiskSpace(HOME_PATH);
@@ -218,7 +227,7 @@ async function validateDiskSpace() {
   }
 }
 
-export async function init(youtubeID) {
+export async function init(youtubeID: string): Promise<void> {
   await validateDiskSpace();
   await mkdirp(join(ROOT, youtubeID));
   await mkdirp(BINARIES_PATH);
@@ -234,31 +243,34 @@ export async function init(youtubeID) {
   }
 }
 
-export async function getAudio(youtubeID, mode) {
-  const fp = filepath(youtubeID, mode, FILE_M4A);
+export async function getAudio(
+  youtubeID: string,
+  mode: Mode
+): Promise<Buffer | undefined> {
+  const fp = filepath(youtubeID, mode, FileType.M4A);
   if (await exists(fp)) {
     return fs.promises.readFile(fp);
   }
 
-  if (mode === MODE_MEDIA_ORIGINAL) {
+  if (mode === MediaMode.Original) {
     const audio = await youtube.downloadAudio(youtubeID);
     await fs.promises.writeFile(fp, audio);
     return audio;
   }
 }
 
-export async function getVideo(youtubeID, mode) {
+export async function getVideo(youtubeID: string, mode: Mode): Promise<Buffer> {
   const cwd = join(ROOT, youtubeID);
-  const inputMP4 = `${MODE_MEDIA_VIDEO}${FILE_MP4}`;
-  const inputM4A = `${mode}${FILE_M4A}`;
-  const output = `${mode}${FILE_MP4}`;
+  const inputMP4 = `${MediaMode.Video}${FileType.MP4}`;
+  const inputM4A = `${mode}${FileType.M4A}`;
+  const output = `${mode}${FileType.MP4}`;
   const outputFull = join(cwd, output);
 
   if (await exists(outputFull)) {
     return fs.promises.readFile(outputFull);
   }
 
-  if (mode === MODE_MEDIA_VIDEO) {
+  if (mode === MediaMode.Video) {
     const video = await youtube.downloadVideo(youtubeID);
     await fs.promises.writeFile(outputFull, video);
     return video;
@@ -288,16 +300,22 @@ export async function getVideo(youtubeID, mode) {
   return fs.promises.readFile(outputFull);
 }
 
-export async function setLyrics(youtubeID, lyrics) {
-  const fp = filepath(youtubeID, MODE_LYRICS, FILE_TEXT);
+export async function setLyrics(
+  youtubeID: string,
+  lyrics: string
+): Promise<void> {
+  const fp = filepath(youtubeID, MetadataMode.Lyrics, FileType.TEXT);
   return fs.promises.writeFile(fp, lyrics, "utf8");
 }
 
-export async function getLyrics(youtubeID, title) {
-  const fp = filepath(youtubeID, MODE_LYRICS, FILE_TEXT);
+export async function getLyrics(
+  youtubeID: string,
+  title?: string
+): Promise<string | undefined> {
+  const fp = filepath(youtubeID, MetadataMode.Lyrics, FileType.TEXT);
   if (await exists(fp)) {
     const l = await fs.promises.readFile(fp, "utf8");
-    if (l.trim() === "" || l === "undefined" || l === "null") return null;
+    if (l.trim() === "" || l === "undefined" || l === "null") return undefined;
     return l;
   }
   const lyrics = await lyricsFinder(title);
@@ -306,33 +324,41 @@ export async function getLyrics(youtubeID, title) {
   return lyrics;
 }
 
-export async function getInfo(youtubeID) {
-  const fp = filepath(youtubeID, MODE_INFO, FILE_JSON);
+export async function getInfo(youtubeID: string): Promise<Info> {
+  const fp = filepath(youtubeID, MetadataMode.Info, FileType.JSON);
   if (await exists(fp)) {
-    return JSON.parse(await fs.promises.readFile(fp));
+    const data = await fs.promises.readFile(fp);
+    return JSON.parse(data.toString());
   }
   const info = (await youtube.info(youtubeID)) || {};
   await fs.promises.writeFile(fp, JSON.stringify(info, null, 2), "utf8");
   return info;
 }
 
-export async function getLanguage(youtubeID, s, force) {
+export async function getLanguage(
+  youtubeID: string,
+  language?: string,
+  force: boolean = false
+): Promise<string | undefined> {
   try {
-    const fp = filepath(youtubeID, MODE_LANG, FILE_TEXT);
+    const fp = filepath(youtubeID, MetadataMode.Lang, FileType.TEXT);
     if (!force && (await exists(fp))) {
       return fs.promises.readFile(fp, "utf8");
     }
-    const lang = await gt.language(s);
+    const lang = await gt.language(language);
     await fs.promises.writeFile(fp, lang);
     return lang;
   } catch (e) {
     rollbar.error(e);
-    return null;
+    return undefined;
   }
 }
 
-export async function getAlignments(youtubeID, mode) {
-  const fpath = filepath(youtubeID, mode, FILE_JSON);
+export async function getAlignments(
+  youtubeID: string,
+  mode: Mode
+): Promise<Alignment[]> {
+  const fpath = filepath(youtubeID, mode, FileType.JSON);
   if (await exists(fpath)) {
     const alignments = JSON.parse(await fs.promises.readFile(fpath, "utf-8"));
     return alignments;
@@ -340,8 +366,12 @@ export async function getAlignments(youtubeID, mode) {
   return [];
 }
 
-export async function setAlignments(youtubeID, mode, alignments) {
-  const fpath = filepath(youtubeID, mode, FILE_JSON);
+export async function setAlignments(
+  youtubeID: string,
+  mode: Mode,
+  alignments: Alignment[]
+) {
+  const fpath = filepath(youtubeID, mode, FileType.JSON);
   await fs.promises.writeFile(
     fpath,
     JSON.stringify(alignments, null, 2),
@@ -349,22 +379,30 @@ export async function setAlignments(youtubeID, mode, alignments) {
   );
 }
 
-export async function getTitle(youtubeID) {
+export async function getTitle(youtubeID: string): Promise<string> {
   const info = await getInfo(youtubeID);
   return youtube.utils.cleanTitle(info.title);
 }
 
-export async function saveFile(youtubeID, mode, file, buffer) {
+export async function saveFile(
+  youtubeID: string,
+  mode: Mode,
+  file: FileType,
+  buffer: Buffer
+): Promise<void> {
   const fp = filepath(youtubeID, mode, file);
   return fs.promises.writeFile(fp, buffer);
 }
 
-export async function getWav(youtubeID, mediaMode) {
+export async function getWav(
+  youtubeID: string,
+  mediaMode: MediaMode
+): Promise<string> {
   const cwd = join(ROOT, youtubeID);
-  const output = `${mediaMode}${FILE_WAV}`;
+  const output = `${mediaMode}${FileType.WAV}`;
   const outputFull = join(cwd, output);
   if (await exists(outputFull)) return outputFull;
-  const input = `${mediaMode}${FILE_M4A}`;
+  const input = `${mediaMode}${FileType.M4A}`;
   await execa(
     FFMPEG_PATH,
     ["-y", "-i", input, "-acodec", "pcm_s16le", output],
@@ -375,17 +413,21 @@ export async function getWav(youtubeID, mediaMode) {
   return outputFull;
 }
 
-export async function getPitch(youtubeID, mediaMode, n) {
+export async function getPitch(
+  youtubeID: string,
+  mediaMode: MediaMode,
+  n: number
+) {
   if (n === 0) {
-    return fileurl(youtubeID, mediaMode, FILE_MP4);
+    return fileurl(youtubeID, mediaMode, FileType.MP4);
   }
   await soundstretch.install();
 
   const cwd = join(ROOT, youtubeID);
-  const output = `${MODE_MEDIA_PITCH}${FILE_MKV}`;
-  const inputMP4 = `${MODE_MEDIA_ORIGINAL}${FILE_MP4}`;
-  const modeWAV = `${mediaMode}${FILE_WAV}`;
-  const pitchWAV = `${MODE_MEDIA_PITCH}${FILE_WAV}`;
+  const output = `${MediaMode.Pitch}${FileType.MKV}`;
+  const inputMP4 = `${MediaMode.Original}${FileType.MP4}`;
+  const modeWAV = `${mediaMode}${FileType.WAV}`;
+  const pitchWAV = `${MediaMode.Pitch}${FileType.WAV}`;
   const outputFull = join(cwd, output);
   await getWav(youtubeID, mediaMode);
 
@@ -417,35 +459,39 @@ export async function getPitch(youtubeID, mediaMode, n) {
 }
 
 export async function download(
-  youtubeID,
-  mediaMode,
-  captionsMode,
-  file,
-  pitch
+  youtubeID: string,
+  mediaMode: MediaMode,
+  captionsMode: CaptionsMode,
+  file: FileType,
+  pitch: number
 ) {
   await init(youtubeID);
 
-  if (file === FILE_MP3) {
+  if (file === FileType.MP3) {
     return downloadAudio(youtubeID, mediaMode, pitch);
-  } else if (file === FILE_MP4) {
+  } else if (file === FileType.MP4) {
     return downloadVideo(youtubeID, mediaMode, captionsMode, pitch);
   }
 }
 
-export async function downloadAudio(youtubeID, mediaMode, pitch) {
+export async function downloadAudio(
+  youtubeID: string,
+  mediaMode: MediaMode,
+  pitch: number
+) {
   let input;
   let output;
   if (pitch === 0) {
-    input = `${mediaMode}${FILE_M4A}`;
-    output = filenamify(`youka-${youtubeID}-${mediaMode}${FILE_MP3}`, {
+    input = `${mediaMode}${FileType.M4A}`;
+    output = filenamify(`youka-${youtubeID}-${mediaMode}${FileType.MP3}`, {
       replacement: "",
     });
   } else {
     await getPitch(youtubeID, mediaMode, pitch);
-    input = `${MODE_MEDIA_PITCH}${FILE_WAV}`;
+    input = `${MediaMode.Pitch}${FileType.WAV}`;
     const pitchStr = pitch > 0 ? `key-plus-${pitch}` : `key-minus${pitch}`;
     output = filenamify(
-      `youka-${youtubeID}-${mediaMode}-${pitchStr}${FILE_MP3}`,
+      `youka-${youtubeID}-${mediaMode}-${pitchStr}${FileType.MP3}`,
       {
         replacement: "",
       }
@@ -468,21 +514,26 @@ export async function downloadAudio(youtubeID, mediaMode, pitch) {
   return downloadFull;
 }
 
-export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
+export async function downloadVideo(
+  youtubeID: string,
+  mediaMode: MediaMode,
+  captionsMode: CaptionsMode,
+  pitch: number
+) {
   let input;
   let output;
   if (pitch === 0) {
-    input = `${mediaMode}${FILE_MP4}`;
+    input = `${mediaMode}${FileType.MP4}`;
     output = filenamify(
-      `youka-${youtubeID}-${mediaMode}-${captionsMode}${FILE_MP4}`,
+      `youka-${youtubeID}-${mediaMode}-${captionsMode}${FileType.MP4}`,
       { replacement: "" }
     );
   } else {
     await getPitch(youtubeID, mediaMode, pitch);
-    input = `${MODE_MEDIA_PITCH}${FILE_MKV}`;
+    input = `${MediaMode.Pitch}${FileType.MKV}`;
     const pitchStr = pitch > 0 ? `key-plus-${pitch}` : `key-minus${pitch}`;
     output = filenamify(
-      `youka-${youtubeID}-${mediaMode}-${captionsMode}-${pitchStr}${FILE_MP4}`,
+      `youka-${youtubeID}-${mediaMode}-${captionsMode}-${pitchStr}${FileType.MP4}`,
       { replacement: "" }
     );
   }
@@ -490,11 +541,11 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   const cwd = join(ROOT, youtubeID);
   const downloadFile = output;
   const downloadFull = join(DOWNLOAD_PATH, downloadFile);
-  const alignmentsFull = filepath(youtubeID, captionsMode, FILE_JSON);
-  const modeFull = filepath(youtubeID, mediaMode, FILE_MP4);
-  const captionsFull = filepath(youtubeID, captionsMode, FILE_ASS);
+  const alignmentsFull = filepath(youtubeID, captionsMode, FileType.JSON);
+  const modeFull = filepath(youtubeID, mediaMode, FileType.MP4);
+  const captionsFull = filepath(youtubeID, captionsMode, FileType.ASS);
   const outputFull = join(cwd, output);
-  const captionsFile = `${captionsMode}${FILE_ASS}`;
+  const captionsFile = `${captionsMode}${FileType.ASS}`;
 
   if (!(await exists(alignmentsFull))) {
     await fs.promises.copyFile(modeFull, downloadFull);
@@ -502,7 +553,7 @@ export async function downloadVideo(youtubeID, mediaMode, captionsMode, pitch) {
   }
 
   const json = await fs.promises.readFile(alignmentsFull, "utf-8");
-  const alignments = new Alignments(json);
+  const alignments = alignmentsFromJSON(json);
   const ass = alignmentsToAss(alignments);
 
   await fs.promises.writeFile(captionsFull, ass, "utf-8");

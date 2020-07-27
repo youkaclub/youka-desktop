@@ -5,12 +5,18 @@ import * as karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
 const amplitude = require("amplitude-js");
 
-export default function LyricsEditor({ id, onSynced }) {
-  const [status, setStatus] = useState();
-  const [error, setError] = useState();
-  const [syncing, setSyncing] = useState();
-  const [synced, setSynced] = useState();
-  const [lyrics, setLyrics] = useState();
+export default function LyricsEditor({
+  id,
+  onSynced,
+}: {
+  id: string;
+  onSynced(mode: library.CaptionsMode): void;
+}) {
+  const [status, setStatus] = useState<string>();
+  const [error, setError] = useState<string>();
+  const [syncing, setSyncing] = useState<boolean>();
+  const [synced, setSynced] = useState<boolean>();
+  const [lyrics, setLyrics] = useState<string>();
 
   useEffect(() => {
     async function init() {
@@ -22,21 +28,23 @@ export default function LyricsEditor({ id, onSynced }) {
     }
   }, [id]);
 
-  async function handleLyricsChange(e, data) {
+  async function handleLyricsChange(_: unknown, data: any) {
     setLyrics(data.value);
     return library.setLyrics(id, data.value);
   }
 
-  async function handleSync(selectedMode) {
+  async function handleSync(selectedMode: library.CaptionsMode) {
     try {
       setStatus("Start syncing");
-      setError(null);
+      setError(undefined);
       setSyncing(true);
       setSynced(false);
       amplitude
         .getInstance()
         .logEvent("RESYNC", { mode: selectedMode, comp: "lyrics-editor" });
-      await karaoke.realign(id, null, selectedMode, (s) => setStatus(s));
+      await karaoke.realign(id, undefined, selectedMode, (s: string) =>
+        setStatus(s)
+      );
       setSynced(true);
       onSynced(selectedMode);
     } catch (e) {
@@ -45,7 +53,7 @@ export default function LyricsEditor({ id, onSynced }) {
       rollbar.error(e);
     } finally {
       setSyncing(false);
-      setStatus(null);
+      setStatus(undefined);
     }
   }
 
@@ -57,7 +65,7 @@ export default function LyricsEditor({ id, onSynced }) {
       </Message>
       {synced ? (
         <Message color="green" icon>
-          <Icon name="circle check" />
+          <Icon name="check circle" />
           <Message.Header>Sync is completed successfully</Message.Header>
         </Message>
       ) : null}
@@ -72,7 +80,7 @@ export default function LyricsEditor({ id, onSynced }) {
       ) : null}
       {error ? (
         <Message negative={true} icon>
-          <Icon name="error" />
+          <Icon name="warning" />
           <Message.Content>
             <Message.Header>Sync Failed</Message.Header>
             <div className="py-2">{error}</div>
@@ -83,7 +91,7 @@ export default function LyricsEditor({ id, onSynced }) {
         <Button
           content="Sync Lyrics"
           disabled={syncing || !lyrics || lyrics.length < 100}
-          onClick={() => handleSync(library.MODE_CAPTIONS_WORD)}
+          onClick={() => handleSync(library.CaptionsMode.Word)}
         />
       </div>
       <Form>
