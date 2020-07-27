@@ -1,10 +1,15 @@
-const debug = require("debug")("youka:desktop");
-const rp = require("request-promise");
-const library = require("./library");
-const client = require("./client");
-const rollbar = require("./rollbar");
+import Debug from "debug";
+import rp from "request-promise";
+import * as library from "./library";
+import client from "./client";
+import rollbar from "./rollbar";
+const debug = Debug("youka:desktop");
 
-async function generate(youtubeID, title, onStatus) {
+export async function generate(
+  youtubeID: string,
+  title: string,
+  onStatus: (status: string) => void
+) {
   debug("youtube-id", youtubeID);
 
   onStatus("Initializing");
@@ -13,7 +18,7 @@ async function generate(youtubeID, title, onStatus) {
   onStatus("Downloading audio");
   const originalAudio = await library.getAudio(
     youtubeID,
-    library.MODE_MEDIA_ORIGINAL
+    library.MediaMode.Original
   );
 
   onStatus("Uploading files");
@@ -24,7 +29,7 @@ async function generate(youtubeID, title, onStatus) {
   const lyrics = await library.getLyrics(youtubeID, title);
 
   let shouldAlign = false;
-  let lang;
+  let lang: string | undefined;
   let alignWordJobId;
   let alignWordQueue;
   let transcriptUrl;
@@ -32,7 +37,7 @@ async function generate(youtubeID, title, onStatus) {
   if (lyrics) {
     lang = await library.getLanguage(youtubeID, lyrics);
     debug("lang", lang);
-    shouldAlign = SUPPORTED_LANGS.includes(lang);
+    shouldAlign = !!lang && SUPPORTED_LANGS.includes(lang);
     transcriptUrl = await client.upload(lyrics);
     if (lang === "en") {
       alignWordQueue = client.QUEUE_ALIGN_EN;
@@ -46,8 +51,8 @@ async function generate(youtubeID, title, onStatus) {
   }
 
   onStatus("Downloading video");
-  await library.getVideo(youtubeID, library.MODE_MEDIA_VIDEO);
-  await library.getVideo(youtubeID, library.MODE_MEDIA_ORIGINAL);
+  await library.getVideo(youtubeID, library.MediaMode.Video);
+  await library.getVideo(youtubeID, library.MediaMode.Original);
   await library.getInfo(youtubeID);
 
   const splitJob = await client.wait(client.QUEUE_SPLIT, splitJobId, onStatus);
@@ -65,7 +70,7 @@ async function generate(youtubeID, title, onStatus) {
       alignWordJobId = await client.enqueue(client.QUEUE_ALIGN, {
         audioUrl: splitJob.result.vocalsUrl,
         transcriptUrl,
-        options: { mode: library.MODE_CAPTIONS_WORD, lang },
+        options: { mode: library.CaptionsMode.Word, lang },
       });
     }
   }
@@ -94,8 +99,8 @@ async function generate(youtubeID, title, onStatus) {
         });
         await library.saveFile(
           youtubeID,
-          library.MODE_CAPTIONS_WORD,
-          library.FILE_JSON,
+          library.CaptionsMode.Word,
+          library.FileType.JSON,
           wordAlignments
         );
       }
@@ -108,29 +113,32 @@ async function generate(youtubeID, title, onStatus) {
   await Promise.all([
     library.saveFile(
       youtubeID,
-      library.MODE_MEDIA_INSTRUMENTS,
-      library.FILE_M4A,
+      library.MediaMode.Instruments,
+      library.FileType.M4A,
       instruments
     ),
     library.saveFile(
       youtubeID,
-      library.MODE_MEDIA_VOCALS,
-      library.FILE_M4A,
+      library.MediaMode.Vocals,
+      library.FileType.M4A,
       vocals
     ),
   ]);
 
   await Promise.all([
-    library.getVideo(youtubeID, library.MODE_MEDIA_INSTRUMENTS),
-    library.getVideo(youtubeID, library.MODE_MEDIA_VOCALS),
+    library.getVideo(youtubeID, library.MediaMode.Instruments),
+    library.getVideo(youtubeID, library.MediaMode.Vocals),
   ]);
 }
 
-async function alignline(youtubeID, onStatus) {
+export async function alignline(
+  youtubeID: string,
+  onStatus: (status: string) => void
+) {
   const queue = client.QUEUE_ALIGN_LINE;
   const alignments = await library.getAlignments(
     youtubeID,
-    library.MODE_CAPTIONS_LINE
+    library.CaptionsMode.Line
   );
   if (!alignments || !alignments.length)
     throw new Error("Line level sync not found");
@@ -138,7 +146,7 @@ async function alignline(youtubeID, onStatus) {
   const lang = await library.getLanguage(youtubeID);
   if (!lang) throw new Error("Can't detect language");
 
-  const audio = await library.getAudio(youtubeID, library.MODE_MEDIA_VOCALS);
+  const audio = await library.getAudio(youtubeID, library.MediaMode.Vocals);
   if (!audio) throw new Error("Can't find vocals");
   onStatus("Uploading files");
   const audioUrl = await client.upload(audio);
@@ -157,26 +165,31 @@ async function alignline(youtubeID, onStatus) {
   });
   await library.saveFile(
     youtubeID,
-    library.MODE_CAPTIONS_WORD,
-    library.FILE_JSON,
+    library.CaptionsMode.Word,
+    library.FileType.JSON,
     wordAlignments
   );
 }
 
-async function realign(youtubeID, title, mode, onStatus) {
+export async function realign(
+  youtubeID: string,
+  title: string | undefined,
+  mode: library.Mode,
+  onStatus: (status: string) => void
+) {
   const lyrics = await library.getLyrics(youtubeID, title);
   if (!lyrics) throw new Error("Lyrics is empty");
   const lang = await library.getLanguage(youtubeID, lyrics, true);
   if (!lang) throw new Error("Can't detect language");
 
   const queue =
-    mode === library.MODE_CAPTIONS_WORD && lang === "en"
+    mode === library.CaptionsMode.Word && lang === "en"
       ? client.QUEUE_ALIGN_EN
       : client.QUEUE_ALIGN;
   const audioMode =
     queue === client.QUEUE_ALIGN_EN
-      ? library.MODE_MEDIA_ORIGINAL
-      : library.MODE_MEDIA_VOCALS;
+      ? library.MediaMode.Original
+      : library.MediaMode.Vocals;
 
   const audio = await library.getAudio(youtubeID, audioMode);
   onStatus("Uploading files");
@@ -195,10 +208,10 @@ async function realign(youtubeID, title, mode, onStatus) {
     uri: job.result.alignmentsUrl,
     encoding: "utf-8",
   });
-  await library.saveFile(youtubeID, mode, library.FILE_JSON, alignments);
+  await library.saveFile(youtubeID, mode, library.FileType.JSON, alignments);
 }
 
-const SUPPORTED_LANGS = [
+export const SUPPORTED_LANGS = [
   "af",
   "am",
   "an",
@@ -296,10 +309,3 @@ const SUPPORTED_LANGS = [
   "yue",
   "zh",
 ];
-
-module.exports = {
-  generate,
-  realign,
-  alignline,
-  SUPPORTED_LANGS,
-};

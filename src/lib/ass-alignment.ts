@@ -1,4 +1,5 @@
 import { Ass, Events, Dialogue } from "./ass";
+import { Alignment } from "./alignment";
 
 interface Options {
   primaryColor: string; // hex code for regular lyrics color
@@ -8,14 +9,6 @@ interface Options {
   style: string; // ASS style to assign to lyrics
   delta: number; // adjustment time in seconds to subtract from all timings
   fixDelta: number; // minimum time in seconds to assign to a word with zero or negative duration
-}
-
-interface Alignment {
-  start: number;
-  end: number;
-  paragraph: number;
-  line: number;
-  text: string;
 }
 
 interface CodedAlignment {

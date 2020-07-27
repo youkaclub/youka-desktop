@@ -22,23 +22,23 @@ export default function WatchPage() {
   const params = querystring.parse(location.search.slice(1));
   const { id, title } = params;
 
-  const [videoModes, setVideoModes] = useState({});
-  const [captionsModes, setCaptionsModes] = useState({});
-  const [videoMode, setVideoMode] = useState();
-  const [captionsMode, setCaptionsMode] = useState();
-  const [videoURL, setVideoURL] = useState();
-  const [captionsURL, setCaptionsURL] = useState();
-  const [error, setError] = useState();
-  const [downloading, setDownloading] = useState();
-  const [status, setStatus] = useState();
-  const [lang, setLang] = useState();
-  const [lyrics, setLyrics] = useState();
-  const [editLyrics, setEditLyrics] = useState();
-  const [pitch, setPitch] = useState(0);
-  const [pitching, setPitching] = useState();
-  const [changingMediaMode, setChangingMediaMode] = useState();
-  const [ddoptions, setddoptions] = useState([]);
-  const [ccoptions, setccoptions] = useState([]);
+  const [videoModes, setVideoModes] = useState<library.MediaUrls>({});
+  const [captionsModes, setCaptionsModes] = useState<library.CaptionUrls>({});
+  const [videoMode, setVideoMode] = useState<library.MediaMode>();
+  const [captionsMode, setCaptionsMode] = useState<library.CaptionsMode>();
+  const [videoURL, setVideoURL] = useState<string>();
+  const [captionsURL, setCaptionsURL] = useState<string>();
+  const [error, setError] = useState<string>();
+  const [downloading, setDownloading] = useState<boolean>();
+  const [status, setStatus] = useState<string>();
+  const [lang, setLang] = useState<string>();
+  const [lyrics, setLyrics] = useState<string>();
+  const [editLyrics, setEditLyrics] = useState<boolean>();
+  const [pitch, setPitch] = useState<number>(0);
+  const [pitching, setPitching] = useState<boolean>();
+  const [changingMediaMode, setChangingMediaMode] = useState<boolean>();
+  const [ddoptions, setddoptions] = useState<any[]>([]);
+  const [ccoptions, setccoptions] = useState<any[]>([]);
 
   const poptions = [];
   for (var i = 10; i >= -10; i--) {
@@ -57,10 +57,10 @@ export default function WatchPage() {
     const tmpccoptions = Object.keys(captionsModes).map((mode, i) => {
       let text;
       switch (mode) {
-        case library.MODE_CAPTIONS_WORD:
+        case library.CaptionsMode.Word:
           text = "On - Word Level";
           break;
-        case library.MODE_CAPTIONS_LINE:
+        case library.CaptionsMode.Line:
           text = "On - Line Level";
           break;
         default:
@@ -70,13 +70,14 @@ export default function WatchPage() {
       return { key: i, text, value: mode };
     });
     tmpccoptions.push({
-      text: capitalize(library.MODE_CAPTIONS_OFF),
-      value: library.MODE_CAPTIONS_OFF,
+      key: -1,
+      text: capitalize(library.CaptionsMode.Off),
+      value: library.CaptionsMode.Off,
     });
     setccoptions(tmpccoptions);
   }, [videoModes, captionsModes, lyrics]);
 
-  async function handleDownload(e, data) {
+  async function handleDownload(_: unknown, data: any) {
     setDownloading(true);
     const file = data.value;
     const obj = {
@@ -88,12 +89,12 @@ export default function WatchPage() {
       amplitude.getInstance().logEvent("DOWNLOAD", obj);
       const fpath = await library.download(
         id,
-        videoMode,
-        captionsMode,
-        file,
+        videoMode!,
+        captionsMode!,
+        file as library.FileType,
         pitch
       );
-      shell.showItemInFolder(fpath);
+      shell.showItemInFolder(fpath!);
     } catch (e) {
       setError(e.toString());
       rollbar.error(e, obj);
@@ -102,33 +103,36 @@ export default function WatchPage() {
     }
   }
 
-  function handleOpenSyncEditor(e, data) {
+  function handleOpenSyncEditor(_: unknown, data: any) {
     history.push(
-      `/${data.value}?id=${id}&title=${title}&videoMode=${library.MODE_MEDIA_ORIGINAL}&captionsMode=${captionsMode}`
+      `/${data.value}?id=${id}&title=${title}&videoMode=${library.MediaMode.Original}&captionsMode=${captionsMode}`
     );
   }
 
-  function handleStatusChanged(s) {
+  function handleStatusChanged(s: string) {
     setStatus(s);
   }
 
-  async function handleChangeMedia(e, data) {
+  async function handleChangeMedia(_: unknown, data: any) {
     return changeMedia(data.value);
   }
 
   function handleFocusSearch() {
-    setVideoURL(null);
+    setVideoURL(undefined);
   }
 
-  function handleChangeCaptions(e, data) {
+  function handleChangeCaptions(_: unknown, data: any) {
     const mode = data.value;
-    if (mode === library.MODE_CAPTIONS_OFF) {
+    if (mode === library.CaptionsMode.Off) {
       amplitude.getInstance().logEvent("CAPTIONS_OFF");
     }
     changeCaptions(mode);
   }
 
-  async function changeMedia(mode, modes) {
+  async function changeMedia(
+    mode: library.MediaMode,
+    modes?: library.MediaUrls
+  ) {
     try {
       setChangingMediaMode(true);
       if (pitch === 0) {
@@ -150,14 +154,17 @@ export default function WatchPage() {
     }
   }
 
-  function changeCaptions(mode, modes) {
+  function changeCaptions(
+    mode: library.CaptionsMode,
+    modes?: library.CaptionUrls
+  ) {
     const m = modes || captionsModes;
     let url = m[mode];
     setCaptionsMode(mode);
     setCaptionsURL(url);
   }
 
-  async function changePitch(n, mode) {
+  async function changePitch(n: number, mode: library.MediaMode) {
     try {
       setPitch(n);
       setPitching(true);
@@ -176,25 +183,25 @@ export default function WatchPage() {
     setEditLyrics(!editLyrics);
   }
 
-  async function handleChangePitch(e, data) {
-    return changePitch(data.value, videoMode);
+  async function handleChangePitch(_: unknown, data: any) {
+    return changePitch(Number(data.value), videoMode!);
   }
 
-  async function handleSynced(mode) {
+  async function handleSynced(mode: library.CaptionsMode) {
     init(mode);
   }
 
-  async function init(customCaptionsMode) {
+  async function init(customCaptionsMode?: library.CaptionsMode) {
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
-      setVideoURL(null);
-      setLang(null);
-      setCaptionsURL(null);
+      setVideoURL(undefined);
+      setLang(undefined);
+      setCaptionsURL(undefined);
       setDownloading(false);
       setPitch(0);
-      setError(null);
-      setStatus(null);
-      setEditLyrics(null);
+      setError(undefined);
+      setStatus(undefined);
+      setEditLyrics(undefined);
       let files = await library.files(id);
       if (!files) {
         const start = new Date();
@@ -205,47 +212,51 @@ export default function WatchPage() {
         amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
         files = await library.files(id);
       }
-      setVideoModes(files.videos);
-      setCaptionsModes(files.captions);
+      if (files) {
+        setVideoModes(files.videos);
+        setCaptionsModes(files.captions);
+      }
 
-      let currVideo;
+      let currVideo: library.MediaMode;
       if (params.videoMode) {
         currVideo = params.videoMode;
       } else {
-        currVideo = library.MODE_MEDIA_INSTRUMENTS;
+        currVideo = library.MediaMode.Instruments;
       }
 
       handleStatusChanged("Searching lyrics");
       const lyr = await library.getLyrics(id, title);
-      const lng = await library.getLanguage(id, lyr);
-      setLang(lng);
+      if (lyr) {
+        const lng = await library.getLanguage(id, lyr);
+        setLang(lng);
+      }
 
-      let currCaptions;
+      let currCaptions: library.CaptionsMode;
       if (customCaptionsMode) {
         currCaptions = customCaptionsMode;
       } else if (params.captionsMode) {
         currCaptions = params.captionsMode;
-      } else if (library.MODE_CAPTIONS_WORD in files.captions) {
-        currCaptions = library.MODE_CAPTIONS_WORD;
-      } else if (library.MODE_CAPTIONS_LINE in files.captions) {
-        currCaptions = library.MODE_CAPTIONS_LINE;
+      } else if (files && library.CaptionsMode.Word in files.captions) {
+        currCaptions = library.CaptionsMode.Word;
+      } else if (files && library.CaptionsMode.Line in files.captions) {
+        currCaptions = library.CaptionsMode.Line;
       } else {
-        currCaptions = library.MODE_CAPTIONS_OFF;
+        currCaptions = library.CaptionsMode.Off;
       }
 
       setVideoMode(currVideo);
       setCaptionsMode(currCaptions);
-      setVideoURL(files.videos[currVideo]);
-      setCaptionsURL(files.captions[currCaptions]);
+      setVideoURL(files && files.videos[currVideo]);
+      setCaptionsURL(files && files.captions[currCaptions]);
       setLyrics(lyr);
-      setStatus(null);
+      setStatus(undefined);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.log(error);
       setError(error.toString());
       rollbar.error(error);
     } finally {
-      setStatus(null);
+      setStatus(undefined);
     }
   }
 
@@ -300,16 +311,16 @@ export default function WatchPage() {
                   loading={downloading}
                   text="Download"
                   selectOnBlur={false}
-                  value={null}
+                  value={undefined}
                   onChange={handleDownload}
                   options={[
                     {
                       text: "Audio",
-                      value: library.FILE_MP3,
+                      value: library.FileType.MP3,
                     },
                     {
                       text: "Video",
-                      value: library.FILE_MP4,
+                      value: library.FileType.MP4,
                     },
                   ]}
                 />
@@ -346,7 +357,7 @@ export default function WatchPage() {
                   <Dropdown
                     button
                     text="Sync Editor"
-                    value={null}
+                    value={undefined}
                     selectOnBlur={false}
                     options={[
                       {
