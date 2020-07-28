@@ -66,7 +66,14 @@ export default function HomePage() {
           onSwitchSection={setBrowseSection}
         />
         <div className={styles.player}>
-          {nowPlaying ? <VideoPlayer video={nowPlaying} /> : <ZeroState />}
+          {nowPlaying ? (
+            <VideoPlayer
+              video={nowPlaying}
+              onEnded={() => playback.finishPlayback(nowPlaying.id)}
+            />
+          ) : (
+            <ZeroState />
+          )}
         </div>
         {showQueue && (
           <div className={styles.queue}>

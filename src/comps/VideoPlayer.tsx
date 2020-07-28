@@ -18,6 +18,7 @@ interface Props {
   video: Video;
   defaultVideoMode?: library.MediaMode;
   defaultCaptionsMode?: library.CaptionsMode;
+  onEnded?(): void;
 }
 
 interface Option {
@@ -26,15 +27,11 @@ interface Option {
   value: string;
 }
 
-interface Files {
-  videos: Record<string, string>;
-  captions: Record<string, string>;
-}
-
 export default function VideoPlayer({
   video,
   defaultVideoMode,
   defaultCaptionsMode,
+  onEnded,
 }: Props) {
   const { id, title } = video;
   const history = useHistory();
@@ -286,6 +283,7 @@ export default function VideoPlayer({
           videoURL={videoURL}
           captionsURL={captionsURL}
           lang={lang}
+          onEnded={onEnded}
         />
       )}
       {videoURL && <div className={styles.title}>{title}</div>}

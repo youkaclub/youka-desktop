@@ -12,11 +12,13 @@ const currentStateSaveVersion = 1;
 export class Playback {
   private events: EventEmitter;
   private nowPlaying?: Video;
+  private playbackFinished: boolean;
   private queue: Video[];
 
   constructor() {
     this.events = new EventEmitter();
     this.queue = [];
+    this.playbackFinished = false;
     this.loadState();
   }
 
@@ -47,23 +49,39 @@ export class Playback {
       return;
     }
 
-    if (this.nowPlaying) {
+    if (this.nowPlaying && !this.playbackFinished) {
       this.queue = [...this.queue, video];
       this.sendQueue();
     } else {
       this.nowPlaying = video;
       this.sendNowPlaying();
+      this.playbackFinished = false;
     }
     this.saveState();
   }
 
-  public async skipToQueuedVideo(id: string): Promise<void> {
-    const queueIndex = this.queue.findIndex((item) => item.id === id);
+  public async finishPlayback(videoId: string): Promise<void> {
+    if (this.nowPlaying?.id !== videoId) return;
+
+    if (this.queue.length > 0) {
+      this.nowPlaying = this.queue[0];
+      this.queue = this.queue.slice(1);
+      this.sendNowPlaying();
+      this.sendQueue();
+    } else {
+      this.playbackFinished = true;
+    }
+    this.saveState();
+  }
+
+  public async skipToQueuedVideo(videoId: string): Promise<void> {
+    const queueIndex = this.queue.findIndex((item) => item.id === videoId);
     if (queueIndex >= 0) {
       const newQueue = this.queue.slice();
       const [queueVideo] = newQueue.splice(queueIndex, 1);
       this.nowPlaying = queueVideo;
       this.queue = newQueue;
+      this.playbackFinished = false;
       this.sendNowPlaying();
       this.sendQueue();
       this.saveState();
@@ -90,6 +108,7 @@ export class Playback {
       JSON.stringify({
         version: currentStateSaveVersion,
         nowPlaying: this.nowPlaying,
+        playbackFinished: this.playbackFinished,
         queue: this.queue,
       })
     );
@@ -101,6 +120,7 @@ export class Playback {
     const state = JSON.parse(json);
     if (state.version !== currentStateSaveVersion) return;
     this.nowPlaying = state.nowPlaying;
+    this.playbackFinished = state.playbackFinished;
     this.queue = state.queue;
   }
 }
