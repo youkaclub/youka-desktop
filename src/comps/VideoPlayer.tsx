@@ -193,16 +193,15 @@ export default function VideoPlayer({
       setError(undefined);
       setStatus(undefined);
       setEditLyrics(undefined);
-      let files = await library.files(id);
-      if (!files) {
+      if (!(await library.isLoaded(id))) {
         const start = new Date();
         await karaoke.generate(id, title, setStatus);
         const end = new Date();
         const duration = Math.abs((end.getTime() - start.getTime()) / 1000);
         debug("generate time", duration);
         amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
-        files = await library.files(id);
       }
+      const files = await library.files(id);
       if (files) {
         setVideoModes(files.videos);
         setCaptionsModes(files.captions);

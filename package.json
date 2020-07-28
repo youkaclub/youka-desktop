@@ -121,5 +121,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css,md}": "prettier --write"
+  },
+  "dependencies": {
+    "eventemitter3": "^4.0.4"
   }
 }

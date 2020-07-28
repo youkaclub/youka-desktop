@@ -152,11 +152,19 @@ export function fileurl(youtubeID: string, mode: Mode, file: FileType) {
   return `file://${fpath}`;
 }
 
+export async function isLoaded(youtubeID: string): Promise<boolean> {
+  const fpath = filepath(youtubeID, MediaMode.Instruments, FileType.MP4);
+  if (!(await exists(fpath))) {
+    return false;
+  }
+
+  return true;
+}
+
 export async function files(
   youtubeID: string
 ): Promise<{ videos: MediaUrls; captions: CaptionUrls } | undefined> {
-  const fpath = filepath(youtubeID, MediaMode.Instruments, FileType.MP4);
-  if (!(await exists(fpath))) {
+  if (!(await isLoaded(youtubeID))) {
     return undefined;
   }
 
