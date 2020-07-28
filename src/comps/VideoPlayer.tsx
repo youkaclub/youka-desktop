@@ -294,7 +294,7 @@ export default function VideoPlayer({
         <div className={styles.toolbar}>
           <Dropdown
             button
-            defaultUpward
+            upward
             disabled={downloading}
             loading={downloading}
             text="Download"
@@ -313,7 +313,7 @@ export default function VideoPlayer({
           />
           <Dropdown
             button
-            defaultUpward
+            upward
             text={" Audio: " + capitalize(videoMode)}
             value={videoMode || undefined}
             options={ddoptions}
@@ -325,7 +325,7 @@ export default function VideoPlayer({
           />
           <Dropdown
             button
-            defaultUpward
+            upward
             text={" Lyrics Sync: " + capitalize(captionsMode)}
             value={captionsMode}
             options={ccoptions}
@@ -336,7 +336,7 @@ export default function VideoPlayer({
           {platform() === "win32" || process.env.NODE_ENV !== "production" ? (
             <Dropdown
               button
-              defaultUpward
+              upward
               text={`Key: ${pitch}`}
               value={pitch}
               options={poptions}
@@ -353,7 +353,7 @@ export default function VideoPlayer({
           {lyrics && (
             <Dropdown
               button
-              defaultUpward
+              upward
               text="Sync Editor"
               options={[
                 {

@@ -1,3 +1,15 @@
+html,
+body {
+  background: #fff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  html,
+  body {
+    background: #222 !important;
+  }
+}
+
 *:focus {
   outline: 0 !important;
 }
@@ -30,10 +42,6 @@
   margin: 0;
 }
 
-.bg-primary {
-  background-color: var(--feature-color);
-}
-
 textarea {
   font-size: 1.75rem !important;
 }
@@ -49,21 +57,4 @@ textarea {
 .ui.input.primary > input,
 .ui.input.secondary > input {
   text-align: center;
-}
-
-.ui.dropdown .menu {
-  background: var(--bg-color) !important;
-}
-
-.ui.dropdown .menu .active.item,
-.ui.dropdown .menu .selected.item {
-  color: var(--text-color) !important;
-}
-
-.ui.dropdown .menu > .item {
-  color: var(--grey-color-1) !important;
-}
-
-.ui.dropdown .menu > .item:hover {
-  background: var(--grey-color-4) !important;
 }

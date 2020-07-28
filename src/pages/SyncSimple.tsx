@@ -6,6 +6,7 @@ import * as library from "../lib/library";
 import * as karaoke from "../lib/karaoke";
 import rollbar from "../lib/rollbar";
 import { Alignment } from "../lib/alignment";
+import { Environment } from "../comps/Environment";
 
 const querystring = require("querystring");
 const amplitude = require("amplitude-js");
@@ -46,7 +47,7 @@ export default function SyncSimplePage() {
   }, [id]);
 
   async function handleClose() {
-    history.push(`/watch?id=${id}&title=${title}&captionsMode=${captionsMode}`);
+    history.push("/");
   }
 
   async function handleAlignments(alignments: Alignment[]) {
@@ -113,65 +114,67 @@ export default function SyncSimplePage() {
   }
 
   return (
-    <div className="flex flex-col p-4 items-center">
-      <div className="flex flex-col items-center w-2/4">
-        <div>
-          <Button
-            content="Sync Words"
-            onClick={handleSync}
-            disabled={syncing || !finished}
-          />
-          <Button content="Close" onClick={handleClose} />
-        </div>
-        {synced ? (
-          <Message color="green" icon>
-            <Icon name="check circle" />
-            <Message.Header>Sync is completed successfully</Message.Header>
-          </Message>
-        ) : null}
-        {status ? (
-          <Message icon>
-            <Icon name="circle notched" loading />
-            <Message.Content>
-              <Message.Header>Sync Status</Message.Header>
-              <div className="py-2">{status}</div>
-            </Message.Content>
-          </Message>
-        ) : null}
-        {error ? (
-          <Message icon negative>
-            <Icon name="exclamation circle" />
-            <Message.Content>
-              <Message.Header>Sync processing is failed</Message.Header>
-              <div className="py-1">{error}</div>
-            </Message.Content>
-          </Message>
-        ) : null}
-        {finished ? null : renderInstructions()}
-      </div>
-      {finished && !syncing && !synced ? (
-        <div className="m-8 text-2xl">
-          <div>Good job!</div>
-          <br />
-          {lang && karaoke.SUPPORTED_LANGS.includes(lang) ? (
-            <div>
-              Click on <b>Sync Words</b> to get even better word level sync
-              automatically
-            </div>
-          ) : null}
-          <br />
+    <Environment>
+      <div className="flex flex-col p-4 items-center">
+        <div className="flex flex-col items-center w-2/4">
           <div>
-            Click on <b>Close</b> to watch the results
+            <Button
+              content="Sync Words"
+              onClick={handleSync}
+              disabled={syncing || !finished}
+            />
+            <Button content="Close" onClick={handleClose} />
           </div>
+          {synced ? (
+            <Message color="green" icon>
+              <Icon name="check circle" />
+              <Message.Header>Sync is completed successfully</Message.Header>
+            </Message>
+          ) : null}
+          {status ? (
+            <Message icon>
+              <Icon name="circle notched" loading />
+              <Message.Content>
+                <Message.Header>Sync Status</Message.Header>
+                <div className="py-2">{status}</div>
+              </Message.Content>
+            </Message>
+          ) : null}
+          {error ? (
+            <Message icon negative>
+              <Icon name="exclamation circle" />
+              <Message.Content>
+                <Message.Header>Sync processing is failed</Message.Header>
+                <div className="py-1">{error}</div>
+              </Message.Content>
+            </Message>
+          ) : null}
+          {finished ? null : renderInstructions()}
         </div>
-      ) : null}
-      {!finished ? (
-        <SyncSimple
-          audioUrl={audioUrl}
-          lyrics={lyrics}
-          onAlignments={handleAlignments}
-        />
-      ) : null}
-    </div>
+        {finished && !syncing && !synced ? (
+          <div className="m-8 text-2xl">
+            <div>Good job!</div>
+            <br />
+            {lang && karaoke.SUPPORTED_LANGS.includes(lang) ? (
+              <div>
+                Click on <b>Sync Words</b> to get even better word level sync
+                automatically
+              </div>
+            ) : null}
+            <br />
+            <div>
+              Click on <b>Close</b> to watch the results
+            </div>
+          </div>
+        ) : null}
+        {!finished ? (
+          <SyncSimple
+            audioUrl={audioUrl}
+            lyrics={lyrics}
+            onAlignments={handleAlignments}
+          />
+        ) : null}
+      </div>
+    </Environment>
   );
 }

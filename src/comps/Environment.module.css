@@ -4,6 +4,10 @@
   top: 0;
   right: 0;
   bottom: 0;
+  background: var(--bg-color);
+  color: var(--text-color);
+  scrollbar-color: var(--text-color) var(--grey-color-5);
+  overflow: auto;
 
   --bg-color: #fff;
   --text-color: #333;
@@ -11,9 +15,9 @@
 
   --grey-color-1: #666;
   --grey-color-2: #999;
-  --grey-color-3: #bbb;
-  --grey-color-4: #ddd;
-  --grey-color-5: #eee;
+  --grey-color-3: #ccc;
+  --grey-color-4: #d4d4d4;
+  --grey-color-5: #e8e8e8;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -29,6 +33,15 @@
   }
 }
 
+.wrapper :global(.ui.button) {
+  background: var(--grey-color-4);
+  color: var(--text-color) !important;
+}
+
+.wrapper :global(.ui.button):hover {
+  background: var(--grey-color-3);
+}
+
 .wrapper :global(.ui.input) > input {
   color: var(--text-color);
   background: var(--bg-color);
@@ -36,4 +49,35 @@
 
 .wrapper :global(.ui.input) > input:placeholder {
   color: var(--grey-color-2);
+}
+
+.wrapper :global(.ui.message) {
+  background: var(--grey-color-5);
+  color: var(--text-color) !important;
+}
+
+.wrapper :global(.ui.dropdown .menu) {
+  background: var(--grey-color-5) !important;
+}
+
+.wrapper :global(.ui.dropdown .menu .active.item),
+.wrapper :global(.ui.dropdown .menu .selected.item) {
+  color: var(--text-color) !important;
+}
+
+.wrapper :global(.ui.dropdown .menu > .item) {
+  color: var(--grey-color-1) !important;
+}
+
+.wrapper :global(.ui.dropdown .menu > .item:hover) {
+  background: var(--grey-color-4) !important;
+}
+
+.wrapper :global(.ui.dimmer) {
+  background: var(--bg-color) !important;
+}
+
+.wrapper :global(.ui.loader) {
+  font-weight: bold;
+  color: var(--grey-color-1) !important;
 }

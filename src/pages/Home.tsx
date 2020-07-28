@@ -11,15 +11,33 @@ import { Environment } from "../comps/Environment";
 import VideoList from "../comps/VideoList";
 import TitleSearch from "../comps/TitleSearch";
 
+interface RootState {
+  version: number;
+  nowPlaying?: Video;
+  queue: Video[];
+  browse: {
+    section: BrowseSection;
+    searchText: string;
+  };
+}
+
+// Increment this number whenever RootState is changed in a way that is not
+// backwards compatible, to clear any old values that have been persisted
+const currentRootStateVersion = 1;
+
+const defaultRootState: RootState = {
+  version: currentRootStateVersion,
+  queue: [],
+  browse: {
+    section: BrowseSection.Trending,
+    searchText: "",
+  },
+};
+
 export default function HomePage() {
   const location = useLocation();
   const history = useHistory();
-  const [browseSection, setBrowseSection] = useState<BrowseSection>(
-    BrowseSection.Trending
-  );
-  const [searchText, setSearchText] = useState("");
-  const [nowPlaying, setNowPlaying] = useState<Video | undefined>();
-  const [queue, setQueue] = useState<Video[]>([]);
+  const [root, setRoot] = useState(loadRootState);
 
   usePageView(location.pathname);
 
@@ -30,20 +48,43 @@ export default function HomePage() {
     // eslint-disable-next-line
   }, []);
 
-  function enqueueVideo(video: Video) {
-    if (nowPlaying) {
-      if (
-        nowPlaying.id !== video.id &&
-        !queue.some((item) => item.id === video.id)
-      ) {
-        setQueue([...queue, video]);
-      }
-    } else {
-      setNowPlaying(video);
-    }
+  function update(root: RootState) {
+    setRoot(root);
+    saveRootState(root);
   }
 
-  const showQueue = queue.length > 0;
+  function switchBrowseSection(section: BrowseSection) {
+    update({
+      ...root,
+      browse: {
+        ...root.browse,
+        section,
+      },
+    });
+  }
+
+  function enqueueVideo(video: Video) {
+    if (
+      root.nowPlaying?.id === video.id ||
+      root.queue.some((item) => item.id === video.id)
+    ) {
+      return;
+    }
+
+    update(
+      root.nowPlaying
+        ? {
+            ...root,
+            queue: [...root.queue, video],
+          }
+        : {
+            ...root,
+            nowPlaying: video,
+          }
+    );
+  }
+
+  const showQueue = root.queue.length > 0;
 
   return (
     <Environment>
@@ -53,37 +94,51 @@ export default function HomePage() {
           .join(" ")}
       >
         <TitleSearch
-          onFocus={() => setBrowseSection(BrowseSection.Search)}
+          searchText={root.browse.searchText}
+          onFocus={() => switchBrowseSection(BrowseSection.Search)}
           onSearch={(value) => {
-            setBrowseSection(BrowseSection.Search);
-            setSearchText(value);
+            update({
+              ...root,
+              browse: {
+                ...root.browse,
+                section: BrowseSection.Search,
+                searchText: value,
+              },
+            });
           }}
         />
         <TitleBar />
         <Browse
-          section={browseSection}
-          searchText={searchText}
+          section={root.browse.section}
+          searchText={root.browse.searchText}
           onSelectVideo={enqueueVideo}
-          onSwitchSection={setBrowseSection}
+          onSwitchSection={switchBrowseSection}
         />
         <div className={styles.player}>
-          {nowPlaying ? <VideoPlayer video={nowPlaying} /> : <ZeroState />}
+          {root.nowPlaying ? (
+            <VideoPlayer video={root.nowPlaying} />
+          ) : (
+            <ZeroState />
+          )}
         </div>
         {showQueue && (
           <div className={styles.queue}>
             <div className={styles.queueTitle}>Up Next</div>
             <VideoList
               kind="horizontal"
-              videos={queue}
+              videos={root.queue}
               onSelect={(video) => {
-                const queueIndex = queue.findIndex(
+                const queueIndex = root.queue.findIndex(
                   (item) => item.id === video.id
                 );
                 if (queueIndex >= 0) {
-                  const newQueue = queue.slice();
+                  const newQueue = root.queue.slice();
                   const [queueVideo] = newQueue.splice(queueIndex, 1);
-                  setQueue(newQueue);
-                  setNowPlaying(queueVideo);
+                  update({
+                    ...root,
+                    nowPlaying: queueVideo,
+                    queue: newQueue,
+                  });
                 }
               }}
             />
@@ -96,4 +151,18 @@ export default function HomePage() {
 
 function ZeroState() {
   return <div className={styles.zeroState}>Youka</div>;
+}
+
+function saveRootState(root: RootState) {
+  localStorage.setItem("homeState", JSON.stringify(root));
+}
+
+function loadRootState(): RootState {
+  const json = localStorage.getItem("homeState");
+  const parsed = json && (JSON.parse(json) as RootState);
+  if (parsed && parsed.version === currentRootStateVersion) {
+    return parsed;
+  } else {
+    return defaultRootState;
+  }
 }

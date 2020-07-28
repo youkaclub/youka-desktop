@@ -137,7 +137,8 @@ export default function SyncLine({
 
   return (
     <div
-      className={visible ? "bg-blue-100 p-4" : "p-4"}
+      className="p-4"
+      style={visible ? { background: "var(--grey-color-5)" } : undefined}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
     >

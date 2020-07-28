@@ -33,13 +33,7 @@
   padding: 10px;
   white-space: nowrap;
   text-align: center;
-  background: var(--grey-color-4);
-  color: var(--grey-color-1) !important;
   font-weight: normal;
-}
-
-.toolbar :global(.ui.button):hover {
-  background: var(--grey-color-3);
 }
 
 .subPane {
