@@ -119,7 +119,6 @@ export default function SyncSimplePage() {
           <Button
             content="Sync Words"
             onClick={handleSync}
-            loading={syncing}
             disabled={syncing || !finished}
           />
           <Button content="Close" onClick={handleClose} />
