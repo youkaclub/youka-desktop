@@ -6,6 +6,10 @@
   overflow: hidden;
 }
 
+.message {
+  padding: 15px;
+}
+
 .video {
   flex: 1 1 300px;
   object-fit: contain;

@@ -14,7 +14,7 @@ const amplitude = require("amplitude-js");
 export default function SyncAdvancedPage() {
   let history = useHistory();
   const location = useLocation();
-  const { id, title, videoMode, captionsMode } = querystring.parse(
+  const { id, videoMode, captionsMode } = querystring.parse(
     location.search.slice(1)
   );
   const [audioUrl, setAudioUrl] = useState<string>();

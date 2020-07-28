@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useHistory } from "react-router-dom";
 import Browse, { BrowseSection } from "../comps/Browse";
 import { usePageView } from "../lib/hooks";
@@ -10,7 +10,7 @@ import TitleBar from "../comps/TitleBar";
 import { Environment } from "../comps/Environment";
 import VideoList from "../comps/VideoList";
 import TitleSearch from "../comps/TitleSearch";
-import { Playback } from "../lib/playback";
+import { Playback, ProcessingStatus } from "../lib/playback";
 
 export default function HomePage() {
   const location = useLocation();
@@ -20,15 +20,21 @@ export default function HomePage() {
   const [searchText, setSearchText] = useState("");
   const [nowPlaying, setNowPlaying] = useState<Video | undefined>();
   const [queue, setQueue] = useState<Video[]>([]);
+  const [processingStatus, setProcessingStatus] = useState<
+    ProcessingStatus | undefined
+  >();
 
   useEffect(() => {
     playback.getNowPlaying().then(setNowPlaying);
     playback.getQueue().then(setQueue);
+    playback.getProcessingStatus().then(setProcessingStatus);
     playback.on("nowPlayingChanged", setNowPlaying);
     playback.on("queueChanged", setQueue);
+    playback.on("processingStatusChanged", setProcessingStatus);
     return () => {
       playback.off("nowPlayingChanged", setNowPlaying);
       playback.off("queueChanged", setQueue);
+      playback.off("processingStatusChanged", setProcessingStatus);
     };
   }, [playback]);
 
@@ -69,6 +75,11 @@ export default function HomePage() {
           {nowPlaying ? (
             <VideoPlayer
               video={nowPlaying}
+              processingStatus={
+                processingStatus?.videoId === nowPlaying.id
+                  ? processingStatus.statusText
+                  : undefined
+              }
               onEnded={() => playback.finishPlayback(nowPlaying.id)}
             />
           ) : (
@@ -81,6 +92,7 @@ export default function HomePage() {
             <VideoList
               kind="horizontal"
               videos={queue}
+              processingStatus={processingStatus}
               onSelect={(video) => playback.skipToQueuedVideo(video.id)}
             />
           </div>

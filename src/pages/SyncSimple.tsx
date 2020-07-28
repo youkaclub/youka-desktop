@@ -14,7 +14,7 @@ const amplitude = require("amplitude-js");
 export default function SyncSimplePage() {
   let history = useHistory();
   const location = useLocation();
-  const { id, title } = querystring.parse(location.search.slice(1));
+  const { id } = querystring.parse(location.search.slice(1));
 
   const [audioUrl, setAudioUrl] = useState<string>();
   const [lyrics, setLyrics] = useState<string>();
@@ -24,9 +24,6 @@ export default function SyncSimplePage() {
   const [finished, setFinished] = useState<boolean>();
   const [status, setStatus] = useState<string>();
   const [error, setError] = useState<string>();
-  const [captionsMode, setCaptionsMode] = useState<library.CaptionsMode>(
-    library.CaptionsMode.Line
-  );
 
   useEffect(() => {
     async function init() {
@@ -67,7 +64,6 @@ export default function SyncSimplePage() {
         comp: "sync-editor-simple",
       });
       await karaoke.alignline(id, (s: string) => setStatus(s));
-      setCaptionsMode(library.CaptionsMode.Word);
       setStatus("Sync is completed successfully");
       setSynced(true);
     } catch (e) {

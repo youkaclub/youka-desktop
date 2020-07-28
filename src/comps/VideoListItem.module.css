@@ -27,7 +27,8 @@
 }
 
 .title,
-.artist {
+.artist,
+.processing {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -38,5 +39,10 @@
 }
 
 .artist {
+  margin-top: 5px;
+}
+
+.processing {
+  font-size: 12px;
   margin-top: 5px;
 }

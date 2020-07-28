@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Message, Icon, Dropdown, Button } from "semantic-ui-react";
 import { shell } from "electron";
 import * as library from "../lib/library";
-import * as karaoke from "../lib/karaoke";
 import Player from "./Player";
 import LyricsEditor from "./LyricsEditor";
 import rollbar from "../lib/rollbar";
@@ -11,13 +10,13 @@ import { useHistory } from "react-router-dom";
 import { Video } from "../lib/video";
 import styles from "./VideoPlayer.module.css";
 const amplitude = require("amplitude-js");
-const debug = require("debug")("youka:desktop");
 const capitalize = require("capitalize");
 
 interface Props {
   video: Video;
   defaultVideoMode?: library.MediaMode;
   defaultCaptionsMode?: library.CaptionsMode;
+  processingStatus?: string;
   onEnded?(): void;
 }
 
@@ -31,6 +30,7 @@ export default function VideoPlayer({
   video,
   defaultVideoMode,
   defaultCaptionsMode,
+  processingStatus,
   onEnded,
 }: Props) {
   const { id, title } = video;
@@ -43,7 +43,6 @@ export default function VideoPlayer({
   const [captionsURL, setCaptionsURL] = useState<string>();
   const [error, setError] = useState<string>();
   const [downloading, setDownloading] = useState<boolean>();
-  const [status, setStatus] = useState<string>();
   const [lang, setLang] = useState<string>();
   const [lyrics, setLyrics] = useState<string>();
   const [editLyrics, setEditLyrics] = useState<boolean>();
@@ -176,87 +175,76 @@ export default function VideoPlayer({
   }
 
   function handleSynced(mode: library.CaptionsMode): void {
-    init(mode);
+    loadVideo(mode);
   }
 
-  async function init(customCaptionsMode?: library.CaptionsMode) {
-    try {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      setVideoURL(undefined);
-      setLang(undefined);
-      setCaptionsURL(undefined);
-      setDownloading(false);
-      setPitch(0);
-      setError(undefined);
-      setStatus(undefined);
-      setEditLyrics(undefined);
-      if (!(await library.isLoaded(id))) {
-        const start = new Date();
-        await karaoke.generate(id, title, setStatus);
-        const end = new Date();
-        const duration = Math.abs((end.getTime() - start.getTime()) / 1000);
-        debug("generate time", duration);
-        amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
-      }
-      const files = await library.files(id);
-      if (files) {
-        setVideoModes(files.videos);
-        setCaptionsModes(files.captions);
-      }
+  async function init() {
+    setVideoURL(undefined);
+    setLang(undefined);
+    setCaptionsURL(undefined);
+    setDownloading(false);
+    setPitch(0);
+    setError(undefined);
+    setEditLyrics(undefined);
+    await loadVideo();
+  }
 
-      let currVideo: library.MediaMode;
-      if (defaultVideoMode) {
-        currVideo = defaultVideoMode;
-      } else {
-        currVideo = library.MediaMode.Instruments;
-      }
+  async function loadVideo(customCaptionsMode?: library.CaptionsMode) {
+    const files = await library.files(id);
+    if (!files) return;
 
-      setStatus("Searching lyrics");
-      const lyr = await library.getLyrics(id, title);
-      if (lyr) {
-        const lng = await library.getLanguage(id, lyr);
-        setLang(lng);
-      }
+    setVideoModes(files.videos);
+    setCaptionsModes(files.captions);
 
-      let currCaptions: library.CaptionsMode;
-      if (customCaptionsMode) {
-        currCaptions = customCaptionsMode;
-      } else if (defaultCaptionsMode) {
-        currCaptions = defaultCaptionsMode;
-      } else if (files && library.CaptionsMode.Word in files.captions) {
-        currCaptions = library.CaptionsMode.Word;
-      } else if (files && library.CaptionsMode.Line in files.captions) {
-        currCaptions = library.CaptionsMode.Line;
-      } else {
-        currCaptions = library.CaptionsMode.Off;
-      }
-
-      setVideoMode(currVideo);
-      setCaptionsMode(currCaptions);
-      setVideoURL(files && files.videos[currVideo]);
-      setCaptionsURL(files && files.captions[currCaptions]);
-      setLyrics(lyr);
-      setStatus(undefined);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (error) {
-      console.log(error);
-      setError(error.toString());
-      rollbar.error(error);
-    } finally {
-      setStatus(undefined);
+    let currVideo: library.MediaMode;
+    if (defaultVideoMode) {
+      currVideo = defaultVideoMode;
+    } else {
+      currVideo = library.MediaMode.Instruments;
     }
+
+    const lyr = await library.getLyrics(id, title);
+    if (lyr) {
+      const lng = await library.getLanguage(id, lyr);
+      setLang(lng);
+    }
+
+    let currCaptions: library.CaptionsMode;
+    if (customCaptionsMode) {
+      currCaptions = customCaptionsMode;
+    } else if (defaultCaptionsMode) {
+      currCaptions = defaultCaptionsMode;
+    } else if (files && library.CaptionsMode.Word in files.captions) {
+      currCaptions = library.CaptionsMode.Word;
+    } else if (files && library.CaptionsMode.Line in files.captions) {
+      currCaptions = library.CaptionsMode.Line;
+    } else {
+      currCaptions = library.CaptionsMode.Off;
+    }
+
+    setVideoMode(currVideo);
+    setCaptionsMode(currCaptions);
+    setVideoURL(files && files.videos[currVideo]);
+    setCaptionsURL(files && files.captions[currCaptions]);
+    setLyrics(lyr);
   }
 
   useEffect(() => {
     init();
     // eslint-disable-next-line
   }, [id]);
+  useEffect(() => {
+    if (!videoURL) {
+      loadVideo();
+    }
+    // eslint-disable-next-line
+  }, [processingStatus]);
 
   if (!id) return null;
 
   return (
     <div className={styles.wrapper}>
-      <div>
+      <div className={styles.message}>
         {error ? (
           <Message icon negative>
             <Icon name="exclamation circle" />
@@ -266,15 +254,15 @@ export default function VideoPlayer({
             </Message.Content>
           </Message>
         ) : null}
-        {status ? (
+        {processingStatus && (
           <Message icon>
             <Icon name="circle notched" loading />
             <Message.Content>
               <Message.Header>{title}</Message.Header>
-              <div className="py-2">{status}</div>
+              <div className="py-2">{processingStatus}</div>
             </Message.Content>
           </Message>
-        ) : null}
+        )}
       </div>
       {videoURL && (
         <Player

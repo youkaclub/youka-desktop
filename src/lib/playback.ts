@@ -1,25 +1,40 @@
 import { Video } from "./video";
 import EventEmitter from "eventemitter3";
+import * as library from "./library";
+import * as karaoke from "./karaoke";
+const amplitude = require("amplitude-js");
+const debug = require("debug")("youka:desktop");
 
 type Event =
   | ["nowPlayingChanged", (nowPlaying: Video) => void]
-  | ["queueChanged", (queue: Video[]) => void];
+  | ["queueChanged", (queue: Video[]) => void]
+  | [
+      "processingStatusChanged",
+      (processingStatus: ProcessingStatus | undefined) => void
+    ];
 
-// Increment this number whenever state save is changed in a way that is not
-// backwards compatible, to clear any old values that have been persisted
-const currentStateSaveVersion = 1;
+export interface ProcessingStatus {
+  videoId: string;
+  statusText: string;
+}
 
 export class Playback {
+  // Increment this number whenever state save is changed in a way that is not
+  // backwards compatible, to clear any old values that have been persisted
+  private static currentStateSaveVersion = 1;
+
   private events: EventEmitter;
   private nowPlaying?: Video;
   private playbackFinished: boolean;
   private queue: Video[];
+  private processingStatus?: ProcessingStatus;
 
   constructor() {
     this.events = new EventEmitter();
     this.queue = [];
     this.playbackFinished = false;
     this.loadState();
+    this.processNextVideo();
   }
 
   // accessors
@@ -30,6 +45,10 @@ export class Playback {
 
   public async getQueue(): Promise<Video[]> {
     return this.queue;
+  }
+
+  public async getProcessingStatus(): Promise<ProcessingStatus | undefined> {
+    return this.processingStatus;
   }
 
   // events
@@ -58,6 +77,7 @@ export class Playback {
       this.playbackFinished = false;
     }
     this.saveState();
+    this.processNextVideo();
   }
 
   public async finishPlayback(videoId: string): Promise<void> {
@@ -102,11 +122,15 @@ export class Playback {
     this.events.emit("queueChanged", this.queue);
   }
 
+  private sendProcessingStatus() {
+    this.events.emit("processingStatusChanged", this.processingStatus);
+  }
+
   private saveState() {
     localStorage.setItem(
       "playbackState",
       JSON.stringify({
-        version: currentStateSaveVersion,
+        version: Playback.currentStateSaveVersion,
         nowPlaying: this.nowPlaying,
         playbackFinished: this.playbackFinished,
         queue: this.queue,
@@ -118,9 +142,57 @@ export class Playback {
     const json = localStorage.getItem("playbackState");
     if (!json) return;
     const state = JSON.parse(json);
-    if (state.version !== currentStateSaveVersion) return;
+    if (state.version !== Playback.currentStateSaveVersion) return;
     this.nowPlaying = state.nowPlaying;
     this.playbackFinished = state.playbackFinished;
     this.queue = state.queue;
+  }
+
+  private async processNextVideo() {
+    if (this.processingStatus) return;
+
+    const allVideos = [this.nowPlaying, ...this.queue].filter(
+      Boolean
+    ) as Video[];
+    let nextUnprocessedVideo: Video | undefined = undefined;
+    for (const video of allVideos) {
+      if (!(await library.isLoaded(video.id))) {
+        nextUnprocessedVideo = video;
+        break;
+      }
+    }
+
+    if (nextUnprocessedVideo) {
+      const videoId = nextUnprocessedVideo.id;
+      try {
+        this.processingStatus = {
+          videoId,
+          statusText: "Initializing",
+        };
+        this.sendProcessingStatus();
+        const start = new Date();
+        await karaoke.generate(
+          videoId,
+          nextUnprocessedVideo.title,
+          (statusText) => {
+            if (this.processingStatus?.videoId !== videoId) return;
+
+            this.processingStatus = {
+              ...this.processingStatus,
+              statusText,
+            };
+            this.sendProcessingStatus();
+          }
+        );
+        const end = new Date();
+        const duration = Math.abs((end.getTime() - start.getTime()) / 1000);
+        debug("generate time", duration);
+        amplitude.getInstance().logEvent("CREATE_KARAOKE", { duration });
+      } finally {
+        this.processingStatus = undefined;
+        this.sendProcessingStatus();
+        setTimeout(() => this.processNextVideo(), 1000);
+      }
+    }
   }
 }
