@@ -2,28 +2,6 @@
   outline: 0 !important;
 }
 
-.plyr__caption {
-  font-size: 2rem;
-}
-
-.plyr:fullscreen .plyr__caption {
-  font-size: 4rem;
-}
-
-.plyr__captions .plyr__caption {
-  background: none !important;
-  line-height: 1% !important;
-}
-
-.plyr__captions {
-  background: rgba(0, 0, 0, 0.8);
-}
-
-.plyr__captions .plyr__caption .captions-all {
-  font-size: 1.5rem;
-  line-height: 1%;
-}
-
 .captions-curr-line,
 .captions-curr-word {
   color: #2185d0;
@@ -71,4 +49,21 @@ textarea {
 .ui.input.primary > input,
 .ui.input.secondary > input {
   text-align: center;
+}
+
+.ui.dropdown .menu {
+  background: var(--bg-color) !important;
+}
+
+.ui.dropdown .menu .active.item,
+.ui.dropdown .menu .selected.item {
+  color: var(--text-color) !important;
+}
+
+.ui.dropdown .menu > .item {
+  color: var(--grey-color-1) !important;
+}
+
+.ui.dropdown .menu > .item:hover {
+  background: var(--grey-color-4) !important;
 }

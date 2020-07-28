@@ -1,3 +1,11 @@
-.list {
+.vertical {
   margin: -5px 0;
+}
+
+.horizontal {
+  display: flex;
+}
+
+.horizontal > * {
+  max-width: 300px;
 }

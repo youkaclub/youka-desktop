@@ -1,0 +1,13 @@
+.title {
+  flex: 0 0 50px;
+  display: flex;
+  align-items: center;
+  background: var(--feature-color);
+  color: var(--bg-color);
+  padding: 20px;
+  height: 50px;
+}
+
+.search {
+  flex-grow: 1;
+}

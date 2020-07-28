@@ -4,16 +4,25 @@ import { Video } from "../lib/video";
 import styles from "./VideoList.module.css";
 
 interface Props {
-  videos: Video[]
-  onSelect(video: Video): void
+  videos: Video[];
+  kind: "vertical" | "horizontal";
+  onSelect?(video: Video): void;
 }
 
-export default function VideoList({ videos, onSelect }: Props) {
+export default function VideoList({ videos, kind, onSelect }: Props) {
   return (
-    <div className={styles.list}>
-      {videos.map(video =>
-        <VideoListItem key={video.id} video={video} onSelect={() => onSelect(video)} />
-      )}
+    <div className={styles[kind]}>
+      {videos.map((video) => (
+        <VideoListItem
+          key={video.id}
+          video={video}
+          onSelect={() => {
+            if (onSelect) {
+              onSelect(video);
+            }
+          }}
+        />
+      ))}
     </div>
   );
 }

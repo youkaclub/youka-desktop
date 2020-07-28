@@ -13,6 +13,7 @@
   --grey-color-2: #999;
   --grey-color-3: #bbb;
   --grey-color-4: #ddd;
+  --grey-color-5: #eee;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,6 +25,7 @@
     --grey-color-2: #777;
     --grey-color-3: #666;
     --grey-color-4: #444;
+    --grey-color-5: #333;
   }
 }
 

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
+import "./plyr.css";
 import App from "./App";
 import { version } from "../package.json";
 import store from "./lib/store";

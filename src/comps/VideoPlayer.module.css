@@ -6,8 +6,19 @@
   overflow: hidden;
 }
 
+.video {
+  flex: 1 1 300px;
+  object-fit: contain;
+}
+
+.title {
+  flex: 0;
+  padding: 10px;
+  font-size: 18px;
+}
+
 .toolbar {
-  flex: 0 0 auto;
+  flex: 0 0 30px;
   display: flex;
   justify-content: stretch;
 }

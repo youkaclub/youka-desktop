@@ -1,27 +1,31 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import Plyr from "plyr";
 import "plyr/dist/plyr.css";
 import SubtitlesOctopus from "libass-wasm";
-import { useWindowSize } from "@react-hook/window-size";
-import styles from "./Player.module.css";
 import * as library from "../lib/library";
 import rollbar from "../lib/rollbar";
+
+interface Props {
+  youtubeID: string;
+  videoURL: string;
+  captionsURL?: string;
+  lang?: string;
+  className?: string;
+  onEnded?(): void;
+}
 
 export default function Player({
   youtubeID,
   videoURL,
   captionsURL,
-  title,
   lang,
-}) {
-  const playerRef = useRef();
-  const videoRef = useRef();
-  const captionsRef = useRef();
-  const assRef = useRef();
-
-  const [windowWidth, windowHeight] = useWindowSize();
-  const [videoHeight, setVideoHeight] = useState(360);
-  const [videoWidth, setVideoWidth] = useState(640);
+  className,
+  onEnded,
+}: Props) {
+  const playerRef = useRef<Plyr>();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const captionsRef = useRef<HTMLTrackElement>(null);
+  const assRef = useRef<SubtitlesOctopus>();
 
   useEffect(() => {
     const plyrOptions = {
@@ -32,18 +36,16 @@ export default function Player({
 
   useEffect(() => {
     (async function () {
-      if (!videoURL) return;
+      if (!videoURL || !videoRef.current) return;
       const currVideoURL = videoRef.current.getAttribute("src");
       const isSame = currVideoURL && currVideoURL.includes(youtubeID);
-      const currentTime = playerRef.current.currentTime;
+      const currentTime = videoRef.current.currentTime;
       videoRef.current.setAttribute("src", videoURL);
       try {
-        await playerRef.current.play();
-        setVideoWidth(videoRef.current.videoWidth);
-        setVideoHeight(videoRef.current.videoHeight);
+        await videoRef.current.play();
       } catch (e) {}
       if (isSame) {
-        playerRef.current.currentTime = currentTime;
+        videoRef.current.currentTime = currentTime;
       }
     })();
   }, [videoURL, youtubeID]);
@@ -51,19 +53,19 @@ export default function Player({
   useEffect(() => {
     if (captionsURL) {
       if (!captionsURL.endsWith(".vtt")) return;
-      captionsRef.current.setAttribute("src", captionsURL);
+      captionsRef.current?.setAttribute("src", captionsURL);
       setTimeout(() => {
-        playerRef.current.toggleCaptions(true);
+        playerRef.current?.toggleCaptions(true);
       }, 0);
     } else {
       setTimeout(() => {
-        playerRef.current.toggleCaptions(false);
+        playerRef.current?.toggleCaptions(false);
       }, 0);
     }
   }, [captionsURL]);
 
   useEffect(() => {
-    async function setTrack(captionsURL) {
+    async function setTrack(captionsURL: string) {
       if (!assRef.current && captionsURL) {
         if (!captionsURL.startsWith("[Script Info]")) return;
 
@@ -88,7 +90,7 @@ export default function Player({
         };
         assRef.current = new SubtitlesOctopus(options);
         setTimeout(() => {
-          playerRef.current.toggleCaptions(false);
+          playerRef.current?.toggleCaptions(false);
         }, 0);
       } else if (assRef.current && !captionsURL) {
         assRef.current.freeTrack();
@@ -97,51 +99,33 @@ export default function Player({
         captionsURL &&
         captionsURL.startsWith("[Script Info]")
       ) {
-        assRef.current.setTrack(captionsURL);
+        if (captionsURL) {
+          assRef.current.setTrack(captionsURL);
+        }
       }
     }
 
-    setTrack(captionsURL);
-  }, [captionsURL, lang]);
-
-  function calcStyle() {
-    const videoRatio = videoWidth / videoHeight;
-
-    let calcHeight = windowHeight * 0.7;
-    let calcWidth = calcHeight * videoRatio;
-
-    if (calcWidth > windowWidth * 0.8) {
-      calcWidth = windowWidth * 0.8;
-      calcHeight = calcWidth / videoRatio;
+    if (captionsURL) {
+      setTrack(captionsURL);
     }
-
-    const height = `${calcHeight}px`;
-    const width = `${calcWidth}px`;
-
-    const style = {
-      width,
-      height,
-    };
-
-    return style;
-  }
+  }, [captionsURL, lang]);
 
   if (!videoURL) return null;
 
   return (
-    <div className={styles.wrapper}>
+    <div className={className}>
       <video
         controls
         playsInline
         id="player"
         crossOrigin="true"
-        type="video/mp4"
         preload="auto"
         ref={videoRef}
+        onEnded={onEnded}
+        className={className}
       >
         <track default kind="captions" srcLang="en" ref={captionsRef} />
       </video>
-      <div className={styles.title}>{title}</div>
     </div>
   );
 }

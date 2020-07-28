@@ -4,24 +4,35 @@
   top: 0;
   right: 0;
   bottom: 0;
-  display: flex;
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: 400px auto;
+  grid-template-rows: 50px auto;
   overflow: hidden;
   background: var(--bg-color);
   color: var(--text-color);
 }
 
-.browse {
-  flex: 1 1 450px;
-  min-width: 400px;
-  display: flex;
-  flex-direction: column;
+.showQueue {
+  grid-template-rows: 50px auto 130px;
 }
 
 .player {
-  flex: 3 1 1000px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.queue {
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: var(--grey-color-5);
+  grid-column: span 2;
+}
+
+.queueTitle {
+  margin: 10px 10px 0;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .zeroState {

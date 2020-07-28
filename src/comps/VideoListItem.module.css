@@ -13,7 +13,7 @@
 .image {
   flex: 0 0 var(--image-size);
   width: var(--image-size);
-  height: calc(var(--image-size) / (16/9));
+  height: calc(var(--image-size) / (16 / 9));
   background-repeat: none;
   background-position: 50% 50%;
   background-size: cover;
@@ -23,6 +23,14 @@
 .text {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.title,
+.artist {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .title {

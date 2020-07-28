@@ -1,0 +1,32 @@
+/* fix issue with short windows where player pushes the content below it off of the bottom of the window */
+.plyr audio,
+.plyr iframe,
+.plyr video {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.plyr__caption {
+  font-size: 2rem;
+}
+
+.plyr:fullscreen .plyr__caption {
+  font-size: 4rem;
+}
+
+.plyr__captions .plyr__caption {
+  background: none !important;
+  line-height: 1% !important;
+}
+
+.plyr__captions {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.plyr__captions .plyr__caption .captions-all {
+  font-size: 1.5rem;
+  line-height: 1%;
+}

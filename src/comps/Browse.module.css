@@ -1,31 +1,11 @@
 .wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1;
   overflow: hidden;
 }
 
-.title {
-  flex: 0 0 50px;
-  display: flex;
-  align-items: center;
-  background: var(--feature-color);
-  color: var(--bg-color);
-  padding: 20px;
-  height: 50px;
-}
-
-.body {
-  flex: 1;
-  overflow-y: scroll;
-  overflow-x: auto;
-}
-
-.search {
-  flex-grow: 1;
-}
-
 .links {
+  flex: 0 0 30px;
   display: flex;
   justify-content: space-around;
 }
@@ -44,6 +24,12 @@
 
 .activeLink {
   color: var(--feature-color);
+}
+
+.videos {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .empty {

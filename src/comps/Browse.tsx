@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { search, trending, mix } from "../lib/youtube";
-import { Input, Loader, Icon } from "semantic-ui-react";
+import { Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
 import Update from "./Update";
 import rollbar from "../lib/rollbar";
@@ -16,7 +16,7 @@ const DAY = 1000 * 60 * 60 * 24;
 const WEEK = DAY * 7;
 const memoizer = memoizeFs({ cachePath: CACHE_PATH, maxAge: WEEK });
 
-export enum Section {
+export enum BrowseSection {
   Search = "search",
   Trending = "trending",
   Library = "library",
@@ -24,8 +24,10 @@ export enum Section {
 }
 
 interface Props {
-  defaultSection: Section;
+  section: BrowseSection;
   youtubeID?: string;
+  searchText: string;
+  onSwitchSection(section: BrowseSection): void;
   onSelectVideo(video: Video): void;
 }
 
@@ -39,28 +41,26 @@ interface Video {
 
 export default function Browse({
   youtubeID,
-  defaultSection,
+  section,
+  searchText,
+  onSwitchSection,
   onSelectVideo,
 }: Props) {
-  const [section, setSection] = useState(defaultSection);
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchText, setSearchText] = useState("");
   const query = useDebounce(searchText, 300);
-  const searchRef = useRef<Input>(null);
 
   useEffect(() => {
     async function loadVideos() {
       switch (section) {
-        case Section.Search:
+        case BrowseSection.Search:
           if (query) {
             doSearch(query);
           } else {
             setVideos([]);
           }
-          searchRef.current?.focus();
           break;
-        case Section.Trending:
+        case BrowseSection.Trending:
           try {
             setLoading(true);
             const trendingMemoize = await memoizer.fn(trending);
@@ -74,7 +74,7 @@ export default function Browse({
             setLoading(false);
           }
           break;
-        case Section.Mix:
+        case BrowseSection.Mix:
           try {
             setLoading(true);
             const mixMemoize = await memoizer.fn(mix);
@@ -89,7 +89,7 @@ export default function Browse({
             setLoading(false);
           }
           break;
-        case Section.Library:
+        case BrowseSection.Library:
           try {
             setLoading(true);
             const libraryVideos = await library.videos();
@@ -132,16 +132,16 @@ export default function Browse({
 
     let icon: SemanticICONS, text: string;
     switch (section) {
-      case Section.Library:
+      case BrowseSection.Library:
         icon = "folder open";
         text = "Your karaoke songs will be available here";
         break;
-      case Section.Search:
+      case BrowseSection.Search:
         icon = "search";
         text = "Start typing to search";
         break;
-      case Section.Mix:
-      case Section.Trending:
+      case BrowseSection.Mix:
+      case BrowseSection.Trending:
         icon = "numbered list";
         text = "Loading playlist failed";
         break;
@@ -161,61 +161,51 @@ export default function Browse({
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.title}>
-        <Input
-          className={styles.search}
-          type="text"
-          onFocus={() => setSection(Section.Search)}
-          onChange={(_, { value }) => setSearchText(value)}
-          placeholder="Start typing to search"
-          ref={searchRef}
-        />
-      </div>
-      <div className={styles.body}>
-        <div className={styles.links}>
-          <div
-            className={
-              section === Section.Search ? styles.activeLink : styles.link
-            }
-            onClick={() => setSection(Section.Search)}
-          >
-            Search
-          </div>
-          <div
-            className={
-              section === Section.Trending ? styles.activeLink : styles.link
-            }
-            onClick={() => setSection(Section.Trending)}
-          >
-            Trending
-          </div>
-          {youtubeID ? (
-            <div
-              className={
-                section === Section.Mix ? styles.activeLink : styles.link
-              }
-              onClick={() => setSection(Section.Mix)}
-            >
-              Mix
-            </div>
-          ) : null}
-          <div
-            className={
-              section === Section.Library ? styles.activeLink : styles.link
-            }
-            onClick={() => setSection(Section.Library)}
-          >
-            Library
-          </div>
+      <div className={styles.links}>
+        <div
+          className={
+            section === BrowseSection.Search ? styles.activeLink : styles.link
+          }
+          onClick={() => onSwitchSection(BrowseSection.Search)}
+        >
+          Search
         </div>
+        <div
+          className={
+            section === BrowseSection.Trending ? styles.activeLink : styles.link
+          }
+          onClick={() => onSwitchSection(BrowseSection.Trending)}
+        >
+          Trending
+        </div>
+        {youtubeID ? (
+          <div
+            className={
+              section === BrowseSection.Mix ? styles.activeLink : styles.link
+            }
+            onClick={() => onSwitchSection(BrowseSection.Mix)}
+          >
+            Mix
+          </div>
+        ) : null}
+        <div
+          className={
+            section === BrowseSection.Library ? styles.activeLink : styles.link
+          }
+          onClick={() => onSwitchSection(BrowseSection.Library)}
+        >
+          Library
+        </div>
+      </div>
+      <div className={styles.videos}>
         {loading ? (
           <Loader className="p-4" active inline="centered" />
         ) : (
-          <VideoList videos={videos} onSelect={onSelectVideo} />
+          <VideoList kind="vertical" videos={videos} onSelect={onSelectVideo} />
         )}
         {renderEmpty()}
-        <Update />
       </div>
+      <Update />
     </div>
   );
 }

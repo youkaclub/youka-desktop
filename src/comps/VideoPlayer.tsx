@@ -124,11 +124,6 @@ export default function VideoPlayer({
     );
   }
 
-  function handleClickClose() {
-    setVideoURL(undefined);
-    setEditLyrics(false);
-  }
-
   async function changeMedia(
     mode: library.MediaMode,
     modes?: library.MediaUrls
@@ -286,21 +281,20 @@ export default function VideoPlayer({
         ) : null}
       </div>
       {videoURL && (
-        <div className={styles.video}>
-          <Player
-            youtubeID={id}
-            videoURL={videoURL}
-            captionsURL={captionsURL}
-            title={title}
-            lang={lang}
-          />
-        </div>
+        <Player
+          className={styles.video}
+          youtubeID={id}
+          videoURL={videoURL}
+          captionsURL={captionsURL}
+          lang={lang}
+        />
       )}
+      {videoURL && <div className={styles.title}>{title}</div>}
       {videoURL && (
         <div className={styles.toolbar}>
-          <Button content="Close Video" onClick={handleClickClose} />
           <Dropdown
             button
+            defaultUpward
             disabled={downloading}
             loading={downloading}
             text="Download"
@@ -319,6 +313,7 @@ export default function VideoPlayer({
           />
           <Dropdown
             button
+            defaultUpward
             text={" Audio: " + capitalize(videoMode)}
             value={videoMode || undefined}
             options={ddoptions}
@@ -330,6 +325,7 @@ export default function VideoPlayer({
           />
           <Dropdown
             button
+            defaultUpward
             text={" Lyrics Sync: " + capitalize(captionsMode)}
             value={captionsMode}
             options={ccoptions}
@@ -340,6 +336,7 @@ export default function VideoPlayer({
           {platform() === "win32" || process.env.NODE_ENV !== "production" ? (
             <Dropdown
               button
+              defaultUpward
               text={`Key: ${pitch}`}
               value={pitch}
               options={poptions}
@@ -356,6 +353,7 @@ export default function VideoPlayer({
           {lyrics && (
             <Dropdown
               button
+              defaultUpward
               text="Sync Editor"
               options={[
                 {
