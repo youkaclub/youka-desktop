@@ -244,42 +244,10 @@ export default function VideoPlayer({
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.message}>
-        {error ? (
-          <Message icon negative>
-            <Icon name="exclamation circle" />
-            <Message.Content>
-              <Message.Header>Karaoke processing is failed</Message.Header>
-              <div className="py-1">{error}</div>
-            </Message.Content>
-          </Message>
-        ) : null}
-        {processingStatus && (
-          <Message icon>
-            <Icon name="circle notched" loading />
-            <Message.Content>
-              <Message.Header>{title}</Message.Header>
-              <div className="py-2">{processingStatus}</div>
-            </Message.Content>
-          </Message>
-        )}
-      </div>
-      {videoURL && (
-        <Player
-          className={styles.video}
-          youtubeID={id}
-          videoURL={videoURL}
-          captionsURL={captionsURL}
-          lang={lang}
-          onEnded={onEnded}
-        />
-      )}
-      {videoURL && <div className={styles.title}>{title}</div>}
       {videoURL && (
         <div className={styles.toolbar}>
           <Dropdown
             button
-            upward
             disabled={downloading}
             loading={downloading}
             text="Download"
@@ -298,7 +266,6 @@ export default function VideoPlayer({
           />
           <Dropdown
             button
-            upward
             text={" Audio: " + capitalize(videoMode)}
             value={videoMode || undefined}
             options={ddoptions}
@@ -310,7 +277,6 @@ export default function VideoPlayer({
           />
           <Dropdown
             button
-            upward
             text={" Lyrics Sync: " + capitalize(captionsMode)}
             value={captionsMode}
             options={ccoptions}
@@ -321,7 +287,6 @@ export default function VideoPlayer({
           {platform() === "win32" || process.env.NODE_ENV !== "production" ? (
             <Dropdown
               button
-              upward
               text={`Key: ${pitch}`}
               value={pitch}
               options={poptions}
@@ -338,7 +303,6 @@ export default function VideoPlayer({
           {lyrics && (
             <Dropdown
               button
-              upward
               text="Sync Editor"
               options={[
                 {
@@ -357,6 +321,39 @@ export default function VideoPlayer({
           )}
         </div>
       )}
+      {(error || processingStatus) && (
+        <div className={styles.message}>
+          {error ? (
+            <Message icon negative>
+              <Icon name="exclamation circle" />
+              <Message.Content>
+                <Message.Header>Karaoke processing is failed</Message.Header>
+                <div className="py-1">{error}</div>
+              </Message.Content>
+            </Message>
+          ) : null}
+          {processingStatus && (
+            <Message icon>
+              <Icon name="circle notched" loading />
+              <Message.Content>
+                <Message.Header>{title}</Message.Header>
+                <div className="py-2">{processingStatus}</div>
+              </Message.Content>
+            </Message>
+          )}
+        </div>
+      )}
+      {videoURL && (
+        <Player
+          className={styles.video}
+          youtubeID={id}
+          videoURL={videoURL}
+          captionsURL={captionsURL}
+          lang={lang}
+          onEnded={onEnded}
+        />
+      )}
+      {videoURL && <div className={styles.title}>{title}</div>}
       {editLyrics && (
         <div className={styles.subPane}>
           <LyricsEditor id={id} onSynced={handleSynced} />

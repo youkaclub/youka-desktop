@@ -27,7 +27,6 @@ export enum BrowseSection {
 
 interface Props {
   section: BrowseSection;
-  youtubeID?: string;
   searchText: string;
   nowPlaying?: Video;
   queue: Video[];
@@ -47,7 +46,6 @@ interface Video {
 }
 
 export default function Browse({
-  youtubeID,
   section,
   searchText,
   nowPlaying,
@@ -89,7 +87,7 @@ export default function Browse({
           try {
             setLoading(true);
             const mixMemoize = await memoizer.fn(mix);
-            const results = await mixMemoize(youtubeID);
+            const results = await mixMemoize(nowPlaying?.id);
             results.shift();
             setVideos(results);
           } catch (error) {
@@ -116,7 +114,7 @@ export default function Browse({
     }
 
     loadVideos();
-  }, [section, youtubeID, query]);
+  }, [section, nowPlaying, query]);
 
   async function doSearch(query: string) {
     try {
@@ -146,7 +144,7 @@ export default function Browse({
         >
           Search
         </SectionLink>
-        {youtubeID && (
+        {nowPlaying && (
           <SectionLink
             section={BrowseSection.Mix}
             currentSection={section}

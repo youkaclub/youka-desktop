@@ -1,9 +1,5 @@
 .wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  flex: 1;
-  overflow: hidden;
+  display: block;
 }
 
 .message {
@@ -11,8 +7,7 @@
 }
 
 .video {
-  flex: 1 1 300px;
-  object-fit: contain;
+  display: block;
 }
 
 .title {
