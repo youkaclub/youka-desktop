@@ -63,6 +63,14 @@ export class Playback {
 
   // methods
 
+  public async playVideo(video: Video): Promise<void> {
+    await this.unenqueueVideo(video);
+    this.nowPlaying = video;
+    this.playbackFinished = false;
+    this.sendNowPlaying();
+    this.saveState();
+  }
+
   public async enqueueVideo(video: Video): Promise<void> {
     if (this.videoIsQueued(video.id)) {
       return;
@@ -80,6 +88,14 @@ export class Playback {
     this.processNextVideo();
   }
 
+  public async unenqueueVideo(video: Video): Promise<void> {
+    if (!this.queue.some((item) => item.id === video.id)) return;
+
+    this.queue = this.queue.filter((item) => item.id !== video.id);
+    this.sendQueue();
+    this.saveState();
+  }
+
   public async finishPlayback(videoId: string): Promise<void> {
     if (this.nowPlaying?.id !== videoId) return;
 
@@ -92,20 +108,6 @@ export class Playback {
       this.playbackFinished = true;
     }
     this.saveState();
-  }
-
-  public async skipToQueuedVideo(videoId: string): Promise<void> {
-    const queueIndex = this.queue.findIndex((item) => item.id === videoId);
-    if (queueIndex >= 0) {
-      const newQueue = this.queue.slice();
-      const [queueVideo] = newQueue.splice(queueIndex, 1);
-      this.nowPlaying = queueVideo;
-      this.queue = newQueue;
-      this.playbackFinished = false;
-      this.sendNowPlaying();
-      this.sendQueue();
-      this.saveState();
-    }
   }
 
   // private

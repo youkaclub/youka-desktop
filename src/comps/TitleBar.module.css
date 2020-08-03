@@ -1,4 +1,5 @@
 .wrapper {
+  grid-column: span 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -16,7 +17,6 @@
 }
 
 .logo {
-  justify-content: center;
   font-size: 18px;
   font-weight: bold;
   color: var(--bg-color);
@@ -24,6 +24,10 @@
 
 .logo:hover {
   color: var(--grey-color-4);
+}
+
+.search {
+  flex: 1 1 300px;
 }
 
 .links {

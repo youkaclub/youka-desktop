@@ -18,6 +18,27 @@
   background-position: 50% 50%;
   background-size: cover;
   margin-right: 15px;
+  position: relative;
+}
+
+.queueButtonWrapper {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 5px 3px;
+}
+
+.item:hover .queueButtonWrapper {
+  display: block;
+}
+
+.queueButton {
+  padding: 7px 6px !important;
+}
+
+.queueIcon {
+  margin: 0 !important;
 }
 
 .text {

@@ -8,8 +8,6 @@ import VideoPlayer from "../comps/VideoPlayer";
 import styles from "./Home.module.css";
 import TitleBar from "../comps/TitleBar";
 import { Environment } from "../comps/Environment";
-import VideoList from "../comps/VideoList";
-import TitleSearch from "../comps/TitleSearch";
 import { Playback, ProcessingStatus } from "../lib/playback";
 
 export default function HomePage() {
@@ -47,16 +45,10 @@ export default function HomePage() {
     // eslint-disable-next-line
   }, []);
 
-  const showQueue = queue.length > 0;
-
   return (
     <Environment>
-      <div
-        className={[styles.wrapper, showQueue && styles.showQueue]
-          .filter(Boolean)
-          .join(" ")}
-      >
-        <TitleSearch
+      <div className={styles.wrapper}>
+        <TitleBar
           searchText={searchText}
           onFocus={() => setBrowseSection(BrowseSection.Search)}
           onSearch={(value) => {
@@ -64,12 +56,15 @@ export default function HomePage() {
             setSearchText(value);
           }}
         />
-        <TitleBar />
         <Browse
           section={browseSection}
           searchText={searchText}
-          onSelectVideo={(video) => playback.enqueueVideo(video)}
+          nowPlaying={nowPlaying}
+          queue={queue}
           onSwitchSection={setBrowseSection}
+          onPlayVideo={(video) => playback.playVideo(video)}
+          onQueueVideo={(video) => playback.enqueueVideo(video)}
+          onUnqueueVideo={(video) => playback.unenqueueVideo(video)}
         />
         <div className={styles.player}>
           {nowPlaying ? (
@@ -86,17 +81,6 @@ export default function HomePage() {
             <ZeroState />
           )}
         </div>
-        {showQueue && (
-          <div className={styles.queue}>
-            <div className={styles.queueTitle}>Up Next</div>
-            <VideoList
-              kind="horizontal"
-              videos={queue}
-              processingStatus={processingStatus}
-              onSelect={(video) => playback.skipToQueuedVideo(video.id)}
-            />
-          </div>
-        )}
       </div>
     </Environment>
   );

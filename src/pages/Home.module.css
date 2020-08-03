@@ -12,27 +12,10 @@
   color: var(--text-color);
 }
 
-.showQueue {
-  grid-template-rows: 50px auto 130px;
-}
-
 .player {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.queue {
-  overflow-x: auto;
-  overflow-y: hidden;
-  background: var(--grey-color-5);
-  grid-column: span 2;
-}
-
-.queueTitle {
-  margin: 10px 10px 0;
-  font-weight: bold;
-  font-size: 16px;
 }
 
 .zeroState {

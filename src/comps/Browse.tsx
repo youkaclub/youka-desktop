@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import { search, trending, mix } from "../lib/youtube";
 import { Loader, Icon } from "semantic-ui-react";
 import VideoList from "./VideoList";
@@ -9,6 +9,7 @@ import { CACHE_PATH } from "../lib/path";
 import useDebounce from "../hooks/useDebounce";
 import { SemanticICONS } from "semantic-ui-react/dist/commonjs/generic";
 import styles from "./Browse.module.css";
+import { ProcessingStatus } from "../lib/playback";
 
 const memoizeFs = require("memoize-fs");
 
@@ -21,14 +22,20 @@ export enum BrowseSection {
   Trending = "trending",
   Library = "library",
   Mix = "mix",
+  Queue = "queue",
 }
 
 interface Props {
   section: BrowseSection;
   youtubeID?: string;
   searchText: string;
+  nowPlaying?: Video;
+  queue: Video[];
+  processingStatus?: ProcessingStatus;
   onSwitchSection(section: BrowseSection): void;
-  onSelectVideo(video: Video): void;
+  onPlayVideo(video: Video): void;
+  onQueueVideo(video: Video): void;
+  onUnqueueVideo(video: Video): void;
 }
 
 interface Video {
@@ -43,8 +50,12 @@ export default function Browse({
   youtubeID,
   section,
   searchText,
+  nowPlaying,
+  queue,
   onSwitchSection,
-  onSelectVideo,
+  onPlayVideo,
+  onQueueVideo,
+  onUnqueueVideo,
 }: Props) {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
@@ -94,7 +105,6 @@ export default function Browse({
             setLoading(true);
             const libraryVideos = await library.videos();
             setVideos(libraryVideos);
-            console.log({ libraryVideos });
           } catch (error) {
             console.error(error);
             setVideos([]);
@@ -126,86 +136,113 @@ export default function Browse({
     }
   }
 
-  function renderEmpty() {
-    if (videos && videos.length) return null;
-    if (loading) return null;
-
-    let icon: SemanticICONS, text: string;
-    switch (section) {
-      case BrowseSection.Library:
-        icon = "folder open";
-        text = "Your karaoke songs will be available here";
-        break;
-      case BrowseSection.Search:
-        icon = "search";
-        text = "Start typing to search";
-        break;
-      case BrowseSection.Mix:
-      case BrowseSection.Trending:
-        icon = "numbered list";
-        text = "Loading playlist failed";
-        break;
-      default:
-        return null;
-    }
-
-    return (
-      <div className={styles.empty}>
-        <div className={styles.emptyIcon}>
-          <Icon size="massive" color="grey" name={icon} />
-        </div>
-        <div>{text}</div>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.wrapper}>
       <div className={styles.links}>
-        <div
-          className={
-            section === BrowseSection.Search ? styles.activeLink : styles.link
-          }
-          onClick={() => onSwitchSection(BrowseSection.Search)}
+        <SectionLink
+          section={BrowseSection.Search}
+          currentSection={section}
+          onSwitchSection={onSwitchSection}
         >
           Search
-        </div>
-        <div
-          className={
-            section === BrowseSection.Trending ? styles.activeLink : styles.link
-          }
-          onClick={() => onSwitchSection(BrowseSection.Trending)}
-        >
-          Trending
-        </div>
-        {youtubeID ? (
-          <div
-            className={
-              section === BrowseSection.Mix ? styles.activeLink : styles.link
-            }
-            onClick={() => onSwitchSection(BrowseSection.Mix)}
+        </SectionLink>
+        {youtubeID && (
+          <SectionLink
+            section={BrowseSection.Mix}
+            currentSection={section}
+            onSwitchSection={onSwitchSection}
           >
             Mix
-          </div>
-        ) : null}
-        <div
-          className={
-            section === BrowseSection.Library ? styles.activeLink : styles.link
-          }
-          onClick={() => onSwitchSection(BrowseSection.Library)}
+          </SectionLink>
+        )}
+        <SectionLink
+          section={BrowseSection.Library}
+          currentSection={section}
+          onSwitchSection={onSwitchSection}
         >
           Library
-        </div>
+        </SectionLink>
+        {queue.length > 0 && (
+          <SectionLink
+            section={BrowseSection.Queue}
+            currentSection={section}
+            onSwitchSection={onSwitchSection}
+          >
+            Queue
+          </SectionLink>
+        )}
       </div>
       <div className={styles.videos}>
         {loading ? (
           <Loader className="p-4" active inline="centered" />
         ) : (
-          <VideoList kind="vertical" videos={videos} onSelect={onSelectVideo} />
+          <VideoList
+            kind="vertical"
+            nowPlaying={nowPlaying}
+            queue={queue}
+            videos={section === BrowseSection.Queue ? queue : videos}
+            onSelect={onPlayVideo}
+            onQueue={onQueueVideo}
+            onUnqueue={onUnqueueVideo}
+          />
         )}
-        {renderEmpty()}
+        {videos.length === 0 && !loading && <ZeroState section={section} />}
       </div>
       <Update />
+    </div>
+  );
+}
+
+function SectionLink({
+  section,
+  currentSection,
+  onSwitchSection,
+  children,
+}: {
+  section: BrowseSection;
+  currentSection: BrowseSection;
+  onSwitchSection(section: BrowseSection): void;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={section === currentSection ? styles.activeLink : styles.link}
+      onClick={() => onSwitchSection(section)}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ZeroState({ section }: { section: BrowseSection }) {
+  let icon: SemanticICONS, text: string;
+  switch (section) {
+    case BrowseSection.Library:
+      icon = "folder open";
+      text = "Your karaoke songs will be available here";
+      break;
+    case BrowseSection.Search:
+      icon = "search";
+      text = "Start typing to search";
+      break;
+    case BrowseSection.Mix:
+    case BrowseSection.Trending:
+      icon = "numbered list";
+      text = "Loading videos failed";
+      break;
+    case BrowseSection.Queue:
+      icon = "list";
+      text = "Queue empty";
+    default:
+      return null;
+  }
+
+  return (
+    <div className={styles.empty}>
+      <div className={styles.emptyIcon}>
+        <Icon size="massive" color="grey" name={icon} />
+      </div>
+      <div>{text}</div>
     </div>
   );
 }
