@@ -111,6 +111,10 @@ export default function Browse({
           } finally {
             setLoading(false);
           }
+          break;
+        case BrowseSection.Queue:
+          setLoading(false);
+          break;
       }
     }
 
@@ -135,6 +139,7 @@ export default function Browse({
     }
   }
 
+  const showVideos = section === BrowseSection.Queue ? queue : videos;
   return (
     <div className={styles.wrapper}>
       <div className={styles.links}>
@@ -161,32 +166,31 @@ export default function Browse({
         >
           Library
         </SectionLink>
-        {queue.length > 0 && (
-          <SectionLink
-            section={BrowseSection.Queue}
-            currentSection={section}
-            onSwitchSection={onSwitchSection}
-          >
-            Queue
-          </SectionLink>
-        )}
+        <SectionLink
+          section={BrowseSection.Queue}
+          currentSection={section}
+          onSwitchSection={onSwitchSection}
+        >
+          Queue
+        </SectionLink>
       </div>
       <div className={styles.videos}>
         {loading ? (
           <Loader className="p-4" active inline="centered" />
+        ) : showVideos.length < 1 ? (
+          <ZeroState section={section} />
         ) : (
           <VideoList
             kind="vertical"
             nowPlaying={nowPlaying}
             queue={queue}
             processingStatus={processingStatus}
-            videos={section === BrowseSection.Queue ? queue : videos}
+            videos={showVideos}
             onSelect={onPlayVideo}
             onQueue={onQueueVideo}
             onUnqueue={onUnqueueVideo}
           />
         )}
-        {videos.length === 0 && !loading && <ZeroState section={section} />}
       </div>
       <Update />
     </div>
@@ -233,6 +237,7 @@ function ZeroState({ section }: { section: BrowseSection }) {
     case BrowseSection.Queue:
       icon = "list";
       text = "Queue empty";
+      break;
     default:
       return null;
   }

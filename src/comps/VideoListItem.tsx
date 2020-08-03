@@ -2,6 +2,7 @@ import React from "react";
 import { Video } from "../lib/video";
 import styles from "./VideoListItem.module.css";
 import { Icon, Button } from "semantic-ui-react";
+import { utils } from "../lib/youtube";
 
 interface Props {
   video: Video;
@@ -18,7 +19,8 @@ export default function VideoListItem({
   onSelect,
   onToggleQueue,
 }: Props) {
-  const [artist, title] = video.title.split(/\s*-\s*/, 2);
+  const { artist, title } = utils.splitArtistTitle(video.title);
+
   return (
     <div className={styles.item} onClick={onSelect}>
       <div
@@ -40,8 +42,8 @@ export default function VideoListItem({
         )}
       </div>
       <div className={styles.text}>
-        <div className={styles.title}>{title || artist}</div>
-        {title && artist && <div className={styles.artist}>{artist}</div>}
+        <div className={styles.title}>{title}</div>
+        {artist && <div className={styles.artist}>{artist}</div>}
         {processingText && (
           <div className={styles.processing}>
             <Icon name="circle notched" loading size="small" /> {processingText}

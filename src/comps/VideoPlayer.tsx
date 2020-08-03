@@ -51,6 +51,7 @@ export default function VideoPlayer({
   const [changingMediaMode, setChangingMediaMode] = useState<boolean>();
   const [ddoptions, setddoptions] = useState<any[]>([]);
   const [ccoptions, setccoptions] = useState<any[]>([]);
+  const [isLoaded, setIsLoaded] = useState(true);
 
   const poptions = [];
   for (var i = 10; i >= -10; i--) {
@@ -59,6 +60,10 @@ export default function VideoPlayer({
       value: i,
     });
   }
+
+  useEffect(() => {
+    library.isLoaded(id).then(setIsLoaded);
+  }, [id]);
 
   useEffect(() => {
     const tmpddoptions: Option[] = Object.keys(videoModes).map((mode, i) => {
@@ -245,6 +250,19 @@ export default function VideoPlayer({
   return (
     <div className={styles.wrapper}>
       {videoURL && (
+        <div className={styles.videoWrapper}>
+          <Player
+            className={styles.video}
+            youtubeID={id}
+            videoURL={videoURL}
+            captionsURL={captionsURL}
+            lang={lang}
+            onEnded={onEnded}
+          />
+        </div>
+      )}
+      {videoURL && <div className={styles.title}>{title}</div>}
+      {videoURL && (
         <div className={styles.toolbar}>
           <Dropdown
             button
@@ -321,7 +339,7 @@ export default function VideoPlayer({
           )}
         </div>
       )}
-      {(error || processingStatus) && (
+      {(error || processingStatus || !isLoaded) && (
         <div className={styles.message}>
           {error ? (
             <Message icon negative>
@@ -332,7 +350,7 @@ export default function VideoPlayer({
               </Message.Content>
             </Message>
           ) : null}
-          {processingStatus && (
+          {processingStatus ? (
             <Message icon>
               <Icon name="circle notched" loading />
               <Message.Content>
@@ -340,22 +358,17 @@ export default function VideoPlayer({
                 <div className="py-2">{processingStatus}</div>
               </Message.Content>
             </Message>
-          )}
+          ) : !isLoaded ? (
+            <Message icon>
+              <Icon name="circle notched" loading />
+              <Message.Content>
+                <Message.Header>{title}</Message.Header>
+                <div className="py-2">Video is waiting to be processed</div>
+              </Message.Content>
+            </Message>
+          ) : null}
         </div>
       )}
-      {videoURL && (
-        <div className={styles.videoWrapper}>
-          <Player
-            className={styles.video}
-            youtubeID={id}
-            videoURL={videoURL}
-            captionsURL={captionsURL}
-            lang={lang}
-            onEnded={onEnded}
-          />
-        </div>
-      )}
-      {videoURL && <div className={styles.title}>{title}</div>}
       {editLyrics && (
         <div className={styles.subPane}>
           <LyricsEditor id={id} onSynced={handleSynced} />

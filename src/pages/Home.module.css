@@ -5,7 +5,7 @@
   right: 0;
   bottom: 0;
   display: grid;
-  grid-template-columns: 400px auto;
+  grid-template-columns: 30% auto;
   grid-template-rows: 50px auto;
   overflow: hidden;
   background: var(--bg-color);

@@ -53,6 +53,15 @@ function cleanTitle(r) {
   return r;
 }
 
+function splitArtistTitle(fullTitle) {
+  const [artist, title] = fullTitle.split(/\s*[-–]\s*/, 2);
+  if (artist) {
+    return { artist, title };
+  } else {
+    return { title: fullTitle };
+  }
+}
+
 function cleanResults(results) {
   const cr = [];
   results.map((result) => {
@@ -146,6 +155,7 @@ function parseInitialDataSearchResults(obj) {
 
 module.exports = {
   cleanTitle,
+  splitArtistTitle,
   cleanResults,
   initialData,
   parseInitialDataSearchResults,

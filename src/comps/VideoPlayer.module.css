@@ -22,27 +22,21 @@
 
 .title {
   flex: 0;
-  padding: 10px;
+  margin: 15px 10px;
   font-size: 18px;
 }
 
 .toolbar {
   flex: 0 0 30px;
+  margin: -5px 5px 10px;
   display: flex;
-  justify-content: stretch;
-}
-
-.toolbar > * {
-  flex: 1;
+  justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 .toolbar :global(.ui.button) {
-  border-radius: 0;
-  margin: 0;
-  padding: 10px;
+  margin: 5px;
   white-space: nowrap;
-  text-align: center;
-  font-weight: normal;
 }
 
 .subPane {

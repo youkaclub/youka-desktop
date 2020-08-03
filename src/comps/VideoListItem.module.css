@@ -6,10 +6,6 @@
   --image-size: 120px;
 }
 
-.item:hover {
-  text-decoration: underline;
-}
-
 .image {
   flex: 0 0 var(--image-size);
   width: var(--image-size);

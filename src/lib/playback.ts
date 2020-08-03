@@ -69,6 +69,7 @@ export class Playback {
     this.playbackFinished = false;
     this.sendNowPlaying();
     this.saveState();
+    this.processNextVideo();
   }
 
   public async enqueueVideo(video: Video): Promise<void> {
