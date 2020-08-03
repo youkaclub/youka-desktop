@@ -178,10 +178,8 @@ export class Playback {
           videoId,
           nextUnprocessedVideo.title,
           (statusText) => {
-            if (this.processingStatus?.videoId !== videoId) return;
-
             this.processingStatus = {
-              ...this.processingStatus,
+              videoId,
               statusText,
             };
             this.sendProcessingStatus();

@@ -63,7 +63,7 @@ export default function VideoPlayer({
 
   useEffect(() => {
     library.isLoaded(id).then(setIsLoaded);
-  }, [id]);
+  }, [id, processingStatus]);
 
   useEffect(() => {
     const tmpddoptions: Option[] = Object.keys(videoModes).map((mode, i) => {
