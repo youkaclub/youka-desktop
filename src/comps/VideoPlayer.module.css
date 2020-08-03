@@ -6,8 +6,18 @@
   padding: 15px;
 }
 
+.videoWrapper {
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+  position: relative;
+}
+
 .video {
-  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .title {

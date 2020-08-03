@@ -344,14 +344,16 @@ export default function VideoPlayer({
         </div>
       )}
       {videoURL && (
-        <Player
-          className={styles.video}
-          youtubeID={id}
-          videoURL={videoURL}
-          captionsURL={captionsURL}
-          lang={lang}
-          onEnded={onEnded}
-        />
+        <div className={styles.videoWrapper}>
+          <Player
+            className={styles.video}
+            youtubeID={id}
+            videoURL={videoURL}
+            captionsURL={captionsURL}
+            lang={lang}
+            onEnded={onEnded}
+          />
+        </div>
       )}
       {videoURL && <div className={styles.title}>{title}</div>}
       {editLyrics && (
