@@ -1,19 +1,15 @@
 .wrapper {
   grid-column: span 2;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 30vw 1fr;
   background: var(--feature-color);
   color: var(--text-color);
-  padding: 20px;
+  padding: 5px;
   height: 50px;
 }
 
-.left,
-.links,
-.logo {
-  width: 33%;
-  display: flex;
+.logoWrapper {
+  padding: 11px 11px 0;
 }
 
 .logo {
@@ -26,12 +22,10 @@
   color: var(--grey-color-4);
 }
 
-.search {
-  flex: 1 1 300px;
-}
-
 .links {
+  display: flex;
   justify-content: flex-end;
+  padding: 11px 11px 0;
 }
 
 .link {

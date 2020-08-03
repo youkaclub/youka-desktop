@@ -23,7 +23,7 @@ export default function TitleBar({ searchText, onFocus, onSearch }: Props) {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.left}>
+      <div className={styles.logoWrapper}>
         <Link className={styles.logo} to="/">
           Youka
         </Link>
