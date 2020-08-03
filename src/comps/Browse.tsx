@@ -50,6 +50,7 @@ export default function Browse({
   searchText,
   nowPlaying,
   queue,
+  processingStatus,
   onSwitchSection,
   onPlayVideo,
   onQueueVideo,
@@ -150,7 +151,7 @@ export default function Browse({
             currentSection={section}
             onSwitchSection={onSwitchSection}
           >
-            Mix
+            Related
           </SectionLink>
         )}
         <SectionLink
@@ -178,6 +179,7 @@ export default function Browse({
             kind="vertical"
             nowPlaying={nowPlaying}
             queue={queue}
+            processingStatus={processingStatus}
             videos={section === BrowseSection.Queue ? queue : videos}
             onSelect={onPlayVideo}
             onQueue={onQueueVideo}

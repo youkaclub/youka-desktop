@@ -9,10 +9,10 @@ interface Props {
   kind: "vertical" | "horizontal";
   processingStatus?: ProcessingStatus;
   nowPlaying?: Video;
-  queue?: Video[];
-  onSelect?(video: Video): void;
-  onQueue?(video: Video): void;
-  onUnqueue?(video: Video): void;
+  queue: Video[];
+  onSelect(video: Video): void;
+  onQueue(video: Video): void;
+  onUnqueue(video: Video): void;
 }
 
 export default function VideoList({

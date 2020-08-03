@@ -14,7 +14,7 @@ export default function HomePage() {
   const location = useLocation();
   const history = useHistory();
   const [playback] = useState(() => new Playback());
-  const [browseSection, setBrowseSection] = useState(BrowseSection.Trending);
+  const [browseSection, setBrowseSection] = useState(BrowseSection.Search);
   const [searchText, setSearchText] = useState("");
   const [nowPlaying, setNowPlaying] = useState<Video | undefined>();
   const [queue, setQueue] = useState<Video[]>([]);
@@ -59,6 +59,7 @@ export default function HomePage() {
         <Browse
           section={browseSection}
           searchText={searchText}
+          processingStatus={processingStatus}
           nowPlaying={nowPlaying}
           queue={queue}
           onSwitchSection={setBrowseSection}
