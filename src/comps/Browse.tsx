@@ -1,7 +1,7 @@
 import React, { useState, useEffect, ReactNode } from "react";
 import { search, trending, mix } from "../lib/youtube";
 import { Loader, Icon } from "semantic-ui-react";
-import VideoList from "./VideoList";
+import VideoList, { VideoListKind } from "./VideoList";
 import Update from "./Update";
 import rollbar from "../lib/rollbar";
 import * as library from "../lib/library";
@@ -31,6 +31,7 @@ interface Props {
   nowPlaying?: Video;
   queue: Video[];
   processingStatus?: ProcessingStatus;
+  listKind: VideoListKind;
   onSwitchSection(section: BrowseSection): void;
   onPlayVideo(video: Video): void;
   onQueueVideo(video: Video): void;
@@ -51,6 +52,7 @@ export default function Browse({
   nowPlaying,
   queue,
   processingStatus,
+  listKind,
   onSwitchSection,
   onPlayVideo,
   onQueueVideo,
@@ -181,7 +183,7 @@ export default function Browse({
           <ZeroState section={section} />
         ) : (
           <VideoList
-            kind="vertical"
+            kind={listKind}
             nowPlaying={nowPlaying}
             queue={queue}
             processingStatus={processingStatus}

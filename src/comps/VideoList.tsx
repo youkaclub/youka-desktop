@@ -4,9 +4,11 @@ import { Video } from "../lib/video";
 import styles from "./VideoList.module.css";
 import { ProcessingStatus } from "../lib/playback";
 
+export type VideoListKind = "vertical" | "horizontal" | "grid";
+
 interface Props {
   videos: Video[];
-  kind: "vertical" | "horizontal";
+  kind: VideoListKind;
   processingStatus?: ProcessingStatus;
   nowPlaying?: Video;
   queue: Video[];

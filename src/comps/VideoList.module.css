@@ -1,5 +1,6 @@
 .vertical {
   margin: -5px 0;
+  width: 100%;
 }
 
 .horizontal {
@@ -7,5 +8,15 @@
 }
 
 .horizontal > * {
-  max-width: 300px;
+  max-width: 350px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 350px 350px 350px;
+}
+
+.grid > * {
+  width: 340px;
+  margin: 10px 20px;
 }

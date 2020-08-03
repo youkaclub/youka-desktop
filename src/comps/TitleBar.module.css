@@ -1,5 +1,4 @@
 .wrapper {
-  grid-column: span 2;
   display: grid;
   grid-template-columns: 1fr 30vw 1fr;
   background: var(--feature-color);

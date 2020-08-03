@@ -1,27 +1,30 @@
-.wrapper {
+.wrapper,
+.wrapperNoPlayer {
   position: absolute;
   left: 0;
   top: 0;
   right: 0;
   bottom: 0;
-  display: grid;
-  grid-template-columns: 30% auto;
-  grid-template-rows: 50px auto;
   overflow: hidden;
   background: var(--bg-color);
   color: var(--text-color);
+  display: grid;
+  grid-template-rows: 50px auto;
+}
+
+.wrapper {
+  grid-template-columns: auto 30%;
+  display: grid;
+}
+
+.wrapperNoPlayer {
+  grid-template-columns: 1fr;
+}
+
+.wrapper .titleBar {
+  grid-column: span 2;
 }
 
 .player {
   overflow: auto;
-}
-
-.zeroState {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 60px;
-  color: var(--grey-color-4);
-  font-weight: bold;
-  flex-grow: 1;
 }

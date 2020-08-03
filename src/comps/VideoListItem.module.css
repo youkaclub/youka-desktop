@@ -3,7 +3,8 @@
   align-items: center;
   margin: 15px;
   cursor: pointer;
-  --image-size: 120px;
+  --image-size: 140px;
+  font-size: 16px;
 }
 
 .image {

@@ -47,28 +47,19 @@ export default function HomePage() {
 
   return (
     <Environment>
-      <div className={styles.wrapper}>
-        <TitleBar
-          searchText={searchText}
-          onFocus={() => setBrowseSection(BrowseSection.Search)}
-          onSearch={(value) => {
-            setBrowseSection(BrowseSection.Search);
-            setSearchText(value);
-          }}
-        />
-        <Browse
-          section={browseSection}
-          searchText={searchText}
-          processingStatus={processingStatus}
-          nowPlaying={nowPlaying}
-          queue={queue}
-          onSwitchSection={setBrowseSection}
-          onPlayVideo={(video) => playback.playVideo(video)}
-          onQueueVideo={(video) => playback.enqueueVideo(video)}
-          onUnqueueVideo={(video) => playback.unenqueueVideo(video)}
-        />
-        <div className={styles.player}>
-          {nowPlaying ? (
+      <div className={nowPlaying ? styles.wrapper : styles.wrapperNoPlayer}>
+        <div className={styles.titleBar}>
+          <TitleBar
+            searchText={searchText}
+            onFocus={() => setBrowseSection(BrowseSection.Search)}
+            onSearch={(value) => {
+              setBrowseSection(BrowseSection.Search);
+              setSearchText(value);
+            }}
+          />
+        </div>
+        {nowPlaying && (
+          <div className={styles.player}>
             <VideoPlayer
               video={nowPlaying}
               processingStatus={
@@ -78,15 +69,21 @@ export default function HomePage() {
               }
               onEnded={() => playback.finishPlayback(nowPlaying.id)}
             />
-          ) : (
-            <ZeroState />
-          )}
-        </div>
+          </div>
+        )}
+        <Browse
+          section={browseSection}
+          searchText={searchText}
+          processingStatus={processingStatus}
+          nowPlaying={nowPlaying}
+          queue={queue}
+          listKind={nowPlaying ? "vertical" : "grid"}
+          onSwitchSection={setBrowseSection}
+          onPlayVideo={(video) => playback.playVideo(video)}
+          onQueueVideo={(video) => playback.enqueueVideo(video)}
+          onUnqueueVideo={(video) => playback.unenqueueVideo(video)}
+        />
       </div>
     </Environment>
   );
-}
-
-function ZeroState() {
-  return <div className={styles.zeroState}>Youka</div>;
 }
